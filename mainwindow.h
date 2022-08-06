@@ -75,8 +75,6 @@ protected:
     void setupOrientationMarker();
     void setupCubeAxesActor();
 
-    void updateViewModeLocation();
-
     int getRenderWindowWidth() const;
     bool checkFileExists(const QString & file_name) const;
     void addBlocks();
@@ -145,6 +143,7 @@ public slots:
     void onExportAsJpg();
     void onToolsExplode();
     void onExplodeValueChanged();
+    void updateViewModeLocation();
 
 protected:
     QSettings * settings;

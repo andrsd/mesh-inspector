@@ -85,11 +85,9 @@ MainWindow::MainWindow(QWidget * parent) :
     clear();
     show();
 
-    // this->update_timer = QTimer();
-    // this->update_timer.timeout.connect(self.onUpdateWindow);
+    connect(&this->update_timer, SIGNAL(timeout()), this, SLOT(onUpdateWindow()));
     this->update_timer.start(250);
-
-    // QTimer::singleShot(1, self._updateViewModeLocation)
+    QTimer::singleShot(1, this, SLOT(updateViewModeLocation()));
 }
 
 MainWindow::~MainWindow()
@@ -227,11 +225,6 @@ MainWindow::setupOrientationMarker()
 
 void
 MainWindow::setupCubeAxesActor()
-{
-}
-
-void
-MainWindow::updateViewModeLocation()
 {
 }
 
@@ -567,5 +560,10 @@ MainWindow::onToolsExplode()
 
 void
 MainWindow::onExplodeValueChanged()
+{
+}
+
+void
+MainWindow::updateViewModeLocation()
 {
 }
