@@ -13,6 +13,7 @@ class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 class QPushButton;
+class QFrame;
 class QDockWidget;
 class InfoWindow;
 
@@ -165,6 +166,7 @@ protected:
     QMenu * export_menu;
     QMenu * view_menu;
     QPushButton * view_mode;
+    QFrame * vtk_widget;
     QDockWidget * info_dock;
     InfoWindow * info_window;
 

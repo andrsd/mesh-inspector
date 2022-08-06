@@ -10,6 +10,7 @@
 #include <QActionGroup>
 #include <QSettings>
 #include <QEvent>
+#include <QFrame>
 #include <QPushButton>
 #include <QFileInfo>
 #include <QtDebug>
@@ -104,11 +105,17 @@ MainWindow::~MainWindow()
     delete this->settings;
     delete this->file_watcher;
     delete this->menu_bar;
+    delete this->vtk_widget;
+    delete this->info_window;
+    delete this->info_dock;
 }
 
 void
 MainWindow::setupWidgets()
 {
+    this->vtk_widget = new QFrame();
+    setCentralWidget(this->vtk_widget);
+
     this->info_window = new InfoWindow(this);
 
     this->info_dock = new QDockWidget("Information", this);
