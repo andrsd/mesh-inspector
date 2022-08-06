@@ -16,6 +16,8 @@ class QPushButton;
 class QFrame;
 class QDockWidget;
 class InfoWindow;
+class AboutDialog;
+
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -151,6 +153,7 @@ public slots:
     void onMinimize();
     void onBringAllToFront();
     void onShowMainWindow();
+    void onAbout();
 
 protected:
     QSettings * settings;
@@ -172,6 +175,7 @@ protected:
     QFrame * vtk_widget;
     QDockWidget * info_dock;
     InfoWindow * info_window;
+    AboutDialog * about_dlg;
 
     QAction * new_action;
     QAction * open_action;
@@ -188,6 +192,7 @@ protected:
     QAction * minimize;
     QAction * bring_all_to_front;
     QAction * show_main_window;
+    QAction * about_box_action;
 
     QActionGroup * visual_repr;
     QActionGroup * color_profile_action_group;

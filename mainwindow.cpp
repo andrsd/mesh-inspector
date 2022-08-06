@@ -17,6 +17,7 @@
 #include <QDockWidget>
 #include <QApplication>
 #include "infowindow.h"
+#include "aboutdlg.h"
 #include "common/reader.h"
 
 // Main window - Load thread
@@ -53,6 +54,10 @@ MainWindow::MainWindow(QWidget * parent) :
     export_menu(nullptr),
     view_menu(nullptr),
     view_mode(nullptr),
+    vtk_widget(nullptr),
+    info_dock(nullptr),
+    info_window(nullptr),
+    about_dlg(nullptr),
     new_action(nullptr),
     open_action(nullptr),
     close_action(nullptr),
@@ -215,6 +220,12 @@ MainWindow::setupMenuBar()
     file_menu->addSeparator();
     this->close_action =
         file_menu->addAction("Close", this, SLOT(onClose()), QKeySequence("Ctrl+W"));
+
+    // The "About" item is fine here, since we assume Mac and that will
+    // place the item into different submenu but this will need to be fixed
+    // for linux and windows
+    file_menu->addSeparator();
+    this->about_box_action = file_menu->addAction("About", this, SLOT(onAbout()));
 
     QMenu * view_menu = this->menu_bar->addMenu("View");
     view_menu->addAction(this->shaded_action);
@@ -696,4 +707,12 @@ MainWindow::onShowMainWindow()
     activateWindow();
     raise();
     updateMenuBar();
+}
+
+void
+MainWindow::onAbout()
+{
+    if (this->about_dlg == nullptr)
+        this->about_dlg = new AboutDialog(this);
+    this->about_dlg->show();
 }

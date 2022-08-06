@@ -24,6 +24,7 @@ add_subdirectory(common)
 
 add_executable(
     ${PROJECT_NAME}
+        aboutdlg.cpp
         infowindow.cpp
         main.cpp
         mainwindow.cpp
@@ -33,6 +34,7 @@ target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
         common
+        ${CMAKE_BUILD_DIR}
 )
 
 target_link_libraries(
@@ -62,3 +64,5 @@ install(
     LIBRARY DESTINATION
         ${CMAKE_INSTALL_LIBDIR}
 )
+
+configure_file(meshinspectorconfig.h.in meshinspectorconfig.h)
