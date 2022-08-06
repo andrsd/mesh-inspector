@@ -12,6 +12,7 @@ class QMenu;
 class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
+class QPushButton;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -160,6 +161,8 @@ protected:
     QMenu * recent_menu;
     QStringList recent_files;
     QMenu * export_menu;
+    QMenu * view_menu;
+    QPushButton * view_mode;
 
     QAction * new_action;
     QAction * open_action;
@@ -171,7 +174,10 @@ protected:
     QAction * transluent_action;
     QAction * view_info_wnd_action;
     QAction * tools_explode_action;
+    QAction * perspective_action;
+    QAction * ori_marker_action;
 
+    QActionGroup * visual_repr;
     QActionGroup * color_profile_action_group;
     QActionGroup * mode_select_action_group;
 };

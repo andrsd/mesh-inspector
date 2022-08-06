@@ -10,6 +10,7 @@
 #include <QActionGroup>
 #include <QSettings>
 #include <QEvent>
+#include <QPushButton>
 #include <QtDebug>
 #include "common/reader.h"
 
@@ -45,6 +46,8 @@ MainWindow::MainWindow(QWidget * parent) :
     menu_bar(new QMenuBar(nullptr)),
     recent_menu(nullptr),
     export_menu(nullptr),
+    view_menu(nullptr),
+    view_mode(nullptr),
     new_action(nullptr),
     open_action(nullptr),
     close_action(nullptr),
@@ -55,6 +58,9 @@ MainWindow::MainWindow(QWidget * parent) :
     transluent_action(nullptr),
     view_info_wnd_action(nullptr),
     tools_explode_action(nullptr),
+    perspective_action(nullptr),
+    ori_marker_action(nullptr),
+    visual_repr(nullptr),
     color_profile_action_group(nullptr),
     mode_select_action_group(nullptr)
 {
@@ -100,11 +106,58 @@ MainWindow::~MainWindow()
 void
 MainWindow::setupWidgets()
 {
+    setupViewModeWidget(this);
 }
 
 void
 MainWindow::setupViewModeWidget(QMainWindow * wnd)
 {
+    this->view_menu = new QMenu();
+    this->shaded_action = this->view_menu->addAction("Shaded");
+    this->shaded_action->setCheckable(true);
+    this->shaded_action->setShortcut(QKeySequence("Ctrl+1"));
+    this->shaded_w_edges_action = this->view_menu->addAction("Shaded with edges");
+    this->shaded_w_edges_action->setCheckable(true);
+    this->shaded_w_edges_action->setShortcut(QKeySequence("Ctrl+2"));
+    this->hidden_edges_removed_action = this->view_menu->addAction("Hidden edges removed");
+    this->hidden_edges_removed_action->setCheckable(true);
+    this->hidden_edges_removed_action->setShortcut(QKeySequence("Ctrl+3"));
+    this->transluent_action = this->view_menu->addAction("Transluent");
+    this->transluent_action->setCheckable(true);
+    this->transluent_action->setShortcut(QKeySequence("Ctrl+4"));
+    this->shaded_w_edges_action->setChecked(true);
+    this->render_mode = SHADED_WITH_EDGES;
+
+    this->visual_repr = new QActionGroup(this->view_menu);
+    this->visual_repr->addAction(this->shaded_action);
+    this->visual_repr->addAction(this->shaded_w_edges_action);
+    this->visual_repr->addAction(this->hidden_edges_removed_action);
+    this->visual_repr->addAction(this->transluent_action);
+    this->visual_repr->setExclusive(true);
+
+    this->view_menu->addSeparator();
+    this->perspective_action = this->view_menu->addAction("Perspective");
+    this->perspective_action->setCheckable(true);
+    this->perspective_action->setChecked(true);
+
+    this->view_menu->addSeparator();
+    this->ori_marker_action = this->view_menu->addAction("Orientation marker");
+    this->ori_marker_action->setCheckable(true);
+    this->ori_marker_action->setChecked(true);
+
+    connect(this->shaded_action, SIGNAL(triggered(bool)), this, SLOT(onShadedTriggered(bool)));
+    // this->shaded_action.triggered.connect(self.onShadedTriggered);
+    // this->shaded_w_edges_action.triggered.connect(self.onShadedWithEdgesTriggered);
+    // this->hidden_edges_removed_action.triggered.connect(self.onHiddenEdgesRemovedTriggered);
+    // this->transluent_action.triggered.connect(self.onTransluentTriggered);
+    // this->perspective_action.toggled.connect(self.onPerspectiveToggled);
+    // this->ori_marker_action.toggled.connect(self.onOrientationMarkerVisibilityChanged);
+
+    this->view_mode = new QPushButton(wnd);
+    this->view_mode->setFixedSize(60, 32);
+    // this->view_mode->setIcon(Assets().icons['render-mode']);
+    this->view_mode->setMenu(this->view_menu);
+    this->view_mode->show();
 }
 
 void
@@ -167,7 +220,9 @@ void
 MainWindow::setupColorProfileMenu(QMenu * menu)
 {
     this->color_profile_action_group = new QActionGroup(this);
-    this->color_profile_id = {this->settings->value("color_profile", COLOR_PROFILE_DEFAULT).toInt()};
+    this->color_profile_id = {
+        this->settings->value("color_profile", COLOR_PROFILE_DEFAULT).toInt()
+    };
     // TODO: fill in color profile
     connect(this->color_profile_action_group,
             SIGNAL(triggered(QAction *)),
@@ -180,7 +235,7 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
 {
     QMenu * select_menu = menu->addMenu("Select mode");
     this->mode_select_action_group = new QActionGroup(this);
-    this->select_mode = {this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt()};
+    this->select_mode = { this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt() };
     // TODO: fill in selection modes
     connect(this->mode_select_action_group,
             SIGNAL(triggered(QAction *)),
@@ -231,7 +286,9 @@ MainWindow::setupCubeAxesActor()
 int
 MainWindow::getRenderWindowWidth() const
 {
-    return 0;
+    // int info_width = this->info_dock->geometry().width();
+    // return this->geometry().width() - info_width;
+    return this->geometry().width();
 }
 
 bool
@@ -380,6 +437,8 @@ MainWindow::event(QEvent * event)
 void
 MainWindow::resizeEvent(QResizeEvent * event)
 {
+    QMainWindow::resizeEvent(event);
+    updateViewModeLocation();
 }
 
 void
@@ -566,4 +625,6 @@ MainWindow::onExplodeValueChanged()
 void
 MainWindow::updateViewModeLocation()
 {
+    auto width = this->getRenderWindowWidth();
+    this->view_mode->move(width - 5 - this->view_mode->width(), 10);
 }
