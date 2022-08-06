@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(mesh-inspector
     VERSION 1.0
-    LANGUAGES CXX)
+    LANGUAGES C CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -19,11 +19,20 @@ find_package(Qt5 REQUIRED
         Gui
         Widgets
 )
+find_package(VTK REQUIRED)
+
+add_subdirectory(common)
 
 add_executable(
     ${PROJECT_NAME}
         main.cpp
         mainwindow.cpp
+)
+
+target_include_directories(
+    ${PROJECT_NAME}
+    PRIVATE
+        common
 )
 
 target_link_libraries(
@@ -32,6 +41,7 @@ target_link_libraries(
         Qt5::Core
         Qt5::Gui
         Qt5::Widgets
+        common
 )
 
 set_target_properties(
