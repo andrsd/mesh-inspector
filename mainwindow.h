@@ -9,6 +9,7 @@ class QSettings;
 class QProgressDialog;
 class QFileSystemWatcher;
 class QMenu;
+class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 
@@ -35,6 +36,19 @@ protected:
         TRANSLUENT = 3
     };
 
+    enum EModeSelect : int {
+        MODE_SELECT_NONE = 0,
+        MODE_SELECT_BLOCKS = 1,
+        MODE_SELECT_CELLS = 2,
+        MODE_SELECT_POINTS = 3
+    };
+
+    enum EColorProfile : int {
+        COLOR_PROFILE_DEFAULT = 0,
+        COLOR_PROFILE_LIGHT = 1,
+        COLOR_PROFILE_DARK = 2
+    };
+
 public:
     explicit MainWindow(QWidget * parent = nullptr);
     virtual ~MainWindow();
@@ -47,9 +61,9 @@ protected:
     void setupExplodeWidgets();
 
     void setupMenuBar();
-    void setupExportMenu();
-    void setupColorProfileMenu();
-    void setupSelectModeMenu(QMenu & tools_menu);
+    void setupExportMenu(QMenu * menu);
+    void setupColorProfileMenu(QMenu * menu);
+    void setupSelectModeMenu(QMenu * menu);
     void updateMenuBar();
 
     void updateWindowTitle();
@@ -124,9 +138,9 @@ public slots:
     void onNodesetSelectionChanged();
     void onClicked(const QPoint & pt);
     void onViewInfoWindow();
-    void onSelectModeTriggered();
+    void onSelectModeTriggered(QAction * action);
     void onDeselect();
-    void onColorProfileTriggered();
+    void onColorProfileTriggered(QAction *);
     void onExportAsPng();
     void onExportAsJpg();
     void onToolsExplode();
@@ -140,8 +154,25 @@ protected:
     QTimer update_timer;
     QFileSystemWatcher * file_watcher;
     ERenderMode render_mode;
+    EModeSelect select_mode;
+    EColorProfile color_profile_id;
     // vtk_interactor;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     QStringList recent_files;
+    QMenu * export_menu;
+
+    QAction * new_action;
+    QAction * open_action;
+    QAction * close_action;
+    QAction * clear_recent_file;
+    QAction * shaded_action;
+    QAction * shaded_w_edges_action;
+    QAction * hidden_edges_removed_action;
+    QAction * transluent_action;
+    QAction * view_info_wnd_action;
+    QAction * tools_explode_action;
+
+    QActionGroup * color_profile_action_group;
+    QActionGroup * mode_select_action_group;
 };
