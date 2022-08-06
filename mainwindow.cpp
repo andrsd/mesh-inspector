@@ -15,6 +15,7 @@
 #include <QFileInfo>
 #include <QtDebug>
 #include <QDockWidget>
+#include <QApplication>
 #include "infowindow.h"
 #include "common/reader.h"
 
@@ -64,9 +65,13 @@ MainWindow::MainWindow(QWidget * parent) :
     tools_explode_action(nullptr),
     perspective_action(nullptr),
     ori_marker_action(nullptr),
+    minimize(nullptr),
+    bring_all_to_front(nullptr),
+    show_main_window(nullptr),
     visual_repr(nullptr),
     color_profile_action_group(nullptr),
-    mode_select_action_group(nullptr)
+    mode_select_action_group(nullptr),
+    windows_action_group(nullptr)
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -226,6 +231,20 @@ MainWindow::setupMenuBar()
     QMenu * tools_menu = this->menu_bar->addMenu("Tools");
     setupSelectModeMenu(tools_menu);
     this->tools_explode_action = tools_menu->addAction("Explode", this, SLOT(onToolsExplode()));
+
+    QMenu * window_menu = this->menu_bar->addMenu("Window");
+    this->minimize =
+        window_menu->addAction("Minimize", this, SLOT(onMinimize()), QKeySequence("Ctrl+M"));
+    window_menu->addSeparator();
+    this->bring_all_to_front =
+        window_menu->addAction("Bring All to Front", this, SLOT(onBringAllToFront()));
+    window_menu->addSeparator();
+    this->show_main_window =
+        window_menu->addAction("Mesh Inspector", this, SLOT(onShowMainWindow()));
+    this->show_main_window->setCheckable(true);
+
+    this->windows_action_group = new QActionGroup(this);
+    this->windows_action_group->addAction(this->show_main_window);
 }
 
 void
@@ -265,6 +284,11 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
 void
 MainWindow::updateMenuBar()
 {
+    auto * active_window = QApplication::activeWindow();
+    this->show_main_window->setChecked(active_window == this);
+
+    this->view_info_wnd_action->setChecked(this->info_window->isVisible());
+    this->tools_explode_action->setEnabled(!this->file_name.isEmpty());
 }
 
 void
@@ -651,4 +675,25 @@ MainWindow::updateViewModeLocation()
 {
     auto width = this->getRenderWindowWidth();
     this->view_mode->move(width - 5 - this->view_mode->width(), 10);
+}
+
+void
+MainWindow::onMinimize()
+{
+    showMinimized();
+}
+
+void
+MainWindow::onBringAllToFront()
+{
+    showNormal();
+}
+
+void
+MainWindow::onShowMainWindow()
+{
+    showNormal();
+    activateWindow();
+    raise();
+    updateMenuBar();
 }

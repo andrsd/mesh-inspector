@@ -148,6 +148,9 @@ public slots:
     void onToolsExplode();
     void onExplodeValueChanged();
     void updateViewModeLocation();
+    void onMinimize();
+    void onBringAllToFront();
+    void onShowMainWindow();
 
 protected:
     QSettings * settings;
@@ -182,8 +185,12 @@ protected:
     QAction * tools_explode_action;
     QAction * perspective_action;
     QAction * ori_marker_action;
+    QAction * minimize;
+    QAction * bring_all_to_front;
+    QAction * show_main_window;
 
     QActionGroup * visual_repr;
     QActionGroup * color_profile_action_group;
     QActionGroup * mode_select_action_group;
+    QActionGroup * windows_action_group;
 };
