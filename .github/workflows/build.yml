@@ -1,5 +1,8 @@
 name: build
 
+env:
+  QT_VERSION: 5.15.2
+
 on:
   push:
     branches:
@@ -10,29 +13,17 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-11
-    runs-on: ${{ matrix.os }}
+    name: macos-11
+    runs-on: macos-11
     steps:
       - name: Checkout source
         uses: actions/checkout@v2
 
-      - name: Install dependencies (macos)
-        if: startsWith(matrix.os, 'macos')
-        run: |
-          brew install cmake vtk
-
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v2
         with:
-          version: 5.15.2
-          target: desktop
-          cache: true
-          cache-key-prefix: ${{ runner.os }}-qt-cache
+          version: ${{ env.QT_VERSION }}
+          setup-python: false
 
       - name: Configure
         run: |

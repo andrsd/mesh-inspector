@@ -19,7 +19,6 @@ find_package(Qt5 REQUIRED
         Gui
         Widgets
 )
-find_package(VTK REQUIRED)
 
 add_subdirectory(common)
 
