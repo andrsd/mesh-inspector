@@ -18,7 +18,6 @@ class QDockWidget;
 class InfoWindow;
 class AboutDialog;
 
-
 class MainWindow : public QMainWindow {
     Q_OBJECT
 

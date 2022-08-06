@@ -30,9 +30,8 @@ AboutDialog::AboutDialog(QWidget * parent) :
     this->title->setAlignment(Qt::AlignHCenter);
     this->layout->addWidget(this->title);
 
-    QString t = QString("Version %1\n\n%2")
-        .arg(MESH_INSPECTOR_VERSION)
-        .arg(MESH_INSPECTOR_COPYRIGHT);
+    QString t =
+        QString("Version %1\n\n%2").arg(MESH_INSPECTOR_VERSION).arg(MESH_INSPECTOR_COPYRIGHT);
     this->text = new QLabel(t);
     font = this->text->font();
     font.setPointSize(0.9 * font.pointSize());
