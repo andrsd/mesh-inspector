@@ -11,6 +11,7 @@
 #include <QSettings>
 #include <QEvent>
 #include <QPushButton>
+#include <QFileInfo>
 #include <QtDebug>
 #include "common/reader.h"
 
@@ -251,6 +252,13 @@ MainWindow::updateMenuBar()
 void
 MainWindow::updateWindowTitle()
 {
+    if (this->file_name.isEmpty())
+        setWindowTitle("Mesh Inspector");
+    else {
+        QFileInfo fi(this->file_name);
+        QString title = QString("Mesh Inspector \u2014 %1").arg(fi.fileName());
+        setWindowTitle(title);
+    }
 }
 
 void
