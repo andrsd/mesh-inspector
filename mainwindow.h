@@ -13,6 +13,8 @@ class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 class QPushButton;
+class QDockWidget;
+class InfoWindow;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -163,6 +165,8 @@ protected:
     QMenu * export_menu;
     QMenu * view_menu;
     QPushButton * view_mode;
+    QDockWidget * info_dock;
+    InfoWindow * info_window;
 
     QAction * new_action;
     QAction * open_action;

@@ -24,6 +24,7 @@ add_subdirectory(common)
 
 add_executable(
     ${PROJECT_NAME}
+        infowindow.cpp
         main.cpp
         mainwindow.cpp
 )

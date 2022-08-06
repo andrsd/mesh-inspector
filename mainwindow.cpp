@@ -13,6 +13,8 @@
 #include <QPushButton>
 #include <QFileInfo>
 #include <QtDebug>
+#include <QDockWidget>
+#include "infowindow.h"
 #include "common/reader.h"
 
 // Main window - Load thread
@@ -107,6 +109,15 @@ MainWindow::~MainWindow()
 void
 MainWindow::setupWidgets()
 {
+    this->info_window = new InfoWindow(this);
+
+    this->info_dock = new QDockWidget("Information", this);
+    this->info_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    this->info_dock->setFloating(false);
+    this->info_dock->setFeatures(QDockWidget::DockWidgetMovable);
+    this->info_dock->setWidget(this->info_window);
+    addDockWidget(Qt::RightDockWidgetArea, this->info_dock);
+
     setupViewModeWidget(this);
 }
 
@@ -294,9 +305,8 @@ MainWindow::setupCubeAxesActor()
 int
 MainWindow::getRenderWindowWidth() const
 {
-    // int info_width = this->info_dock->geometry().width();
-    // return this->geometry().width() - info_width;
-    return this->geometry().width();
+    int info_width = this->info_dock->geometry().width();
+    return this->geometry().width() - info_width;
 }
 
 bool
@@ -465,7 +475,6 @@ MainWindow::closeEvent(QCloseEvent * event)
     this->settings->setValue("tools/select_mode", this->select_mode);
     this->settings->setValue("color_profile", this->color_profile_id);
     this->settings->setValue("window/geometry", this->saveGeometry());
-    this->settings->setValue("window/state", this->saveState());
     this->settings->setValue("recent_files", this->recent_files);
     QMainWindow::closeEvent(event);
 }
