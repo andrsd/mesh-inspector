@@ -186,11 +186,22 @@ MainWindow::setupViewModeWidget(QMainWindow * wnd)
     this->ori_marker_action->setChecked(true);
 
     connect(this->shaded_action, SIGNAL(triggered(bool)), this, SLOT(onShadedTriggered(bool)));
-    // this->shaded_action.triggered.connect(self.onShadedTriggered);
-    // this->shaded_w_edges_action.triggered.connect(self.onShadedWithEdgesTriggered);
-    // this->hidden_edges_removed_action.triggered.connect(self.onHiddenEdgesRemovedTriggered);
-    // this->transluent_action.triggered.connect(self.onTransluentTriggered);
-    // this->perspective_action.toggled.connect(self.onPerspectiveToggled);
+    connect(this->shaded_w_edges_action,
+            SIGNAL(triggered(bool)),
+            this,
+            SLOT(onShadedWithEdgesTriggered(bool)));
+    connect(this->hidden_edges_removed_action,
+            SIGNAL(triggered(bool)),
+            this,
+            SLOT(onHiddenEdgesRemovedTriggered(bool)));
+    connect(this->transluent_action,
+            SIGNAL(triggered(bool)),
+            this,
+            SLOT(onTransluentTriggered(bool)));
+    connect(this->perspective_action,
+            SIGNAL(toggled(bool)),
+            this,
+            SLOT(onPerspectiveToggled(bool)));
     connect(this->ori_marker_action,
             SIGNAL(toggled(bool)),
             this,
