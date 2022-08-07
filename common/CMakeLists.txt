@@ -12,7 +12,6 @@ add_library(
     ${PROJECT_NAME}
     SHARED
         clickablelabel.cpp
-        reader.cpp
 )
 
 target_link_libraries(

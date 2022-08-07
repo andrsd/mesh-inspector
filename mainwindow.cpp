@@ -25,11 +25,18 @@
 #include "vtkOrientationMarkerWidget.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
-#include "common/reader.h"
+#include "reader.h"
+#include "exodusiireader.h"
 
 // Main window - Load thread
 
-MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reader(nullptr) {}
+MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reader(nullptr)
+{
+    if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
+        this->reader = new ExodusIIReader(file_name);
+    else
+        this->reader = nullptr;
+}
 
 Reader *
 MainWindow::LoadThread::getReader()

@@ -32,6 +32,7 @@ find_package(VTK
         RenderingGL2PSOpenGL2
         RenderingOpenGL2
         RenderingQt
+        IOExodus
 )
 if(NOT VTK_FOUND)
     message(FATAL_ERROR "Unable to find the VTK build folder.")
@@ -45,9 +46,11 @@ add_subdirectory(common)
 add_executable(
     ${PROJECT_NAME}
         aboutdlg.cpp
+        exodusiireader.cpp
         infowindow.cpp
         main.cpp
         mainwindow.cpp
+        reader.cpp
 )
 
 target_include_directories(
@@ -55,7 +58,6 @@ target_include_directories(
     PRIVATE
         common
         ${CMAKE_BUILD_DIR}
-        ${VTK_DIR}/include
 )
 
 target_link_libraries(

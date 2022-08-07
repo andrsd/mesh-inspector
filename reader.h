@@ -7,6 +7,7 @@
 class Reader {
 public:
     Reader(const QString & file_name);
+    virtual ~Reader();
 
     virtual void load() = 0;
 
@@ -22,11 +23,11 @@ public:
 
     // virtual A getVariableInfo() const = 0;
 
-    virtual void getTotalNumberOfElements() const = 0;
+    virtual std::size_t getTotalNumberOfElements() const = 0;
 
     virtual std::size_t getTotalNumberOfNodes() const = 0;
 
-    virtual void getDimensionality() const = 0;
+    virtual int getDimensionality() const = 0;
 
 protected:
     QString file_name;
