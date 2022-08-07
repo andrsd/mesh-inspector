@@ -13,6 +13,7 @@ add_library(
     SHARED
         clickablelabel.cpp
         hline.cpp
+        sliderwithedit.cpp
 )
 
 target_link_libraries(
