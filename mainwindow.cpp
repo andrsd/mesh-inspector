@@ -10,6 +10,9 @@
 #include <QActionGroup>
 #include <QSettings>
 #include <QEvent>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
 #include <QPushButton>
 #include <QFileInfo>
 #include <QtDebug>
@@ -593,11 +596,27 @@ MainWindow::resizeEvent(QResizeEvent * event)
 void
 MainWindow::dragEnterEvent(QDragEnterEvent * event)
 {
+    if (event->mimeData() && event->mimeData()->hasUrls())
+        event->accept();
+    else
+        event->ignore();
 }
 
 void
 MainWindow::dropEvent(QDropEvent * event)
 {
+    if (event->mimeData() && event->mimeData()->hasUrls()) {
+        event->setDropAction(Qt::CopyAction);
+        event->accept();
+
+        QStringList file_names;
+        for (auto & url : event->mimeData()->urls())
+            file_names.append(url.toLocalFile());
+        if (file_names.length() > 0)
+            loadFile(file_names[0]);
+    }
+    else
+        event->ignore();
 }
 
 void
