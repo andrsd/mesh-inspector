@@ -13,6 +13,7 @@ add_library(
     SHARED
         clickablelabel.cpp
         hline.cpp
+        loadfileevent.cpp
         sliderwithedit.cpp
 )
 

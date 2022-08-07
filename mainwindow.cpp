@@ -30,6 +30,7 @@
 #include "aboutdlg.h"
 #include "reader.h"
 #include "exodusiireader.h"
+#include "common/loadfileevent.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -583,6 +584,12 @@ MainWindow::event(QEvent * event)
 {
     if (event->type() == QEvent::WindowActivate)
         this->updateMenuBar();
+    else if (event->type() == LoadFileEvent::type) {
+        auto * e = dynamic_cast<LoadFileEvent *>(event);
+        loadFile(e->fileName());
+        return true;
+    }
+
     return QMainWindow::event(event);
 }
 
