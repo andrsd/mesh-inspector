@@ -1,7 +1,7 @@
 name: build
 
 env:
-  QT_VERSION: 5.15.2
+  QT_VERSION: 5.15.5_1
 
 on:
   push:
@@ -13,21 +13,33 @@ on:
 
 jobs:
   build:
-    name: macos-11
-    runs-on: macos-11
+    name: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ 'macos-11', 'ubuntu-22.04' ]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v2
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v2
-        with:
-          version: ${{ env.QT_VERSION }}
-          setup-python: false
+      - name: Install dependencies (linux)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update -qq
+          sudo apt install libvtk9-qt-dev
+          echo "QT5DIR=/usr/lib/x86_64-linux-gnu/cmake/Qt5" >> $GITHUB_ENV
+
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install vtk qt5
+          echo "QT5DIR=$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5" >> $GITHUB_ENV
 
       - name: Configure
         run: |
-          cmake -S . -B ${{ github.workspace }}/build
+          cmake -S . -B ${{ github.workspace }}/build \
+            -DQt5_DIR=${{ env.QT5DIR }}
 
       - name: Build
         run: make -C ${{ github.workspace }}/build

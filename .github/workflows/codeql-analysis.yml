@@ -1,7 +1,7 @@
 name: code-ql
 
 env:
-  QT_VERSION: 5.15.2
+  QT_VERSION: 5.15.5_1
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
 jobs:
   analyze:
     name: analyze
-    runs-on: macos-11
+    runs-on: ubuntu-22.04
     permissions:
       actions: read
       contents: read
@@ -34,15 +34,14 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v2
-      with:
-        version: ${{ env.QT_VERSION }}
-        setup-python: false
+    - name: Install dependencies
+      run: |
+          sudo apt-get update -qq
+          sudo apt install libvtk9-qt-dev
 
     - name: Configure
       run: |
-          cmake -S . -B ${{ github.workspace }}/build
+        cmake -S . -B ${{ github.workspace }}/build
 
     - name: Build
       run: make -C ${{ github.workspace }}/build
