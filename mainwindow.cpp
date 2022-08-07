@@ -10,12 +10,14 @@
 #include <QActionGroup>
 #include <QSettings>
 #include <QEvent>
-#include <QFrame>
 #include <QPushButton>
 #include <QFileInfo>
 #include <QtDebug>
 #include <QDockWidget>
 #include <QApplication>
+#include "QVTKOpenGLNativeWidget.h"
+#include "vtkGenericOpenGLRenderWindow.h"
+#include "vtkRenderer.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "common/reader.h"
@@ -55,6 +57,7 @@ MainWindow::MainWindow(QWidget * parent) :
     view_menu(nullptr),
     view_mode(nullptr),
     vtk_widget(nullptr),
+    vtk_interactor(nullptr),
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
@@ -96,9 +99,6 @@ MainWindow::MainWindow(QWidget * parent) :
     setupVtk();
     setColorProfile();
 
-    // this->_vtk_interactor.Initialize();
-    // this->_vtk_interactor.Start();
-
     setupOrientationMarker();
     setupCubeAxesActor();
 
@@ -123,8 +123,14 @@ MainWindow::~MainWindow()
 void
 MainWindow::setupWidgets()
 {
-    this->vtk_widget = new QFrame();
+    this->vtk_widget = new QVTKOpenGLNativeWidget();
     setCentralWidget(this->vtk_widget);
+
+    this->vtk_render_window = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+    this->vtk_widget->setRenderWindow(this->vtk_render_window);
+
+    this->vtk_renderer = vtkSmartPointer<vtkRenderer>::New();
+    this->vtk_render_window->AddRenderer(this->vtk_renderer);
 
     this->info_window = new InfoWindow(this);
 
@@ -322,6 +328,15 @@ MainWindow::connectSignals()
 void
 MainWindow::setupVtk()
 {
+    this->vtk_interactor = this->vtk_render_window->GetInteractor();
+
+    // TODO: set interactor style
+
+    // TODO: set background from preferences/templates
+    this->vtk_renderer->SetGradientBackground(true);
+    // set anti-aliasing on
+    this->vtk_renderer->SetUseFXAA(true);
+    this->vtk_render_window->SetMultiSamples(1);
 }
 
 void
@@ -451,6 +466,9 @@ MainWindow::selectPoint(const QPoint & pt)
 void
 MainWindow::setColorProfile()
 {
+    double bkgnd[3] = { 82 / 256., 87 / 256., 110 / 256. };
+    this->vtk_renderer->SetBackground(bkgnd);
+    this->vtk_renderer->SetBackground2(bkgnd);
 }
 
 void
@@ -609,6 +627,7 @@ MainWindow::onPerspectiveToggled(bool checked)
 void
 MainWindow::onUpdateWindow()
 {
+    this->vtk_render_window->Render();
 }
 
 void

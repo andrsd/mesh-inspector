@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
+#include "vtkSmartPointer.h"
 
 class Reader;
 class QSettings;
@@ -13,10 +14,13 @@ class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 class QPushButton;
-class QFrame;
+class QVTKOpenGLNativeWidget;
 class QDockWidget;
 class InfoWindow;
 class AboutDialog;
+class vtkGenericOpenGLRenderWindow;
+class vtkRenderer;
+class vtkRenderWindowInteractor;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -171,7 +175,10 @@ protected:
     QMenu * export_menu;
     QMenu * view_menu;
     QPushButton * view_mode;
-    QFrame * vtk_widget;
+    QVTKOpenGLNativeWidget * vtk_widget;
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> vtk_render_window;
+    vtkSmartPointer<vtkRenderer> vtk_renderer;
+    vtkRenderWindowInteractor * vtk_interactor;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;

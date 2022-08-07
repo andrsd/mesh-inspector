@@ -20,6 +20,25 @@ find_package(Qt5 REQUIRED
         Widgets
 )
 
+find_package(VTK
+    COMPONENTS
+        CommonCore
+        GUISupportQt
+        InteractionStyle
+        RenderingContextOpenGL2
+        RenderingCore
+        RenderingFreeType
+        RenderingGL2PSOpenGL2
+        RenderingOpenGL2
+        RenderingQt
+)
+if(NOT VTK_FOUND)
+    message(FATAL_ERROR "Unable to find the VTK build folder.")
+endif()
+if(NOT(TARGET VTK::GUISupportQt))
+    message(FATAL_ERROR "VTK not built with Qt support.")
+endif()
+
 add_subdirectory(common)
 
 add_executable(
@@ -35,6 +54,7 @@ target_include_directories(
     PRIVATE
         common
         ${CMAKE_BUILD_DIR}
+        ${VTK_DIR}/include
 )
 
 target_link_libraries(
@@ -44,6 +64,7 @@ target_link_libraries(
         Qt5::Gui
         Qt5::Widgets
         common
+        ${VTK_LIBRARIES}
 )
 
 set_target_properties(
