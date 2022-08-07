@@ -18,6 +18,8 @@
 #include "QVTKOpenGLNativeWidget.h"
 #include "vtkGenericOpenGLRenderWindow.h"
 #include "vtkRenderer.h"
+#include "vtkAxesActor.h"
+#include "vtkOrientationMarkerWidget.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "common/reader.h"
@@ -58,6 +60,7 @@ MainWindow::MainWindow(QWidget * parent) :
     view_mode(nullptr),
     vtk_widget(nullptr),
     vtk_interactor(nullptr),
+    ori_marker(nullptr),
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
@@ -186,7 +189,10 @@ MainWindow::setupViewModeWidget(QMainWindow * wnd)
     // this->hidden_edges_removed_action.triggered.connect(self.onHiddenEdgesRemovedTriggered);
     // this->transluent_action.triggered.connect(self.onTransluentTriggered);
     // this->perspective_action.toggled.connect(self.onPerspectiveToggled);
-    // this->ori_marker_action.toggled.connect(self.onOrientationMarkerVisibilityChanged);
+    connect(this->ori_marker_action,
+            SIGNAL(toggled(bool)),
+            this,
+            SLOT(onOrientationMarkerVisibilityChanged(bool)));
 
     this->view_mode = new QPushButton(wnd);
     this->view_mode->setFixedSize(60, 32);
@@ -352,6 +358,14 @@ MainWindow::loadFile(const QString & file_name)
 void
 MainWindow::setupOrientationMarker()
 {
+    vtkAxesActor * axes = vtkAxesActor::New();
+    this->ori_marker = vtkOrientationMarkerWidget::New();
+    this->ori_marker->SetDefaultRenderer(this->vtk_renderer);
+    this->ori_marker->SetOrientationMarker(axes);
+    this->ori_marker->SetViewport(0.8, 0, 1.0, 0.2);
+    this->ori_marker->SetInteractor(this->vtk_interactor);
+    this->ori_marker->SetEnabled(true);
+    this->ori_marker->SetInteractive(false);
 }
 
 void
@@ -575,8 +589,12 @@ MainWindow::onCubeAxisVisibilityChanged()
 }
 
 void
-MainWindow::onOrientationMarkerVisibilityChanged()
+MainWindow::onOrientationMarkerVisibilityChanged(bool visible)
 {
+    if (visible)
+        this->ori_marker->EnabledOn();
+    else
+        this->ori_marker->EnabledOff();
 }
 
 void

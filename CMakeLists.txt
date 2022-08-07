@@ -25,6 +25,7 @@ find_package(VTK
         CommonCore
         GUISupportQt
         InteractionStyle
+        RenderingAnnotation
         RenderingContextOpenGL2
         RenderingCore
         RenderingFreeType

@@ -21,6 +21,7 @@ class AboutDialog;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
+class vtkOrientationMarkerWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -127,7 +128,7 @@ public slots:
     void onSidesetVisibilityChanged();
     void onNodesetVisibilityChanged();
     void onCubeAxisVisibilityChanged();
-    void onOrientationMarkerVisibilityChanged();
+    void onOrientationMarkerVisibilityChanged(bool visible);
     void onOpenFile();
     void onOpenRecentFile();
     void onClearRecentFiles();
@@ -179,6 +180,7 @@ protected:
     vtkSmartPointer<vtkGenericOpenGLRenderWindow> vtk_render_window;
     vtkSmartPointer<vtkRenderer> vtk_renderer;
     vtkRenderWindowInteractor * vtk_interactor;
+    vtkOrientationMarkerWidget * ori_marker;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
