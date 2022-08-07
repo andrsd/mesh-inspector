@@ -12,6 +12,7 @@ add_library(
     ${PROJECT_NAME}
     SHARED
         clickablelabel.cpp
+        expandablewidget.cpp
         hline.cpp
         loadfileevent.cpp
         notificationwidget.cpp
