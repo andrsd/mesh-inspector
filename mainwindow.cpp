@@ -28,6 +28,8 @@
 #include "reader.h"
 #include "exodusiireader.h"
 
+static const int MAX_RECENT_FILES = 10;
+
 // Main window - Load thread
 
 MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reader(nullptr)
@@ -546,12 +548,14 @@ MainWindow::buildRecentFilesMenu()
     assert(this->recent_menu != nullptr);
     this->recent_menu->clear();
     if (this->recent_files.length() > 0) {
-        // for f in reversed(self.recent_files):
-        //     unused_path, file_name = os.path.split(f);
-        //     action = self._recent_menu.addAction(file_name,
-        //                                          self.onOpenRecentFile);
-        //     action.setData(f);
-        // this->recent_menu->addSeparator();
+        for (auto it = this->recent_files.rbegin(); it != this->recent_files.rend(); ++it) {
+            QString f = *it;
+            QFileInfo fi(f);
+            auto * action =
+                this->recent_menu->addAction(fi.fileName(), this, SLOT(onOpenRecentFile()));
+            action->setData(f);
+        }
+        this->recent_menu->addSeparator();
     }
     this->clear_recent_file =
         this->recent_menu->addAction("Clear Menu", this, SLOT(onClearRecentFiles()));
@@ -560,6 +564,15 @@ MainWindow::buildRecentFilesMenu()
 void
 MainWindow::addToRecentFiles(const QString & file_name)
 {
+    QStringList rf_list;
+    for (auto & f : this->recent_files) {
+        if (f.compare(file_name) != 0)
+            rf_list.append(f);
+    }
+    rf_list.append(file_name);
+    if (rf_list.length() > MAX_RECENT_FILES)
+        rf_list.removeFirst();
+    this->recent_files = rf_list;
 }
 
 bool
@@ -636,6 +649,7 @@ MainWindow::onLoadFinished()
     this->file_name = QString(reader->getFileName().c_str());
     updateWindowTitle();
     addToRecentFiles(this->file_name);
+    buildRecentFilesMenu();
     this->file_watcher->addPath(this->file_name);
     // this->file_changed_notification->setFileName(this->file_name);
 
@@ -643,7 +657,7 @@ MainWindow::onLoadFinished()
     // self._setSelectionProperties(self._selection)
     // self._vtk_renderer.AddActor(self._selection.getActor())
 
-    this->progress->hide();
+    // this->progress->hide();
     delete this->progress;
     this->progress = nullptr;
 
@@ -711,11 +725,18 @@ MainWindow::onOpenFile()
 void
 MainWindow::onOpenRecentFile()
 {
+    QAction * action = dynamic_cast<QAction *>(this->sender());
+    if (action != nullptr) {
+        auto file_name = action->data();
+        loadFile(file_name.toString());
+    }
 }
 
 void
 MainWindow::onClearRecentFiles()
 {
+    this->recent_files = QStringList();
+    buildRecentFilesMenu();
 }
 
 void
