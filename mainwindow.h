@@ -85,7 +85,7 @@ protected:
     void setupCubeAxesActor();
 
     int getRenderWindowWidth() const;
-    bool checkFileExists(const QString & file_name) const;
+    bool checkFileExists(const QString & file_name);
     void addBlocks();
     void addSideSets();
     void addNodeSets();

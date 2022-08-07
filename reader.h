@@ -1,27 +1,42 @@
 #pragma once
 
-#include <QString>
+#include <string>
+#include <vector>
+#include "vtkAlgorithmOutput.h"
 
 /// Base class for file readers
 ///
 class Reader {
 public:
-    Reader(const QString & file_name);
+    struct BlockInformation {
+        std::string name;
+        int object_type;
+        int object_index;
+        int number;
+        int multiblock_index;
+    };
+
+    struct VariableInformation {
+        std::string name;
+        int object_type;
+        int num_components;
+    };
+
+public:
+    Reader(const std::string & file_name);
     virtual ~Reader();
 
     virtual void load() = 0;
 
-    // virtual getVtkOutputPort() const = 0;
+    virtual vtkAlgorithmOutput * getVtkOutputPort() = 0;
 
-    // virtual getBlocks() const = 0;
+    virtual std::vector<BlockInformation> getBlocks() = 0;
 
-    // virtual A getSideSets() const = 0;
+    virtual std::vector<BlockInformation> getSideSets() = 0;
 
-    // virtual A getNodeSets() const = 0;
+    virtual std::vector<BlockInformation> getNodeSets() = 0;
 
-    const QString & getFileName() const;
-
-    // virtual A getVariableInfo() const = 0;
+    const std::string & getFileName() const;
 
     virtual std::size_t getTotalNumberOfElements() const = 0;
 
@@ -30,5 +45,5 @@ public:
     virtual int getDimensionality() const = 0;
 
 protected:
-    QString file_name;
+    std::string file_name;
 };

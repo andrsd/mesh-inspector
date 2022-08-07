@@ -33,7 +33,7 @@
 MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reader(nullptr)
 {
     if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
-        this->reader = new ExodusIIReader(file_name);
+        this->reader = new ExodusIIReader(file_name.toStdString());
     else
         this->reader = nullptr;
 }
@@ -383,9 +383,9 @@ MainWindow::loadFile(const QString & file_name)
     QFileInfo fi(file_name);
     this->progress =
         new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
-    this->progress->setWindowModality(Qt::WindowModal);
-    this->progress->setMinimumDuration(0);
-    this->progress->show();
+    // this->progress->setWindowModality(Qt::WindowModal);
+    // this->progress->setMinimumDuration(0);
+    // this->progress->show();
 
     this->load_thread = new LoadThread(file_name);
     connect(this->load_thread, SIGNAL(finished()), this, SLOT(onLoadFinished()));
@@ -418,9 +418,16 @@ MainWindow::getRenderWindowWidth() const
 }
 
 bool
-MainWindow::checkFileExists(const QString & file_name) const
+MainWindow::checkFileExists(const QString & file_name)
 {
-    return false;
+    QFileInfo fi(file_name);
+    if (fi.exists())
+        return true;
+    else {
+        auto base_file = fi.fileName();
+        showNotification(QString("Unable to open '%1': File does not exist.").arg(base_file));
+        return false;
+    }
 }
 
 void
@@ -626,7 +633,7 @@ MainWindow::onLoadFinished()
     // self.fileLoaded.emit(params)
     // self.boundsChanged.emit(bnds)
 
-    this->file_name = reader->getFileName();
+    this->file_name = QString(reader->getFileName().c_str());
     updateWindowTitle();
     addToRecentFiles(this->file_name);
     this->file_watcher->addPath(this->file_name);
