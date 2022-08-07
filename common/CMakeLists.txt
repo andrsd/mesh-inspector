@@ -14,6 +14,7 @@ add_library(
         clickablelabel.cpp
         hline.cpp
         loadfileevent.cpp
+        notificationwidget.cpp
         sliderwithedit.cpp
 )
 

@@ -31,6 +31,7 @@
 #include "reader.h"
 #include "exodusiireader.h"
 #include "common/loadfileevent.h"
+#include "common/notificationwidget.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -66,6 +67,7 @@ MainWindow::MainWindow(QWidget * parent) :
     progress(nullptr),
     file_name(),
     file_watcher(new QFileSystemWatcher()),
+    notification(nullptr),
     render_mode(SHADED_WITH_EDGES),
     select_mode(MODE_SELECT_NONE),
     color_profile_id(COLOR_PROFILE_DEFAULT),
@@ -163,6 +165,16 @@ MainWindow::setupWidgets()
     addDockWidget(Qt::RightDockWidgetArea, this->info_dock);
 
     setupViewModeWidget(this);
+    setupFileChangedNotificationWidget();
+    setupNotificationWidget();
+    // this->selected_mesh_ent_info = SelectedMeshEntityInfoWidget(self)
+    // this->selected_mesh_ent_info.setVisible(False)
+
+    // this->deselect_sc = QtWidgets.QShortcut(
+    //     QtGui.QKeySequence(QtCore.Qt.Key_Space), self)
+    // this->deselect_sc.activated.connect(self.onDeselect)
+
+    setupExplodeWidgets();
 }
 
 void
@@ -233,6 +245,8 @@ MainWindow::setupViewModeWidget(QMainWindow * wnd)
 void
 MainWindow::setupNotificationWidget()
 {
+    this->notification = new NotificationWidget();
+    this->notification->setVisible(false);
 }
 
 void
@@ -490,6 +504,18 @@ MainWindow::setSelectionProperties()
 void
 MainWindow::showNotification(const QString & text, int ms)
 {
+    this->notification->setText(text);
+    this->notification->adjustSize();
+    auto width = geometry().width();
+    auto left = (width - this->notification->width()) / 2;
+    // top = 10
+    auto top = height() - this->notification->height() - 10;
+    this->notification->setGeometry(left,
+                                    top,
+                                    this->notification->width(),
+                                    this->notification->height());
+    this->notification->setGraphicsEffect(nullptr);
+    // this->notification->show(ms);
 }
 
 void
@@ -584,13 +610,17 @@ MainWindow::event(QEvent * event)
 {
     if (event->type() == QEvent::WindowActivate)
         this->updateMenuBar();
-    else if (event->type() == LoadFileEvent::type) {
-        auto * e = dynamic_cast<LoadFileEvent *>(event);
-        loadFile(e->fileName());
-        return true;
-    }
 
     return QMainWindow::event(event);
+}
+
+void
+MainWindow::customEvent(QEvent * event)
+{
+    if (event->type() == LoadFileEvent::type) {
+        auto * e = dynamic_cast<LoadFileEvent *>(event);
+        loadFile(e->fileName());
+    }
 }
 
 void

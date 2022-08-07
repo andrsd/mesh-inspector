@@ -17,6 +17,7 @@ class QVTKOpenGLNativeWidget;
 class QDockWidget;
 class InfoWindow;
 class AboutDialog;
+class NotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
@@ -114,6 +115,7 @@ protected:
     void addToRecentFiles(const QString & file_name);
 
     virtual bool event(QEvent * event);
+    virtual void customEvent(QEvent * event);
     virtual void resizeEvent(QResizeEvent * event);
     virtual void dragEnterEvent(QDragEnterEvent * event);
     virtual void dropEvent(QDropEvent * event);
@@ -165,6 +167,7 @@ protected:
     QString file_name;
     QTimer update_timer;
     QFileSystemWatcher * file_watcher;
+    NotificationWidget * notification;
     ERenderMode render_mode;
     EModeSelect select_mode;
     EColorProfile color_profile_id;
