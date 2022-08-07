@@ -294,9 +294,8 @@ void
 MainWindow::setupColorProfileMenu(QMenu * menu)
 {
     this->color_profile_action_group = new QActionGroup(this);
-    this->color_profile_id = {
-        this->settings->value("color_profile", COLOR_PROFILE_DEFAULT).toInt()
-    };
+    this->color_profile_id = static_cast<EColorProfile>(
+        this->settings->value("color_profile", COLOR_PROFILE_DEFAULT).toInt());
     // TODO: fill in color profile
     connect(this->color_profile_action_group,
             SIGNAL(triggered(QAction *)),
@@ -309,7 +308,8 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
 {
     QMenu * select_menu = menu->addMenu("Select mode");
     this->mode_select_action_group = new QActionGroup(this);
-    this->select_mode = { this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt() };
+    this->select_mode = static_cast<EModeSelect>(
+        this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt());
     // TODO: fill in selection modes
     connect(this->mode_select_action_group,
             SIGNAL(triggered(QAction *)),

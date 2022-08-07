@@ -45,14 +45,14 @@ protected:
         TRANSLUENT = 3
     };
 
-    enum EModeSelect : int {
+    enum EModeSelect {
         MODE_SELECT_NONE = 0,
         MODE_SELECT_BLOCKS = 1,
         MODE_SELECT_CELLS = 2,
         MODE_SELECT_POINTS = 3
     };
 
-    enum EColorProfile : int {
+    enum EColorProfile {
         COLOR_PROFILE_DEFAULT = 0,
         COLOR_PROFILE_LIGHT = 1,
         COLOR_PROFILE_DARK = 2
