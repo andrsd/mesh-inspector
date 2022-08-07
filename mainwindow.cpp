@@ -15,6 +15,9 @@
 #include <QtDebug>
 #include <QDockWidget>
 #include <QApplication>
+#include <QFileDialog>
+#include <QProgressDialog>
+#include <QVector3D>
 #include "QVTKOpenGLNativeWidget.h"
 #include "vtkGenericOpenGLRenderWindow.h"
 #include "vtkRenderer.h"
@@ -366,6 +369,20 @@ MainWindow::clear()
 void
 MainWindow::loadFile(const QString & file_name)
 {
+    this->clear();
+    if (!this->checkFileExists(file_name))
+        return;
+
+    QFileInfo fi(file_name);
+    this->progress =
+        new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
+    this->progress->setWindowModality(Qt::WindowModal);
+    this->progress->setMinimumDuration(0);
+    this->progress->show();
+
+    this->load_thread = new LoadThread(file_name);
+    connect(this->load_thread, SIGNAL(finished()), this, SLOT(onLoadFinished()));
+    this->load_thread->start(QThread::IdlePriority);
 }
 
 void
@@ -574,6 +591,61 @@ MainWindow::onClose()
 void
 MainWindow::onLoadFinished()
 {
+    Reader * reader = this->load_thread->getReader();
+
+    addBlocks();
+    addSideSets();
+    addNodeSets();
+
+    // auto gmin = QVector3D(float('inf'), float('inf'), float('inf'));
+    // auto gmax = QVector3D(float('-inf'), float('-inf'), float('-inf'));
+    // for block in self._blocks.values():
+    //     bmin, bmax = block.bounds
+    //     gmin = common.point_min(bmin, gmin)
+    //     gmax = common.point_max(bmax, gmax)
+    // bnds = [gmin.x(), gmax.x(), gmin.y(), gmax.y(), gmin.z(), gmax.z()]
+
+    // self._com = common.centerOfBounds(bnds)
+    // self._cube_axes_actor.SetBounds(*bnds)
+    // self._vtk_renderer.AddViewProp(self._cube_axes_actor)
+
+    // params = {
+    //     'blocks': reader.getBlocks(),
+    //     'sidesets': reader.getSideSets(),
+    //     'nodesets': reader.getNodeSets(),
+    //     'total_elems': reader.getTotalNumberOfElements(),
+    //     'total_nodes': reader.getTotalNumberOfNodes()
+    // }
+    // self.fileLoaded.emit(params)
+    // self.boundsChanged.emit(bnds)
+
+    this->file_name = reader->getFileName();
+    updateWindowTitle();
+    addToRecentFiles(this->file_name);
+    this->file_watcher->addPath(this->file_name);
+    // this->file_changed_notification->setFileName(this->file_name);
+
+    // self._selection = Selection(self._geometry.GetOutput())
+    // self._setSelectionProperties(self._selection)
+    // self._vtk_renderer.AddActor(self._selection.getActor())
+
+    this->progress->hide();
+    delete this->progress;
+    this->progress = nullptr;
+
+    this->updateMenuBar();
+
+    // if reader.getDimensionality() == 3:
+    //     style = OtterInteractorStyle3D(self)
+    // else:
+    //     style = OtterInteractorStyle2D(self)
+    // self._vtk_interactor.SetInteractorStyle(style)
+
+    // camera = self._vtk_renderer.GetActiveCamera()
+    // focal_point = camera.GetFocalPoint()
+    // camera.SetPosition(focal_point[0], focal_point[1], 1)
+    // camera.SetRoll(0)
+    // self._vtk_renderer.ResetCamera()
 }
 
 void
@@ -613,6 +685,13 @@ MainWindow::onOrientationMarkerVisibilityChanged(bool visible)
 void
 MainWindow::onOpenFile()
 {
+    QString file_name = QFileDialog::getOpenFileName(this,
+                                                     "Open File",
+                                                     "",
+                                                     "ExodusII files (*.e *.exo);;"
+                                                     "VTK Unstructured Grid files (*.vtk)");
+    if (!file_name.isNull())
+        this->loadFile(file_name);
 }
 
 void
@@ -628,6 +707,11 @@ MainWindow::onClearRecentFiles()
 void
 MainWindow::onNewFile()
 {
+    this->clear();
+    // emit fileLoaded(None);
+    // emit boundsChanged([]);
+    this->file_name = QString();
+    this->updateWindowTitle();
 }
 
 void
