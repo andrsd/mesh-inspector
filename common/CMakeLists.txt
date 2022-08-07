@@ -12,6 +12,7 @@ add_library(
     ${PROJECT_NAME}
     SHARED
         clickablelabel.cpp
+        hline.cpp
 )
 
 target_link_libraries(
