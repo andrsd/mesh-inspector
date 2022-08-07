@@ -3,7 +3,6 @@
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
-#include "vtkSmartPointer.h"
 
 class Reader;
 class QSettings;
@@ -169,7 +168,6 @@ protected:
     ERenderMode render_mode;
     EModeSelect select_mode;
     EColorProfile color_profile_id;
-    // vtk_interactor;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     QStringList recent_files;
@@ -177,8 +175,8 @@ protected:
     QMenu * view_menu;
     QPushButton * view_mode;
     QVTKOpenGLNativeWidget * vtk_widget;
-    vtkSmartPointer<vtkGenericOpenGLRenderWindow> vtk_render_window;
-    vtkSmartPointer<vtkRenderer> vtk_renderer;
+    vtkGenericOpenGLRenderWindow * vtk_render_window;
+    vtkRenderer * vtk_renderer;
     vtkRenderWindowInteractor * vtk_interactor;
     vtkOrientationMarkerWidget * ori_marker;
     QDockWidget * info_dock;

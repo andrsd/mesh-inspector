@@ -59,6 +59,8 @@ MainWindow::MainWindow(QWidget * parent) :
     view_menu(nullptr),
     view_mode(nullptr),
     vtk_widget(nullptr),
+    vtk_render_window(nullptr),
+    vtk_renderer(nullptr),
     vtk_interactor(nullptr),
     ori_marker(nullptr),
     info_dock(nullptr),
@@ -129,10 +131,10 @@ MainWindow::setupWidgets()
     this->vtk_widget = new QVTKOpenGLNativeWidget();
     setCentralWidget(this->vtk_widget);
 
-    this->vtk_render_window = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+    this->vtk_render_window = vtkGenericOpenGLRenderWindow::New();
     this->vtk_widget->setRenderWindow(this->vtk_render_window);
 
-    this->vtk_renderer = vtkSmartPointer<vtkRenderer>::New();
+    this->vtk_renderer = vtkRenderer::New();
     this->vtk_render_window->AddRenderer(this->vtk_renderer);
 
     this->info_window = new InfoWindow(this);
