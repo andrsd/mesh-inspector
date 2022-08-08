@@ -30,11 +30,14 @@ signals:
     void blockSelectionChanged(int block_number);
     void sideSetVisibilityChanged(int sideset_id, bool visible);
     void sideSetSelectionChanged(int sideset_id);
+    void nodeSetVisibilityChanged(int nodeset_id, bool visible);
+    void nodeSetSelectionChanged(int nodeset_id);
     void dimensionsStateChanged(bool visible);
 
 public slots:
     void onBlockAdded(int id, const QString & name);
     void onSideSetAdded(int id, const QString & name);
+    void onNodeSetAdded(int id, const QString & name);
 
 protected slots:
     void onBlockChanged(QStandardItem * item);
@@ -45,6 +48,10 @@ protected slots:
 
     void onSideSetChanged(QStandardItem * item);
     void onSideSetSelectionChanged(const QItemSelection & selected,
+                                   const QItemSelection & deselected);
+
+    void onNodeSetChanged(QStandardItem * item);
+    void onNodeSetSelectionChanged(const QItemSelection & selected,
                                    const QItemSelection & deselected);
 
     void onDimensionsStateChanged(int state);

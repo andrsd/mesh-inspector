@@ -27,6 +27,7 @@ class vtkCompositeDataGeometryFilter;
 class vtkCubeAxesActor;
 class BlockObject;
 class SideSetObject;
+class NodeSetObject;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -71,6 +72,7 @@ public:
 signals:
     void blockAdded(int id, const QString & name);
     void sideSetAdded(int id, const QString & name);
+    void nodeSetAdded(int id, const QString & name);
 
 protected:
     void setupWidgets();
@@ -101,12 +103,12 @@ protected:
     void addNodeSets();
     BlockObject * getBlock(int block_id);
     SideSetObject * getSideSet(int sideset_id);
-    // A getNodeSet(nodeset_id);
+    NodeSetObject * getNodeSet(int nodeset_id);
     void setSelectedBlockProperties(BlockObject * block);
     void setDeselectedBlockProperties(BlockObject * block);
     void setBlockProperties(BlockObject * block, bool selected = false);
     void setSideSetProperties(SideSetObject * sideset);
-    void setNodeSetProperties();
+    void setNodeSetProperties(NodeSetObject * nodeset);
     void setSelectionProperties();
     void showNotification(const QString & text, int ms = 5000);
     void showFileChangedNotification();
@@ -136,7 +138,7 @@ public slots:
     void onBlockVisibilityChanged(int block_id, bool visible);
     void onBlockColorChanged(int block_id, QColor color);
     void onSideSetVisibilityChanged(int sideset_id, bool visible);
-    void onNodesetVisibilityChanged();
+    void onNodeSetVisibilityChanged(int nodeset_id, bool visible);
     void onCubeAxisVisibilityChanged(bool visible);
     void onOrientationMarkerVisibilityChanged(bool visible);
     void onOpenFile();
@@ -153,7 +155,7 @@ public slots:
     void onReloadFile();
     void onBlockSelectionChanged(int block_id);
     void onSideSetSelectionChanged(int sideset_id);
-    void onNodesetSelectionChanged();
+    void onNodeSetSelectionChanged(int nodeset_id);
     void onClicked(const QPoint & pt);
     void onViewInfoWindow();
     void onSelectModeTriggered(QAction * action);
@@ -221,6 +223,7 @@ protected:
     std::map<int, BlockObject *> blocks;
     BlockObject * selected_block;
     std::map<int, SideSetObject *> side_sets;
+    std::map<int, NodeSetObject *> node_sets;
 
 protected:
     static QColor SIDESET_CLR;

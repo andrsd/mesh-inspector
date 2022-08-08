@@ -54,6 +54,7 @@ add_executable(
         main.cpp
         mainwindow.cpp
         meshobject.cpp
+        nodesetobject.cpp
         reader.cpp
         sidesetobject.cpp
 )

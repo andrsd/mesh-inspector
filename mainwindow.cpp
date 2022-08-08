@@ -35,6 +35,7 @@
 #include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
+#include "nodesetobject.h"
 #include "exodusiireader.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
@@ -418,6 +419,19 @@ MainWindow::connectSignals()
             this,
             SLOT(onSideSetSelectionChanged(int)));
 
+    connect(this,
+            SIGNAL(nodeSetAdded(int, const QString &)),
+            this->info_window,
+            SLOT(onNodeSetAdded(int, const QString &)));
+    connect(this->info_window,
+            SIGNAL(nodeSetVisibilityChanged(int, bool)),
+            this,
+            SLOT(onNodeSetVisibilityChanged(int, bool)));
+    connect(this->info_window,
+            SIGNAL(nodeSetSelectionChanged(int)),
+            this,
+            SLOT(onNodeSetSelectionChanged(int)));
+
     connect(this->info_window,
             SIGNAL(dimensionsStateChanged(bool)),
             this,
@@ -448,6 +462,10 @@ MainWindow::clear()
     for (auto & it : this->side_sets)
         delete it.second;
     this->side_sets.clear();
+
+    for (auto & it : this->node_sets)
+        delete it.second;
+    this->node_sets.clear();
 }
 
 void
@@ -558,6 +576,21 @@ MainWindow::addSideSets()
 void
 MainWindow::addNodeSets()
 {
+    auto * reader = this->load_thread->getReader();
+
+    for (auto & ninfo : reader->getNodeSets()) {
+        auto * eb = vtkExtractBlock::New();
+        eb->SetInputConnection(reader->getVtkOutputPort());
+        eb->AddIndex(ninfo.multiblock_index);
+        eb->Update();
+
+        auto * nodeset = new NodeSetObject(eb);
+        this->node_sets[ninfo.number] = nodeset;
+        this->setNodeSetProperties(nodeset);
+        this->vtk_renderer->AddViewProp(nodeset->getActor());
+
+        emit nodeSetAdded(ninfo.number, QString::fromStdString(ninfo.name));
+    }
 }
 
 BlockObject *
@@ -575,6 +608,16 @@ MainWindow::getSideSet(int sideset_id)
 {
     const auto & it = this->side_sets.find(sideset_id);
     if (it != this->side_sets.end())
+        return it->second;
+    else
+        return nullptr;
+}
+
+NodeSetObject *
+MainWindow::getNodeSet(int nodeset_id)
+{
+    const auto & it = this->node_sets.find(nodeset_id);
+    if (it != this->node_sets.end())
         return it->second;
     else
         return nullptr;
@@ -672,8 +715,18 @@ MainWindow::setSideSetProperties(SideSetObject * sideset)
 }
 
 void
-MainWindow::setNodeSetProperties()
+MainWindow::setNodeSetProperties(NodeSetObject * nodeset)
 {
+    auto * property = nodeset->getProperty();
+    property->SetRepresentationToPoints();
+    property->SetRenderPointsAsSpheres(true);
+    property->SetVertexVisibility(true);
+    property->SetEdgeVisibility(false);
+    property->SetPointSize(10);
+    property->SetColor(NODESET_CLR.redF(), NODESET_CLR.greenF(), NODESET_CLR.blueF());
+    property->SetOpacity(1);
+    property->SetAmbient(1);
+    property->SetDiffuse(0);
 }
 
 void
@@ -959,8 +1012,11 @@ MainWindow::onSideSetVisibilityChanged(int sideset_id, bool visible)
 }
 
 void
-MainWindow::onNodesetVisibilityChanged()
+MainWindow::onNodeSetVisibilityChanged(int nodeset_id, bool visible)
 {
+    auto * nodeset = getNodeSet(nodeset_id);
+    if (nodeset)
+        nodeset->setVisible(visible);
 }
 
 void
@@ -1092,8 +1148,16 @@ MainWindow::onSideSetSelectionChanged(int sideset_id)
 }
 
 void
-MainWindow::onNodesetSelectionChanged()
+MainWindow::onNodeSetSelectionChanged(int nodeset_id)
 {
+    const auto & it = this->node_sets.find(nodeset_id);
+    if (it != this->node_sets.end()) {
+        auto * nodeset = it->second;
+        // this->selected_mesh_ent_info->setNodesetInfo(sideset_id, sideset->info);
+        showSelectedMeshEntity();
+    }
+    else
+        hideSelectedMeshEntity();
 }
 
 void

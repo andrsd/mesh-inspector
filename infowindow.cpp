@@ -146,7 +146,10 @@ InfoWindow::setupNodesetsWidgets()
 {
     this->nodeset_model = new QStandardItemModel();
     this->nodeset_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    // this->nodeset_model.itemChanged.connect(self.onNodesetChanged)
+    connect(this->nodeset_model,
+            SIGNAL(itemChanged(QStandardItem *)),
+            this,
+            SLOT(onNodeSetChanged(QStandardItem *)));
 
     this->nodesets = new OTreeView();
     this->nodesets->setFixedHeight(150);
@@ -157,7 +160,10 @@ InfoWindow::setupNodesetsWidgets()
     this->nodesets->setColumnWidth(2, 40);
     this->nodesets->hideColumn(IDX_COLOR);
     auto * sel_model = this->nodesets->selectionModel();
-    // sel_model->selectionChanged.connect(self.onNodesetSelectionChanged)
+    connect(sel_model,
+            SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+            this,
+            SLOT(onNodeSetSelectionChanged(const QItemSelection &, const QItemSelection &)));
 
     this->nodesets_expd = new ExpandableWidget("Node sets");
     this->nodesets_expd->setWidget(this->nodesets);
@@ -419,4 +425,48 @@ InfoWindow::onSideSetSelectionChanged(const QItemSelection & selected,
     }
     else
         emit sideSetSelectionChanged(-1);
+}
+
+void
+InfoWindow::onNodeSetAdded(int id, const QString & name)
+{
+    auto row = this->nodeset_model->rowCount();
+
+    auto * si_name = new QStandardItem();
+    si_name->setText(name);
+    si_name->setCheckable(true);
+    si_name->setData(id);
+    this->nodeset_model->setItem(row, IDX_NAME, si_name);
+
+    auto * si_id = new QStandardItem();
+    si_id->setText(QString::number(id));
+    this->nodeset_model->setItem(row, IDX_ID, si_id);
+
+    this->nodesets_expd->setNumberOfItems(this->nodeset_model->rowCount());
+}
+
+void
+InfoWindow::onNodeSetChanged(QStandardItem * item)
+{
+    if (item->column() == IDX_NAME) {
+        bool visible = item->checkState() == Qt::Checked;
+        auto nodeset_id = item->data().toInt();
+        emit nodeSetVisibilityChanged(nodeset_id, visible);
+    }
+}
+
+void
+InfoWindow::onNodeSetSelectionChanged(const QItemSelection & selected,
+                                      const QItemSelection & deselected)
+{
+    if (selected.indexes().length() > 0) {
+        this->blocks->clearSelection();
+        this->sidesets->clearSelection();
+        auto index = selected.indexes()[0];
+        auto * item = this->nodeset_model->itemFromIndex(index);
+        auto sideset_id = item->data().toInt();
+        emit nodeSetSelectionChanged(sideset_id);
+    }
+    else
+        emit nodeSetSelectionChanged(-1);
 }
