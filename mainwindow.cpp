@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "meshinspectorconfig.h"
 #include <QLabel>
 #include <QMenuBar>
 #include <QMenu>
@@ -379,10 +380,10 @@ void
 MainWindow::updateWindowTitle()
 {
     if (this->file_name.isEmpty())
-        setWindowTitle("Mesh Inspector");
+        setWindowTitle(MESH_INSPECTOR_APP_NAME);
     else {
         QFileInfo fi(this->file_name);
-        QString title = QString("Mesh Inspector \u2014 %1").arg(fi.fileName());
+        QString title = QString("%1 \u2014 %2").arg(MESH_INSPECTOR_APP_NAME).arg(fi.fileName());
         setWindowTitle(title);
     }
 }
