@@ -515,7 +515,9 @@ MainWindow::setupCubeAxesActor()
 int
 MainWindow::getRenderWindowWidth() const
 {
-    int info_width = this->info_dock->geometry().width();
+    int info_width = 0;
+    if (this->info_dock->isVisible())
+        info_width = this->info_dock->geometry().width();
     return this->geometry().width() - info_width;
 }
 
@@ -1216,6 +1218,12 @@ MainWindow::onClicked(const QPoint & pt)
 void
 MainWindow::onViewInfoWindow()
 {
+    if (this->info_dock->isVisible())
+        this->info_dock->hide();
+    else
+        this->info_dock->show();
+    this->updateMenuBar();
+    this->updateViewModeLocation();
 }
 
 void
