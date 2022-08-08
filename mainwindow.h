@@ -152,7 +152,7 @@ public slots:
     void onTransluentTriggered(bool checked);
     void onPerspectiveToggled(bool checked);
     void onUpdateWindow();
-    void onFileChanged();
+    void onFileChanged(const QString & path);
     void onReloadFile();
     void onBlockSelectionChanged(int block_id);
     void onSideSetSelectionChanged(int sideset_id);

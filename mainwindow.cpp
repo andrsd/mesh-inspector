@@ -438,6 +438,11 @@ MainWindow::connectSignals()
             SIGNAL(dimensionsStateChanged(bool)),
             this,
             SLOT(onCubeAxisVisibilityChanged(bool)));
+
+    connect(this->file_watcher,
+            SIGNAL(fileChanged(const QString &)),
+            this,
+            SLOT(onFileChanged(const QString &)));
 }
 
 void
@@ -470,6 +475,10 @@ MainWindow::clear()
     this->node_sets.clear();
 
     this->vtk_renderer->RemoveAllViewProps();
+
+    auto watched_files = this->file_watcher->files();
+    for (auto & file : watched_files)
+        this->file_watcher->removePath(file);
 }
 
 void
@@ -1160,8 +1169,11 @@ MainWindow::onUpdateWindow()
 }
 
 void
-MainWindow::onFileChanged()
+MainWindow::onFileChanged(const QString & path)
 {
+    if (!this->file_watcher->files().contains(path))
+        this->file_watcher->addPath(path);
+    showFileChangedNotification();
 }
 
 void
