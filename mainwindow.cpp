@@ -1075,21 +1075,65 @@ MainWindow::onNewFile()
 void
 MainWindow::onShadedTriggered(bool checked)
 {
+    this->render_mode = SHADED;
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        bool selected = this->selected_block == block;
+        setBlockProperties(block, selected);
+        block->setSilhouetteVisible(false);
+    }
+    for (auto & it : this->side_sets) {
+        auto * sideset = it.second;
+        setSideSetProperties(sideset);
+    }
 }
 
 void
 MainWindow::onShadedWithEdgesTriggered(bool checked)
 {
+    this->render_mode = SHADED_WITH_EDGES;
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        bool selected = this->selected_block == block;
+        setBlockProperties(block, selected);
+        block->setSilhouetteVisible(false);
+    }
+    for (auto & it : this->side_sets) {
+        auto * sideset = it.second;
+        setSideSetProperties(sideset);
+    }
 }
 
 void
 MainWindow::onHiddenEdgesRemovedTriggered(bool checked)
 {
+    this->render_mode = HIDDEN_EDGES_REMOVED;
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        bool selected = this->selected_block == block;
+        setBlockProperties(block, selected);
+        block->setSilhouetteVisible(block->visible());
+    }
+    for (auto & it : this->side_sets) {
+        auto * sideset = it.second;
+        setSideSetProperties(sideset);
+    }
 }
 
 void
 MainWindow::onTransluentTriggered(bool checked)
 {
+    this->render_mode = TRANSLUENT;
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        bool selected = this->selected_block == block;
+        setBlockProperties(block, selected);
+        block->setSilhouetteVisible(block->visible());
+    }
+    for (auto & it : this->side_sets) {
+        auto * sideset = it.second;
+        setSideSetProperties(sideset);
+    }
 }
 
 void
