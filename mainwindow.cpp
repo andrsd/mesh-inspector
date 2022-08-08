@@ -26,14 +26,26 @@
 #include "vtkRenderer.h"
 #include "vtkAxesActor.h"
 #include "vtkOrientationMarkerWidget.h"
+#include "vtkExtractBlock.h"
+#include "vtkProperty.h"
+#include "vtkCamera.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "reader.h"
+#include "blockobject.h"
 #include "exodusiireader.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 
 static const int MAX_RECENT_FILES = 10;
+
+QColor MainWindow::SIDESET_CLR = QColor(255, 173, 79);
+QColor MainWindow::SIDESET_EDGE_CLR = QColor(26, 26, 102);
+QColor MainWindow::NODESET_CLR = QColor(168, 91, 2);
+QColor MainWindow::SELECTION_CLR = QColor(255, 173, 79);
+QColor MainWindow::SELECTION_EDGE_CLR = QColor(179, 95, 0);
+
+int MainWindow::SIDESET_EDGE_WIDTH = 5;
 
 // Main window - Load thread
 
@@ -391,6 +403,9 @@ MainWindow::setupVtk()
 void
 MainWindow::clear()
 {
+    for (auto & it : this->blocks)
+        delete it.second;
+    this->blocks.clear();
 }
 
 void
@@ -453,6 +468,22 @@ MainWindow::checkFileExists(const QString & file_name)
 void
 MainWindow::addBlocks()
 {
+    auto * camera = this->vtk_renderer->GetActiveCamera();
+    auto * reader = this->load_thread->getReader();
+
+    for (auto & binfo : reader->getBlocks()) {
+        vtkExtractBlock * eb = vtkExtractBlock::New();
+        eb->SetInputConnection(reader->getVtkOutputPort());
+        eb->AddIndex(binfo.multiblock_index);
+        eb->Update();
+
+        auto * block = new BlockObject(eb, camera);
+        setBlockProperties(block);
+        this->blocks[binfo.number] = block;
+
+        this->vtk_renderer->AddViewProp(block->getActor());
+        this->vtk_renderer->AddViewProp(block->getSilhouetteActor());
+    }
 }
 
 void
@@ -465,25 +496,80 @@ MainWindow::addNodeSets()
 {
 }
 
-MainWindow::ERenderMode
-MainWindow::getRenderMode()
+void
+MainWindow::setSelectedBlockProperties(BlockObject * block)
 {
-    return this->render_mode;
+    auto * property = block->getProperty();
+    if (this->render_mode == SHADED) {
+        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
+        property->SetOpacity(1.0);
+        property->SetEdgeVisibility(false);
+    }
+    else if (this->render_mode == SHADED_WITH_EDGES) {
+        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
+        property->SetOpacity(1.0);
+        property->SetEdgeVisibility(true);
+        property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
+                               SIDESET_EDGE_CLR.greenF(),
+                               SIDESET_EDGE_CLR.blueF());
+        property->SetLineWidth(2);
+    }
+    else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
+        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
+        property->SetOpacity(1.0);
+        property->SetEdgeVisibility(false);
+    }
+    else if (this->render_mode == TRANSLUENT) {
+        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
+        property->SetOpacity(0.33);
+        property->SetEdgeVisibility(false);
+    }
 }
 
 void
-MainWindow::setSelectedBlockProperties()
+MainWindow::setDeselectedBlockProperties(BlockObject * block)
 {
+    auto * property = block->getProperty();
+    if (this->render_mode == SHADED) {
+        auto & clr = block->getColor();
+        property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
+        property->SetOpacity(1.0);
+        property->SetEdgeVisibility(false);
+    }
+    else if (this->render_mode == SHADED_WITH_EDGES) {
+        auto & clr = block->getColor();
+        property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
+        property->SetOpacity(1.0);
+        property->SetEdgeVisibility(true);
+        property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
+                               SIDESET_EDGE_CLR.greenF(),
+                               SIDESET_EDGE_CLR.blueF());
+        property->SetLineWidth(2);
+    }
+    else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
+        property->SetColor(1., 1., 1.);
+        property->SetOpacity(1.0);
+        property->SetEdgeVisibility(false);
+    }
+    else if (this->render_mode == TRANSLUENT) {
+        auto & clr = block->getColor();
+        property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
+        property->SetOpacity(0.33);
+        property->SetEdgeVisibility(false);
+    }
 }
 
 void
-MainWindow::setDeselectedBlockProperties()
+MainWindow::setBlockProperties(BlockObject * block, bool selected)
 {
-}
-
-void
-MainWindow::setBlockProperties()
-{
+    auto * property = block->getProperty();
+    property->SetRepresentationToSurface();
+    property->SetAmbient(0.4);
+    property->SetDiffuse(0.6);
+    if (selected)
+        this->setSelectedBlockProperties(block);
+    else
+        this->setDeselectedBlockProperties(block);
 }
 
 void
@@ -725,11 +811,11 @@ MainWindow::onLoadFinished()
     //     style = OtterInteractorStyle2D(self)
     // self._vtk_interactor.SetInteractorStyle(style)
 
-    // camera = self._vtk_renderer.GetActiveCamera()
-    // focal_point = camera.GetFocalPoint()
-    // camera.SetPosition(focal_point[0], focal_point[1], 1)
-    // camera.SetRoll(0)
-    // self._vtk_renderer.ResetCamera()
+    auto * camera = this->vtk_renderer->GetActiveCamera();
+    auto * focal_point = camera->GetFocalPoint();
+    camera->SetPosition(focal_point[0], focal_point[1], 1);
+    camera->SetRoll(0);
+    this->vtk_renderer->ResetCamera();
 }
 
 void

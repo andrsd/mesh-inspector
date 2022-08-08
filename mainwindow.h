@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QThread>
 #include <QTimer>
+#include <QColor>
 
 class Reader;
 class QSettings;
@@ -22,6 +23,8 @@ class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkOrientationMarkerWidget;
+class vtkCompositeDataGeometryFilter;
+class BlockObject;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -93,10 +96,9 @@ protected:
     // A getBlock(block_id);
     // A getSideSet(sideset_id);
     // A getNodeSet(nodeset_id);
-    ERenderMode getRenderMode();
-    void setSelectedBlockProperties();
-    void setDeselectedBlockProperties();
-    void setBlockProperties();
+    void setSelectedBlockProperties(BlockObject * block);
+    void setDeselectedBlockProperties(BlockObject * block);
+    void setBlockProperties(BlockObject * block, bool selected = false);
     void setSideSetProperties();
     void setNodeSetProperties();
     void setSelectionProperties();
@@ -207,4 +209,15 @@ protected:
     QActionGroup * color_profile_action_group;
     QActionGroup * mode_select_action_group;
     QActionGroup * windows_action_group;
+
+    std::map<int, BlockObject *> blocks;
+
+protected:
+    static QColor SIDESET_CLR;
+    static QColor SIDESET_EDGE_CLR;
+    static QColor NODESET_CLR;
+    static QColor SELECTION_CLR;
+    static QColor SELECTION_EDGE_CLR;
+
+    static int SIDESET_EDGE_WIDTH;
 };

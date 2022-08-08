@@ -23,6 +23,8 @@ find_package(Qt5 REQUIRED
 find_package(VTK
     COMPONENTS
         CommonCore
+        FiltersExtraction
+        FiltersHybrid
         GUISupportQt
         InteractionStyle
         RenderingAnnotation
@@ -46,6 +48,7 @@ add_subdirectory(common)
 add_executable(
     ${PROJECT_NAME}
         aboutdlg.cpp
+        blockobject.cpp
         exodusiireader.cpp
         infowindow.cpp
         main.cpp
