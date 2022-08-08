@@ -16,6 +16,7 @@ add_library(
         horzline.cpp
         loadfileevent.cpp
         notificationwidget.cpp
+        otreeview.cpp
         sliderwithedit.cpp
 )
 
