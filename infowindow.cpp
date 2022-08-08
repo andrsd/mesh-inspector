@@ -223,7 +223,9 @@ InfoWindow::clear()
 {
     this->block_model->removeRows(0, this->block_model->rowCount());
     this->sideset_model->removeRows(0, this->sideset_model->rowCount());
+    this->sidesets_expd->setNumberOfItems(0);
     this->nodeset_model->removeRows(0, this->nodeset_model->rowCount());
+    this->nodesets_expd->setNumberOfItems(0);
 
     this->total_elements->setText(1, "");
     this->total_nodes->setText(1, "");

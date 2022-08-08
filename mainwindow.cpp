@@ -466,6 +466,8 @@ MainWindow::clear()
     for (auto & it : this->node_sets)
         delete it.second;
     this->node_sets.clear();
+
+    this->vtk_renderer->RemoveAllViewProps();
 }
 
 void
@@ -1070,7 +1072,7 @@ void
 MainWindow::onNewFile()
 {
     this->clear();
-    // emit fileLoaded(None);
+    this->info_window->clear();
     // emit boundsChanged([]);
     this->file_name = QString();
     this->updateWindowTitle();
