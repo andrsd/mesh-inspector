@@ -28,10 +28,13 @@ signals:
     void blockVisibilityChanged(int block_number, bool visible);
     void blockColorChanged(int block_number, QColor color);
     void blockSelectionChanged(int block_number);
+    void sideSetVisibilityChanged(int sideset_id, bool visible);
+    void sideSetSelectionChanged(int sideset_id);
     void dimensionsStateChanged(bool visible);
 
 public slots:
     void onBlockAdded(int id, const QString & name);
+    void onSideSetAdded(int id, const QString & name);
 
 protected slots:
     void onBlockChanged(QStandardItem * item);
@@ -39,6 +42,11 @@ protected slots:
                                  const QItemSelection & deselected);
     void onNameContextMenu(QStandardItem * item, const QPoint & point);
     void onBlockCustomContextMenu(const QPoint &);
+
+    void onSideSetChanged(QStandardItem * item);
+    void onSideSetSelectionChanged(const QItemSelection & selected,
+                                   const QItemSelection & deselected);
+
     void onDimensionsStateChanged(int state);
 
     void onHideBlock();

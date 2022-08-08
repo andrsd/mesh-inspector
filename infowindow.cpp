@@ -117,7 +117,10 @@ InfoWindow::setupSidesetsWidgets()
 {
     this->sideset_model = new QStandardItemModel();
     this->sideset_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    // this->sideset_model.itemChanged.connect(self.onSidesetChanged)
+    connect(this->sideset_model,
+            SIGNAL(itemChanged(QStandardItem *)),
+            this,
+            SLOT(onSideSetChanged(QStandardItem *)));
 
     this->sidesets = new OTreeView();
     this->sidesets->setFixedHeight(150);
@@ -128,7 +131,10 @@ InfoWindow::setupSidesetsWidgets()
     this->sidesets->setColumnWidth(2, 40);
     this->sidesets->hideColumn(IDX_COLOR);
     auto * sel_model = this->sidesets->selectionModel();
-    // sel_model.selectionChanged.connect(self.onSidesetSelectionChanged);
+    connect(sel_model,
+            SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+            this,
+            SLOT(onSideSetSelectionChanged(const QItemSelection &, const QItemSelection &)));
 
     this->sidesets_expd = new ExpandableWidget("Side sets");
     this->sidesets_expd->setWidget(this->sidesets);
@@ -369,4 +375,48 @@ InfoWindow::onShowAllBlocks()
 void
 InfoWindow::onAppearance()
 {
+}
+
+void
+InfoWindow::onSideSetAdded(int id, const QString & name)
+{
+    auto row = this->sideset_model->rowCount();
+
+    auto * si_name = new QStandardItem();
+    si_name->setText(name);
+    si_name->setCheckable(true);
+    si_name->setData(id);
+    this->sideset_model->setItem(row, IDX_NAME, si_name);
+
+    auto * si_id = new QStandardItem();
+    si_id->setText(QString::number(id));
+    this->sideset_model->setItem(row, IDX_ID, si_id);
+
+    this->sidesets_expd->setNumberOfItems(this->sideset_model->rowCount());
+}
+
+void
+InfoWindow::onSideSetChanged(QStandardItem * item)
+{
+    if (item->column() == IDX_NAME) {
+        bool visible = item->checkState() == Qt::Checked;
+        auto sideset_id = item->data().toInt();
+        emit sideSetVisibilityChanged(sideset_id, visible);
+    }
+}
+
+void
+InfoWindow::onSideSetSelectionChanged(const QItemSelection & selected,
+                                      const QItemSelection & deselected)
+{
+    if (selected.indexes().length() > 0) {
+        this->blocks->clearSelection();
+        this->nodesets->clearSelection();
+        auto index = selected.indexes()[0];
+        auto * item = this->sideset_model->itemFromIndex(index);
+        auto sideset_id = item->data().toInt();
+        emit sideSetSelectionChanged(sideset_id);
+    }
+    else
+        emit sideSetSelectionChanged(-1);
 }

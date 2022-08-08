@@ -15,6 +15,7 @@ public:
     virtual ~ExpandableWidget();
 
     void setLabel(const QString & text);
+    void setNumberOfItems(int num);
     void setWidget(QWidget * widget);
 
 protected slots:
@@ -22,7 +23,6 @@ protected slots:
 
 protected:
     void setExpandButtonText(bool checked);
-    void setNumberOfItems(int num);
 
     QString caption;
     QWidget * widget;

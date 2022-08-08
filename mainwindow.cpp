@@ -34,6 +34,7 @@
 #include "aboutdlg.h"
 #include "reader.h"
 #include "blockobject.h"
+#include "sidesetobject.h"
 #include "exodusiireader.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
@@ -404,6 +405,19 @@ MainWindow::connectSignals()
             this,
             SLOT(onBlockSelectionChanged(int)));
 
+    connect(this,
+            SIGNAL(sideSetAdded(int, const QString &)),
+            this->info_window,
+            SLOT(onSideSetAdded(int, const QString &)));
+    connect(this->info_window,
+            SIGNAL(sideSetVisibilityChanged(int, bool)),
+            this,
+            SLOT(onSideSetVisibilityChanged(int, bool)));
+    connect(this->info_window,
+            SIGNAL(sideSetSelectionChanged(int)),
+            this,
+            SLOT(onSideSetSelectionChanged(int)));
+
     connect(this->info_window,
             SIGNAL(dimensionsStateChanged(bool)),
             this,
@@ -430,6 +444,10 @@ MainWindow::clear()
     for (auto & it : this->blocks)
         delete it.second;
     this->blocks.clear();
+
+    for (auto & it : this->side_sets)
+        delete it.second;
+    this->side_sets.clear();
 }
 
 void
@@ -520,6 +538,21 @@ MainWindow::addBlocks()
 void
 MainWindow::addSideSets()
 {
+    auto * reader = this->load_thread->getReader();
+
+    for (auto & finfo : reader->getSideSets()) {
+        auto * eb = vtkExtractBlock::New();
+        eb->SetInputConnection(reader->getVtkOutputPort());
+        eb->AddIndex(finfo.multiblock_index);
+        eb->Update();
+
+        auto sideset = new SideSetObject(eb);
+        this->side_sets[finfo.number] = sideset;
+        setSideSetProperties(sideset);
+        this->vtk_renderer->AddViewProp(sideset->getActor());
+
+        emit sideSetAdded(finfo.number, QString::fromStdString(finfo.name));
+    }
 }
 
 void
@@ -532,6 +565,16 @@ MainWindow::getBlock(int block_id)
 {
     const auto & it = this->blocks.find(block_id);
     if (it != this->blocks.end())
+        return it->second;
+    else
+        return nullptr;
+}
+
+SideSetObject *
+MainWindow::getSideSet(int sideset_id)
+{
+    const auto & it = this->side_sets.find(sideset_id);
+    if (it != this->side_sets.end())
         return it->second;
     else
         return nullptr;
@@ -614,8 +657,18 @@ MainWindow::setBlockProperties(BlockObject * block, bool selected)
 }
 
 void
-MainWindow::setSideSetProperties()
+MainWindow::setSideSetProperties(SideSetObject * sideset)
 {
+    auto * property = sideset->getProperty();
+    property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
+    property->SetEdgeVisibility(false);
+    property->LightingOff();
+    if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
+        property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
+                               SIDESET_EDGE_CLR.greenF(),
+                               SIDESET_EDGE_CLR.blueF());
+        property->SetLineWidth(SIDESET_EDGE_WIDTH);
+    }
 }
 
 void
@@ -898,8 +951,11 @@ MainWindow::onBlockColorChanged(int block_id, QColor color)
 }
 
 void
-MainWindow::onSidesetVisibilityChanged()
+MainWindow::onSideSetVisibilityChanged(int sideset_id, bool visible)
 {
+    auto * sideset = getSideSet(sideset_id);
+    if (sideset)
+        sideset->setVisible(visible);
 }
 
 void
@@ -1023,8 +1079,16 @@ MainWindow::onBlockSelectionChanged(int block_id)
 }
 
 void
-MainWindow::onSidesetSelectionChanged()
+MainWindow::onSideSetSelectionChanged(int sideset_id)
 {
+    const auto & it = this->side_sets.find(sideset_id);
+    if (it != this->side_sets.end()) {
+        auto * sideset = it->second;
+        // this->selected_mesh_ent_info->setSidesetInfo(sideset_id, sideset->info);
+        showSelectedMeshEntity();
+    }
+    else
+        hideSelectedMeshEntity();
 }
 
 void

@@ -53,7 +53,9 @@ add_executable(
         infowindow.cpp
         main.cpp
         mainwindow.cpp
+        meshobject.cpp
         reader.cpp
+        sidesetobject.cpp
 )
 
 target_include_directories(

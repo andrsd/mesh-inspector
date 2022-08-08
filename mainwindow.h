@@ -26,6 +26,7 @@ class vtkOrientationMarkerWidget;
 class vtkCompositeDataGeometryFilter;
 class vtkCubeAxesActor;
 class BlockObject;
+class SideSetObject;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -69,6 +70,7 @@ public:
 
 signals:
     void blockAdded(int id, const QString & name);
+    void sideSetAdded(int id, const QString & name);
 
 protected:
     void setupWidgets();
@@ -98,12 +100,12 @@ protected:
     void addSideSets();
     void addNodeSets();
     BlockObject * getBlock(int block_id);
-    // A getSideSet(sideset_id);
+    SideSetObject * getSideSet(int sideset_id);
     // A getNodeSet(nodeset_id);
     void setSelectedBlockProperties(BlockObject * block);
     void setDeselectedBlockProperties(BlockObject * block);
     void setBlockProperties(BlockObject * block, bool selected = false);
-    void setSideSetProperties();
+    void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties();
     void setSelectionProperties();
     void showNotification(const QString & text, int ms = 5000);
@@ -133,7 +135,7 @@ public slots:
     void onLoadFinished();
     void onBlockVisibilityChanged(int block_id, bool visible);
     void onBlockColorChanged(int block_id, QColor color);
-    void onSidesetVisibilityChanged();
+    void onSideSetVisibilityChanged(int sideset_id, bool visible);
     void onNodesetVisibilityChanged();
     void onCubeAxisVisibilityChanged(bool visible);
     void onOrientationMarkerVisibilityChanged(bool visible);
@@ -150,7 +152,7 @@ public slots:
     void onFileChanged();
     void onReloadFile();
     void onBlockSelectionChanged(int block_id);
-    void onSidesetSelectionChanged();
+    void onSideSetSelectionChanged(int sideset_id);
     void onNodesetSelectionChanged();
     void onClicked(const QPoint & pt);
     void onViewInfoWindow();
@@ -218,6 +220,7 @@ protected:
 
     std::map<int, BlockObject *> blocks;
     BlockObject * selected_block;
+    std::map<int, SideSetObject *> side_sets;
 
 protected:
     static QColor SIDESET_CLR;
