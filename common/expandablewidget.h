@@ -8,6 +8,8 @@ class QLabel;
 class QGridLayout;
 
 class ExpandableWidget : public QWidget {
+    Q_OBJECT
+
 public:
     ExpandableWidget(const QString & text, QWidget * parent = nullptr);
     virtual ~ExpandableWidget();
@@ -15,7 +17,7 @@ public:
     void setLabel(const QString & text);
     void setWidget(QWidget * widget);
 
-protected:
+protected slots:
     void onExpandToggled(bool checked);
 
 protected:
