@@ -8,26 +8,13 @@
 #include "vtkExtractBlock.h"
 
 BlockObject::BlockObject(vtkExtractBlock * eb, vtkCamera * camera) :
-    geometry(nullptr),
-    mapper(nullptr),
-    actor(nullptr),
+    MeshObject(eb),
     silhouette(nullptr),
     silhouette_mapper(nullptr),
     silhouette_actor(nullptr)
 {
     vtkDataObject * data_object = eb->GetOutput();
 
-    this->geometry = vtkCompositeDataGeometryFilter::New();
-    this->geometry->SetInputConnection(0, eb->GetOutputPort(0));
-    this->geometry->Update();
-
-    this->mapper = vtkPolyDataMapper::New();
-    this->mapper->SetInputConnection(this->geometry->GetOutputPort());
-    this->mapper->SetScalarModeToUsePointFieldData();
-    this->mapper->InterpolateScalarsBeforeMappingOn();
-
-    this->actor = vtkActor::New();
-    this->actor->SetMapper(this->mapper);
     this->actor->SetScale(0.99999);
     this->actor->VisibilityOn();
 
@@ -57,24 +44,6 @@ BlockObject::setUpSilhouette(vtkCamera * camera)
     property->SetLineWidth(3);
 }
 
-bool
-BlockObject::visible()
-{
-    return this->actor->GetVisibility();
-}
-
-vtkActor *
-BlockObject::getActor()
-{
-    return this->actor;
-}
-
-vtkProperty *
-BlockObject::getProperty()
-{
-    return this->actor->GetProperty();
-}
-
 vtkActor *
 BlockObject::getSilhouetteActor()
 {
@@ -97,15 +66,6 @@ void
 BlockObject::setColor(const QColor & color)
 {
     this->color = color;
-}
-
-void
-BlockObject::setVisible(bool visible)
-{
-    if (visible)
-        this->actor->VisibilityOn();
-    else
-        this->actor->VisibilityOff();
 }
 
 void
