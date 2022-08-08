@@ -1139,6 +1139,14 @@ MainWindow::onTransluentTriggered(bool checked)
 void
 MainWindow::onPerspectiveToggled(bool checked)
 {
+    if (checked) {
+        auto * camera = this->vtk_renderer->GetActiveCamera();
+        camera->ParallelProjectionOff();
+    }
+    else {
+        auto * camera = this->vtk_renderer->GetActiveCamera();
+        camera->ParallelProjectionOn();
+    }
 }
 
 void
