@@ -29,6 +29,7 @@
 #include "vtkExtractBlock.h"
 #include "vtkProperty.h"
 #include "vtkCamera.h"
+#include "vtkCubeAxesActor.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "reader.h"
@@ -93,6 +94,7 @@ MainWindow::MainWindow(QWidget * parent) :
     vtk_renderer(nullptr),
     vtk_interactor(nullptr),
     ori_marker(nullptr),
+    cube_axes_actor(nullptr),
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
@@ -114,7 +116,8 @@ MainWindow::MainWindow(QWidget * parent) :
     visual_repr(nullptr),
     color_profile_action_group(nullptr),
     mode_select_action_group(nullptr),
-    windows_action_group(nullptr)
+    windows_action_group(nullptr),
+    selected_block(nullptr)
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -384,6 +387,27 @@ MainWindow::updateWindowTitle()
 void
 MainWindow::connectSignals()
 {
+    connect(this,
+            SIGNAL(blockAdded(int, const QString &)),
+            this->info_window,
+            SLOT(onBlockAdded(int, const QString &)));
+    connect(this->info_window,
+            SIGNAL(blockVisibilityChanged(int, bool)),
+            this,
+            SLOT(onBlockVisibilityChanged(int, bool)));
+    connect(this->info_window,
+            SIGNAL(blockColorChanged(int, QColor)),
+            this,
+            SLOT(onBlockColorChanged(int, QColor)));
+    connect(this->info_window,
+            SIGNAL(blockSelectionChanged(int)),
+            this,
+            SLOT(onBlockSelectionChanged(int)));
+
+    connect(this->info_window,
+            SIGNAL(dimensionsStateChanged(bool)),
+            this,
+            SLOT(onCubeAxisVisibilityChanged(bool)));
 }
 
 void
@@ -443,6 +467,11 @@ MainWindow::setupOrientationMarker()
 void
 MainWindow::setupCubeAxesActor()
 {
+    this->cube_axes_actor = vtkCubeAxesActor::New();
+    this->cube_axes_actor->VisibilityOff();
+    this->cube_axes_actor->SetCamera(this->vtk_renderer->GetActiveCamera());
+    this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);
+    this->cube_axes_actor->SetFlyMode(vtkCubeAxesActor::VTK_FLY_OUTER_EDGES);
 }
 
 int
@@ -483,6 +512,8 @@ MainWindow::addBlocks()
 
         this->vtk_renderer->AddViewProp(block->getActor());
         this->vtk_renderer->AddViewProp(block->getSilhouetteActor());
+
+        emit blockAdded(binfo.number, QString::fromStdString(binfo.name));
     }
 }
 
@@ -494,6 +525,16 @@ MainWindow::addSideSets()
 void
 MainWindow::addNodeSets()
 {
+}
+
+BlockObject *
+MainWindow::getBlock(int block_id)
+{
+    const auto & it = this->blocks.find(block_id);
+    if (it != this->blocks.end())
+        return it->second;
+    else
+        return nullptr;
 }
 
 void
@@ -615,8 +656,18 @@ MainWindow::showSelectedMeshEntity()
 }
 
 void
+MainWindow::hideSelectedMeshEntity()
+{
+    // this->selected_mesh_ent_info->hide();
+}
+
+void
 MainWindow::deselectBlocks()
 {
+    if (this->selected_block != nullptr) {
+        setBlockProperties(this->selected_block, false);
+        this->selected_block = nullptr;
+    }
 }
 
 // void
@@ -762,6 +813,7 @@ MainWindow::onLoadFinished()
 {
     Reader * reader = this->load_thread->getReader();
 
+    this->info_window->clear();
     addBlocks();
     addSideSets();
     addNodeSets();
@@ -773,10 +825,11 @@ MainWindow::onLoadFinished()
     //     gmin = common.point_min(bmin, gmin)
     //     gmax = common.point_max(bmax, gmax)
     // bnds = [gmin.x(), gmax.x(), gmin.y(), gmax.y(), gmin.z(), gmax.z()]
+    // self.boundsChanged.emit(bnds)
 
     // self._com = common.centerOfBounds(bnds)
     // self._cube_axes_actor.SetBounds(*bnds)
-    // self._vtk_renderer.AddViewProp(self._cube_axes_actor)
+    this->vtk_renderer->AddViewProp(this->cube_axes_actor);
 
     // params = {
     //     'blocks': reader.getBlocks(),
@@ -786,7 +839,6 @@ MainWindow::onLoadFinished()
     //     'total_nodes': reader.getTotalNumberOfNodes()
     // }
     // self.fileLoaded.emit(params)
-    // self.boundsChanged.emit(bnds)
 
     this->file_name = QString(reader->getFileName().c_str());
     updateWindowTitle();
@@ -819,13 +871,30 @@ MainWindow::onLoadFinished()
 }
 
 void
-MainWindow::onBlockVisibilityChanged()
+MainWindow::onBlockVisibilityChanged(int block_id, bool visible)
 {
+    BlockObject * block = getBlock(block_id);
+    if (block) {
+        block->setVisible(visible);
+        if (this->render_mode == HIDDEN_EDGES_REMOVED || this->render_mode == TRANSLUENT)
+            block->setSilhouetteVisible(visible);
+        else
+            block->setSilhouetteVisible(false);
+    }
 }
 
 void
-MainWindow::onBlockColorChanged()
+MainWindow::onBlockColorChanged(int block_id, QColor color)
 {
+    BlockObject * block = getBlock(block_id);
+    if (block) {
+        block->setColor(color);
+        auto * property = block->getProperty();
+        if (this->render_mode == HIDDEN_EDGES_REMOVED)
+            property->SetColor(1, 1, 1);
+        else
+            property->SetColor(color.redF(), color.greenF(), color.blueF());
+    }
 }
 
 void
@@ -839,8 +908,12 @@ MainWindow::onNodesetVisibilityChanged()
 }
 
 void
-MainWindow::onCubeAxisVisibilityChanged()
+MainWindow::onCubeAxisVisibilityChanged(bool visible)
 {
+    if (visible)
+        this->cube_axes_actor->VisibilityOn();
+    else
+        this->cube_axes_actor->VisibilityOff();
 }
 
 void
@@ -933,8 +1006,20 @@ MainWindow::onReloadFile()
 }
 
 void
-MainWindow::onBlockSelectionChanged()
+MainWindow::onBlockSelectionChanged(int block_id)
 {
+    deselectBlocks();
+    const auto & it = this->blocks.find(block_id);
+    if (it != this->blocks.end()) {
+        BlockObject * block = it->second;
+        // TODO
+        // this->selected_mesh_ent_info.setBlockInfo(block_id, block->info());
+        showSelectedMeshEntity();
+        this->selected_block = block;
+        setBlockProperties(block, true);
+    }
+    else
+        hideSelectedMeshEntity();
 }
 
 void

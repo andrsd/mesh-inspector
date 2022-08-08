@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QScrollArea>
+#include <QList>
+#include <QColor>
 
 class QWidget;
 class QVBoxLayout;
@@ -11,12 +13,40 @@ class QTreeWidget;
 class ExpandableWidget;
 class QTreeWidgetItem;
 class QCheckBox;
+class QStandardItem;
+class QItemSelection;
 
 class InfoWindow : public QScrollArea {
     Q_OBJECT
 
 public:
     explicit InfoWindow(QWidget * parent = nullptr);
+
+    void clear();
+
+signals:
+    void blockVisibilityChanged(int block_number, bool visible);
+    void blockColorChanged(int block_number, QColor color);
+    void blockSelectionChanged(int block_number);
+    void dimensionsStateChanged(bool visible);
+
+public slots:
+    void onBlockAdded(int id, const QString & name);
+
+protected slots:
+    void onBlockChanged(QStandardItem * item);
+    void onBlockSelectionChanged(const QItemSelection & selected,
+                                 const QItemSelection & deselected);
+    void onNameContextMenu(QStandardItem * item, const QPoint & point);
+    void onBlockCustomContextMenu(const QPoint &);
+    void onDimensionsStateChanged(int state);
+
+    void onHideBlock();
+    void onHideOtherBlocks();
+    void onHideAllBlocks();
+    void onShowBlock();
+    void onShowAllBlocks();
+    void onAppearance();
 
 protected:
     void setupWidgets();
@@ -52,4 +82,6 @@ protected:
     static const int IDX_NAME = 0;
     static const int IDX_COLOR = 1;
     static const int IDX_ID = 2;
+
+    static QList<QColor> colors;
 };

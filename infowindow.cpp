@@ -6,9 +6,19 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QCheckBox>
+#include <QBrush>
+#include <QMenu>
 #include "common/horzline.h"
 #include "common/expandablewidget.h"
 #include "common/otreeview.h"
+
+QList<QColor> InfoWindow::colors({ QColor(156, 207, 237),
+                                   QColor(165, 165, 165),
+                                   QColor(60, 97, 180),
+                                   QColor(234, 234, 234),
+                                   QColor(197, 226, 243),
+                                   QColor(127, 127, 127),
+                                   QColor(250, 182, 0) });
 
 InfoWindow::InfoWindow(QWidget * parent) :
     widget(nullptr),
@@ -77,7 +87,10 @@ InfoWindow::setupBlocksWidgets()
 
     this->block_model = new QStandardItemModel();
     this->block_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    // this->block_model->itemChanged.connect(self.onBlockChanged)
+    connect(this->block_model,
+            SIGNAL(itemChanged(QStandardItem *)),
+            this,
+            SLOT(onBlockChanged(QStandardItem *)));
     this->blocks = new OTreeView();
     this->blocks->setFixedHeight(250);
     this->blocks->setRootIsDecorated(false);
@@ -87,9 +100,15 @@ InfoWindow::setupBlocksWidgets()
     this->blocks->setColumnWidth(1, 20);
     this->blocks->setColumnWidth(2, 40);
     this->blocks->setContextMenuPolicy(Qt::CustomContextMenu);
-    // this->blocks.customContextMenuRequested.connect(self.onBlockCustomContextMenu)
+    connect(this->blocks,
+            SIGNAL(customContextMenuRequested(const QPoint &)),
+            this,
+            SLOT(onBlockCustomContextMenu(const QPoint &)));
     auto * sel_model = this->blocks->selectionModel();
-    // sel_model.selectionChanged.connect(self.onBlockSelectionChanged)
+    connect(sel_model,
+            SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+            this,
+            SLOT(onBlockSelectionChanged(const QItemSelection &, const QItemSelection &)));
     this->layout->addWidget(this->blocks);
 }
 
@@ -97,7 +116,7 @@ void
 InfoWindow::setupSidesetsWidgets()
 {
     this->sideset_model = new QStandardItemModel();
-    this->sideset_model->setHorizontalHeaderLabels(QStringList({"Name", "", "ID"}));
+    this->sideset_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
     // this->sideset_model.itemChanged.connect(self.onSidesetChanged)
 
     this->sidesets = new OTreeView();
@@ -120,7 +139,7 @@ void
 InfoWindow::setupNodesetsWidgets()
 {
     this->nodeset_model = new QStandardItemModel();
-    this->nodeset_model->setHorizontalHeaderLabels(QStringList({"Name", "", "ID"}));
+    this->nodeset_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
     // this->nodeset_model.itemChanged.connect(self.onNodesetChanged)
 
     this->nodesets = new OTreeView();
@@ -171,7 +190,7 @@ InfoWindow::setupRangeWidgets()
     this->range->addTopLevelItem(this->z_range);
 
     this->dimensions = new QCheckBox("Show dimensions");
-    // this->dimensions->stateChanged.connect(self.onDimensionsStateChanged)
+    connect(this->dimensions, SIGNAL(stateChanged(int)), this, SLOT(onDimensionsStateChanged(int)));
 
     auto * l = new QVBoxLayout();
     l->setSpacing(8);
@@ -185,4 +204,169 @@ InfoWindow::setupRangeWidgets()
     this->range_expd = new ExpandableWidget("Dimensions");
     this->range_expd->setWidget(w);
     this->layout->addWidget(this->range_expd);
+}
+
+void
+InfoWindow::clear()
+{
+    this->block_model->removeRows(0, this->block_model->rowCount());
+    this->sideset_model->removeRows(0, this->sideset_model->rowCount());
+    this->nodeset_model->removeRows(0, this->nodeset_model->rowCount());
+
+    this->total_elements->setText(1, "");
+    this->total_nodes->setText(1, "");
+}
+
+void
+InfoWindow::onBlockAdded(int id, const QString & name)
+{
+    int row = this->block_model->rowCount();
+
+    auto * si_name = new QStandardItem();
+    si_name->setText(name);
+    si_name->setCheckable(true);
+    si_name->setCheckState(Qt::Checked);
+    si_name->setData(id);
+    this->block_model->setItem(row, IDX_NAME, si_name);
+
+    auto * si_clr = new QStandardItem();
+    si_clr->setText("\u25a0");
+    int clr_idx = row % InfoWindow::colors.length();
+    auto color = InfoWindow::colors[clr_idx];
+    si_clr->setForeground(QBrush(color));
+    si_clr->setData(color);
+    this->block_model->setItem(row, IDX_COLOR, si_clr);
+
+    auto * si_id = new QStandardItem();
+    si_id->setText(QString::number(id));
+    this->block_model->setItem(row, IDX_ID, si_id);
+}
+
+void
+InfoWindow::onBlockChanged(QStandardItem * item)
+{
+    if (item->column() == IDX_NAME) {
+        bool visible = item->checkState() == Qt::Checked;
+        int block_id = item->data().toInt();
+        emit blockVisibilityChanged(block_id, visible);
+    }
+    else if (item->column() == IDX_COLOR) {
+        auto color = item->foreground().color();
+        auto index = this->block_model->indexFromItem(item);
+        auto name_index = index.siblingAtColumn(IDX_NAME);
+        int block_id = this->block_model->itemFromIndex(name_index)->data().toInt();
+        emit blockColorChanged(block_id, color);
+    }
+}
+
+void
+InfoWindow::onBlockSelectionChanged(const QItemSelection & selected,
+                                    const QItemSelection & deselected)
+{
+    if (selected.indexes().length() > 0) {
+        this->sidesets->clearSelection();
+        this->nodesets->clearSelection();
+        auto * item = this->block_model->itemFromIndex(selected.indexes()[0]);
+        int block_id = item->data().toInt();
+        emit blockSelectionChanged(block_id);
+    }
+    else
+        emit blockSelectionChanged(-1);
+}
+
+void
+InfoWindow::onNameContextMenu(QStandardItem * item, const QPoint & point)
+{
+    QMenu menu;
+    if (item->checkState() == Qt::Checked) {
+        menu.addAction("Hide", this, SLOT(onHideBlock()));
+        menu.addAction("Hide others", this, SLOT(onHideOtherBlocks()));
+        menu.addAction("Hide all", this, SLOT(onHideAllBlocks()));
+    }
+    else {
+        menu.addAction("Show", this, SLOT(onShowBlock()));
+        menu.addAction("Show all", this, SLOT(onShowAllBlocks()));
+    }
+    menu.addSeparator();
+    menu.addAction("Appearance...", this, SLOT(onAppearance()));
+    menu.exec(point);
+}
+
+void
+InfoWindow::onBlockCustomContextMenu(const QPoint & point)
+{
+    auto index = this->blocks->indexAt(point);
+    if (index.isValid()) {
+        auto * item = this->block_model->itemFromIndex(index);
+        onNameContextMenu(item, this->blocks->viewport()->mapToGlobal(point));
+    }
+}
+
+void
+InfoWindow::onDimensionsStateChanged(int state)
+{
+    emit dimensionsStateChanged(state == Qt::Checked);
+}
+
+void
+InfoWindow::onHideBlock()
+{
+    auto * selection_model = this->blocks->selectionModel();
+    auto indexes = selection_model->selectedIndexes();
+    if (indexes.length() > 0) {
+        auto index = indexes[0];
+        auto * item = this->block_model->itemFromIndex(index);
+        item->setCheckState(Qt::Unchecked);
+    }
+}
+
+void
+InfoWindow::onHideOtherBlocks()
+{
+    auto * selection_model = this->blocks->selectionModel();
+    auto indexes = selection_model->selectedIndexes();
+    if (indexes.length() > 0) {
+        auto index = indexes[0];
+        for (int row = 0; row < this->block_model->rowCount(); row++) {
+            if (row != index.row()) {
+                auto * item = this->block_model->item(row, 0);
+                item->setCheckState(Qt::Unchecked);
+            }
+        }
+    }
+}
+
+void
+InfoWindow::onHideAllBlocks()
+{
+    for (int row = 0; row < this->block_model->rowCount(); row++) {
+        auto * item = this->block_model->item(row, 0);
+        item->setCheckState(Qt::Unchecked);
+    }
+}
+
+void
+InfoWindow::onShowBlock()
+{
+    auto * selection_model = this->blocks->selectionModel();
+    auto indexes = selection_model->selectedIndexes();
+    if (indexes.length() > 0) {
+        auto index = indexes[0];
+        auto * item = this->block_model->itemFromIndex(index);
+        item->setCheckState(Qt::Checked);
+    }
+}
+
+void
+InfoWindow::onShowAllBlocks()
+{
+    for (int row = 0; row < this->block_model->rowCount(); row++) {
+        auto * item = this->block_model->item(row, 0);
+        item->setCheckState(Qt::Checked);
+    }
+}
+
+void
+InfoWindow::onAppearance()
+{
 }

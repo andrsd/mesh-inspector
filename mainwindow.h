@@ -24,6 +24,7 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkOrientationMarkerWidget;
 class vtkCompositeDataGeometryFilter;
+class vtkCubeAxesActor;
 class BlockObject;
 
 class MainWindow : public QMainWindow {
@@ -66,6 +67,9 @@ public:
     explicit MainWindow(QWidget * parent = nullptr);
     virtual ~MainWindow();
 
+signals:
+    void blockAdded(int id, const QString & name);
+
 protected:
     void setupWidgets();
     void setupViewModeWidget(QMainWindow * wnd);
@@ -93,7 +97,7 @@ protected:
     void addBlocks();
     void addSideSets();
     void addNodeSets();
-    // A getBlock(block_id);
+    BlockObject * getBlock(int block_id);
     // A getSideSet(sideset_id);
     // A getNodeSet(nodeset_id);
     void setSelectedBlockProperties(BlockObject * block);
@@ -105,6 +109,7 @@ protected:
     void showNotification(const QString & text, int ms = 5000);
     void showFileChangedNotification();
     void showSelectedMeshEntity();
+    void hideSelectedMeshEntity();
     void deselectBlocks();
     // void blockActorToId(actor);
     void selectBlock(const QPoint & pt);
@@ -126,11 +131,11 @@ protected:
 public slots:
     void onClose();
     void onLoadFinished();
-    void onBlockVisibilityChanged();
-    void onBlockColorChanged();
+    void onBlockVisibilityChanged(int block_id, bool visible);
+    void onBlockColorChanged(int block_id, QColor color);
     void onSidesetVisibilityChanged();
     void onNodesetVisibilityChanged();
-    void onCubeAxisVisibilityChanged();
+    void onCubeAxisVisibilityChanged(bool visible);
     void onOrientationMarkerVisibilityChanged(bool visible);
     void onOpenFile();
     void onOpenRecentFile();
@@ -144,7 +149,7 @@ public slots:
     void onUpdateWindow();
     void onFileChanged();
     void onReloadFile();
-    void onBlockSelectionChanged();
+    void onBlockSelectionChanged(int block_id);
     void onSidesetSelectionChanged();
     void onNodesetSelectionChanged();
     void onClicked(const QPoint & pt);
@@ -184,6 +189,7 @@ protected:
     vtkRenderer * vtk_renderer;
     vtkRenderWindowInteractor * vtk_interactor;
     vtkOrientationMarkerWidget * ori_marker;
+    vtkCubeAxesActor * cube_axes_actor;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
@@ -211,6 +217,7 @@ protected:
     QActionGroup * windows_action_group;
 
     std::map<int, BlockObject *> blocks;
+    BlockObject * selected_block;
 
 protected:
     static QColor SIDESET_CLR;
