@@ -13,7 +13,7 @@ add_library(
     SHARED
         clickablelabel.cpp
         expandablewidget.cpp
-        hline.cpp
+        horzline.cpp
         loadfileevent.cpp
         notificationwidget.cpp
         sliderwithedit.cpp

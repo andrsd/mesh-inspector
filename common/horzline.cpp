@@ -1,6 +1,6 @@
-#include "hline.h"
+#include "horzline.h"
 
-HLine::HLine(QWidget * parent) : QFrame(parent)
+HorzLine::HorzLine(QWidget * parent) : QFrame(parent)
 {
     this->setFrameShape(QFrame::HLine);
     this->setFrameShadow(QFrame::Plain);
