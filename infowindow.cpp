@@ -16,6 +16,10 @@ InfoWindow::InfoWindow(QWidget * parent) :
     lbl_info(nullptr),
     block_model(nullptr),
     blocks(nullptr),
+    nodeset_model(nullptr),
+    nodesets(nullptr),
+    sideset_model(nullptr),
+    sidesets(nullptr),
     totals(nullptr),
     total_elements(nullptr),
     totals_expd(nullptr),
@@ -51,10 +55,10 @@ InfoWindow::setupWidgets()
 
     setupBlocksWidgets();
     this->layout->addWidget(new HorzLine());
-    // this->setupSidesetsWidgets();
-    // this->layout.addWidget(HLine());
-    // this->setupNodesetsWidgets();
-    // this->layout.addWidget(HLine());
+    setupSidesetsWidgets();
+    this->layout->addWidget(new HorzLine());
+    setupNodesetsWidgets();
+    this->layout->addWidget(new HorzLine());
     setupSummaryWidgets();
     this->layout->addWidget(new HorzLine());
     setupRangeWidgets();
@@ -87,6 +91,52 @@ InfoWindow::setupBlocksWidgets()
     auto * sel_model = this->blocks->selectionModel();
     // sel_model.selectionChanged.connect(self.onBlockSelectionChanged)
     this->layout->addWidget(this->blocks);
+}
+
+void
+InfoWindow::setupSidesetsWidgets()
+{
+    this->sideset_model = new QStandardItemModel();
+    this->sideset_model->setHorizontalHeaderLabels(QStringList({"Name", "", "ID"}));
+    // this->sideset_model.itemChanged.connect(self.onSidesetChanged)
+
+    this->sidesets = new OTreeView();
+    this->sidesets->setFixedHeight(150);
+    this->sidesets->setRootIsDecorated(false);
+    this->sidesets->setModel(this->sideset_model);
+    this->sidesets->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->sidesets->setColumnWidth(0, 190);
+    this->sidesets->setColumnWidth(2, 40);
+    this->sidesets->hideColumn(IDX_COLOR);
+    auto * sel_model = this->sidesets->selectionModel();
+    // sel_model.selectionChanged.connect(self.onSidesetSelectionChanged);
+
+    this->sidesets_expd = new ExpandableWidget("Side sets");
+    this->sidesets_expd->setWidget(this->sidesets);
+    this->layout->addWidget(this->sidesets_expd);
+}
+
+void
+InfoWindow::setupNodesetsWidgets()
+{
+    this->nodeset_model = new QStandardItemModel();
+    this->nodeset_model->setHorizontalHeaderLabels(QStringList({"Name", "", "ID"}));
+    // this->nodeset_model.itemChanged.connect(self.onNodesetChanged)
+
+    this->nodesets = new OTreeView();
+    this->nodesets->setFixedHeight(150);
+    this->nodesets->setRootIsDecorated(false);
+    this->nodesets->setModel(this->nodeset_model);
+    this->nodesets->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->nodesets->setColumnWidth(0, 190);
+    this->nodesets->setColumnWidth(2, 40);
+    this->nodesets->hideColumn(IDX_COLOR);
+    auto * sel_model = this->nodesets->selectionModel();
+    // sel_model->selectionChanged.connect(self.onNodesetSelectionChanged)
+
+    this->nodesets_expd = new ExpandableWidget("Node sets");
+    this->nodesets_expd->setWidget(this->nodesets);
+    this->layout->addWidget(this->nodesets_expd);
 }
 
 void
