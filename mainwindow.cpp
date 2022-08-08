@@ -939,14 +939,8 @@ MainWindow::onLoadFinished()
     // self._cube_axes_actor.SetBounds(*bnds)
     this->vtk_renderer->AddViewProp(this->cube_axes_actor);
 
-    // params = {
-    //     'blocks': reader.getBlocks(),
-    //     'sidesets': reader.getSideSets(),
-    //     'nodesets': reader.getNodeSets(),
-    //     'total_elems': reader.getTotalNumberOfElements(),
-    //     'total_nodes': reader.getTotalNumberOfNodes()
-    // }
-    // self.fileLoaded.emit(params)
+    this->info_window->setSummary(reader->getTotalNumberOfElements(),
+                                  reader->getTotalNumberOfNodes());
 
     this->file_name = QString(reader->getFileName().c_str());
     updateWindowTitle();

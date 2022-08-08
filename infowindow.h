@@ -23,6 +23,7 @@ public:
     explicit InfoWindow(QWidget * parent = nullptr);
 
     void clear();
+    void setSummary(int total_elems, int total_nodes);
 
 signals:
     void blockVisibilityChanged(int block_number, bool visible);

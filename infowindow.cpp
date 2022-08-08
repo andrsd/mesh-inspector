@@ -8,6 +8,7 @@
 #include <QCheckBox>
 #include <QBrush>
 #include <QMenu>
+#include <QLocale>
 #include "common/horzline.h"
 #include "common/expandablewidget.h"
 #include "common/otreeview.h"
@@ -471,4 +472,11 @@ InfoWindow::onNodeSetSelectionChanged(const QItemSelection & selected,
     }
     else
         emit nodeSetSelectionChanged(-1);
+}
+
+void
+InfoWindow::setSummary(int total_elems, int total_nodes)
+{
+    this->total_elements->setText(1, QLocale::system().toString(total_elems));
+    this->total_nodes->setText(1, QLocale::system().toString(total_nodes));
 }
