@@ -21,6 +21,7 @@
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QVector3D>
+#include <QShortcut>
 #include "QVTKOpenGLNativeWidget.h"
 #include "vtkGenericOpenGLRenderWindow.h"
 #include "vtkRenderer.h"
@@ -119,6 +120,7 @@ MainWindow::MainWindow(QWidget * parent) :
     color_profile_action_group(nullptr),
     mode_select_action_group(nullptr),
     windows_action_group(nullptr),
+    deselect_sc(nullptr),
     selected_block(nullptr)
 {
     QSize default_size = QSize(1000, 700);
@@ -187,9 +189,8 @@ MainWindow::setupWidgets()
     // this->selected_mesh_ent_info = SelectedMeshEntityInfoWidget(self)
     // this->selected_mesh_ent_info.setVisible(False)
 
-    // this->deselect_sc = QtWidgets.QShortcut(
-    //     QtGui.QKeySequence(QtCore.Qt.Key_Space), self)
-    // this->deselect_sc.activated.connect(self.onDeselect)
+    this->deselect_sc = new QShortcut(QKeySequence(Qt::Key_Space), this);
+    connect(this->deselect_sc, SIGNAL(activated()), this, SLOT(onDeselect()));
 
     setupExplodeWidgets();
 }

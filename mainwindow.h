@@ -16,6 +16,7 @@ class QDragEnterEvent;
 class QPushButton;
 class QVTKOpenGLNativeWidget;
 class QDockWidget;
+class QShortcut;
 class InfoWindow;
 class AboutDialog;
 class NotificationWidget;
@@ -219,6 +220,8 @@ protected:
     QActionGroup * color_profile_action_group;
     QActionGroup * mode_select_action_group;
     QActionGroup * windows_action_group;
+
+    QShortcut * deselect_sc;
 
     std::map<int, BlockObject *> blocks;
     BlockObject * selected_block;
