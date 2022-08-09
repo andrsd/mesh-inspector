@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QFileInfo>
 #include <QString>
+#include <QShortcut>
 #include "common/clickablelabel.h"
 
 FileChangedNotificationWidget::FileChangedNotificationWidget(QWidget * parent) :
@@ -10,7 +11,9 @@ FileChangedNotificationWidget::FileChangedNotificationWidget(QWidget * parent) :
     layout(nullptr),
     text(nullptr),
     reload(nullptr),
-    dismiss(nullptr)
+    dismiss(nullptr),
+    dismiss_shortcut(nullptr),
+    reload_shortcut(nullptr)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("border-radius: 6px;"
@@ -18,6 +21,14 @@ FileChangedNotificationWidget::FileChangedNotificationWidget(QWidget * parent) :
                   "color: #fff;"
                   "font-size: 14px;");
     setUpWidgets();
+
+    this->dismiss_shortcut = new QShortcut(QKeySequence(Qt::Key_Escape), parent);
+    this->dismiss_shortcut->setEnabled(false);
+    connect(this->dismiss_shortcut, SIGNAL(activated()), this, SLOT(onDismiss()));
+
+    this->reload_shortcut = new QShortcut(QKeySequence("Ctrl+R"), parent);
+    this->reload_shortcut->setEnabled(false);
+    connect(this->reload_shortcut, SIGNAL(activated()), this, SLOT(onReload()));
 }
 
 FileChangedNotificationWidget::~FileChangedNotificationWidget()
@@ -26,6 +37,8 @@ FileChangedNotificationWidget::~FileChangedNotificationWidget()
     delete this->text;
     delete this->reload;
     delete this->dismiss;
+    delete this->dismiss_shortcut;
+    delete this->reload_shortcut;
 }
 
 void
@@ -74,4 +87,22 @@ FileChangedNotificationWidget::onDismiss()
 {
     hide();
     emit dismissed();
+}
+
+void
+FileChangedNotificationWidget::showEvent(QShowEvent * event)
+{
+    QWidget::showEvent(event);
+
+    this->dismiss_shortcut->setEnabled(true);
+    this->reload_shortcut->setEnabled(true);
+}
+
+void
+FileChangedNotificationWidget::hideEvent(QHideEvent * event)
+{
+    QWidget::hideEvent(event);
+
+    this->dismiss_shortcut->setEnabled(false);
+    this->reload_shortcut->setEnabled(false);
 }

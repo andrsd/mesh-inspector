@@ -5,6 +5,7 @@
 class QHBoxLayout;
 class QLabel;
 class ClickableLabel;
+class QShortcut;
 
 class FileChangedNotificationWidget : public QWidget {
     Q_OBJECT
@@ -25,9 +26,13 @@ protected slots:
 
 protected:
     void setUpWidgets();
+    void showEvent(QShowEvent * event);
+    void hideEvent(QHideEvent * event);
 
     QHBoxLayout * layout;
     QLabel * text;
     ClickableLabel * reload;
     ClickableLabel * dismiss;
+    QShortcut * dismiss_shortcut;
+    QShortcut * reload_shortcut;
 };
