@@ -2,6 +2,7 @@ add_executable(
     ${PROJECT_NAME}
         aboutdlg.cpp
         blockobject.cpp
+        boundingbox.cpp
         exodusiireader.cpp
         filechangednotificationwidget.cpp
         infowindow.cpp

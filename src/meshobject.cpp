@@ -19,6 +19,10 @@ MeshObject::MeshObject(vtkExtractBlock * eb)
     this->actor = vtkActor::New();
     this->actor->SetMapper(this->mapper);
     this->actor->VisibilityOff();
+
+    double * bnds = this->actor->GetBounds();
+    this->bounds = BoundingBox(bnds[0], bnds[1], bnds[2], bnds[3], bnds[4], bnds[5]);
+    this->center_of_bounds = this->bounds.center();
 }
 
 MeshObject::~MeshObject() {}
@@ -48,4 +52,10 @@ MeshObject::setVisible(bool visible)
         this->actor->VisibilityOn();
     else
         this->actor->VisibilityOff();
+}
+
+vtkVector3d
+MeshObject::getCenterOfBounds()
+{
+    return this->center_of_bounds;
 }
