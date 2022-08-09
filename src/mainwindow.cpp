@@ -34,6 +34,7 @@
 #include "vtkCubeAxesActor.h"
 #include "vtkWindowToImageFilter.h"
 #include "vtkPNGWriter.h"
+#include "vtkJPEGWriter.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "filechangednotificationwidget.h"
@@ -1305,6 +1306,18 @@ MainWindow::onExportAsPng()
 void
 MainWindow::onExportAsJpg()
 {
+    auto fname = getFileName("Export to JPG", "JPG files (*.jpg)", "jpg");
+    if (!file_name.isNull()) {
+        auto * windowToImageFilter = vtkWindowToImageFilter::New();
+        windowToImageFilter->SetInput(this->vtk_render_window);
+        windowToImageFilter->ReadFrontBufferOff();
+        windowToImageFilter->Update();
+
+        auto * writer = vtkJPEGWriter::New();
+        writer->SetFileName(fname.toStdString().c_str());
+        writer->SetInputConnection(windowToImageFilter->GetOutputPort());
+        writer->Write();
+    }
 }
 
 void
