@@ -264,7 +264,7 @@ MainWindow::setupViewModeWidget(QMainWindow * wnd)
 void
 MainWindow::setupNotificationWidget()
 {
-    this->notification = new NotificationWidget();
+    this->notification = new NotificationWidget(this);
     this->notification->setVisible(false);
 }
 
@@ -763,7 +763,7 @@ MainWindow::showNotification(const QString & text, int ms)
                                     this->notification->width(),
                                     this->notification->height());
     this->notification->setGraphicsEffect(nullptr);
-    // this->notification->show(ms);
+    this->notification->show(ms);
 }
 
 void

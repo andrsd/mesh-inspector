@@ -7,7 +7,12 @@
 #include <QGraphicsOpacityEffect>
 #include "clickablelabel.h"
 
-NotificationWidget::NotificationWidget(QWidget * parent)
+NotificationWidget::NotificationWidget(QWidget * parent) :
+    QWidget(parent),
+    layout(nullptr),
+    text(nullptr),
+    dismiss_label(nullptr),
+    anim(nullptr)
 {
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("border-radius: 6px;"
