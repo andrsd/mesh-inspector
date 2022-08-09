@@ -481,3 +481,22 @@ InfoWindow::setSummary(int total_elems, int total_nodes)
     this->total_elements->setText(1, QLocale::system().toString(total_elems));
     this->total_nodes->setText(1, QLocale::system().toString(total_nodes));
 }
+
+void
+InfoWindow::setBounds(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax)
+{
+    char format = 'f';
+    int precision = 5;
+    auto x_range = QString("%1 to %2")
+                       .arg(QString::number(xmin, format, precision))
+                       .arg(QString::number(xmax, format, precision));
+    this->x_range->setText(1, x_range);
+    auto y_range = QString("%1 to %2")
+                       .arg(QString::number(ymin, format, precision))
+                       .arg(QString::number(ymax, format, precision));
+    this->y_range->setText(1, y_range);
+    auto z_range = QString("%1 to %2")
+                       .arg(QString::number(zmin, format, precision))
+                       .arg(QString::number(zmax, format, precision));
+    this->z_range->setText(1, z_range);
+}

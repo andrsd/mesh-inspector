@@ -24,6 +24,7 @@ public:
 
     void clear();
     void setSummary(int total_elems, int total_nodes);
+    void setBounds(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
 
 signals:
     void blockVisibilityChanged(int block_number, bool visible);

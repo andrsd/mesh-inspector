@@ -991,6 +991,9 @@ MainWindow::onLoadFinished()
     this->vtk_renderer->AddViewProp(this->cube_axes_actor);
 
     this->center_of_bounds = bbox.center();
+    this->info_window
+        ->setBounds(bbox.min(0), bbox.max(0), bbox.min(1), bbox.max(1), bbox.min(2), bbox.max(2));
+
     this->info_window->setSummary(reader->getTotalNumberOfElements(),
                                   reader->getTotalNumberOfNodes());
 
