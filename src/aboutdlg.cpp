@@ -6,6 +6,7 @@
 #include "meshinspectorconfig.h"
 
 AboutDialog::AboutDialog(QWidget * parent) :
+    QDialog(parent),
     layout(nullptr),
     icon(nullptr),
     title(nullptr),
