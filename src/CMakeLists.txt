@@ -2,6 +2,7 @@ add_executable(
     ${PROJECT_NAME}
         aboutdlg.cpp
         blockobject.cpp
+        colorprofile.cpp
         boundingbox.cpp
         exodusiireader.cpp
         explodewidget.cpp

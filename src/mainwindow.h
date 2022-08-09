@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QColor>
 #include "vtkVector.h"
+#include <vector>
 
 class Reader;
 class QSettings;
@@ -32,6 +33,7 @@ class vtkCubeAxesActor;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
+class ColorProfile;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -61,12 +63,6 @@ protected:
         MODE_SELECT_BLOCKS = 1,
         MODE_SELECT_CELLS = 2,
         MODE_SELECT_POINTS = 3
-    };
-
-    enum EColorProfile {
-        COLOR_PROFILE_DEFAULT = 0,
-        COLOR_PROFILE_LIGHT = 1,
-        COLOR_PROFILE_DARK = 2
     };
 
 public:
@@ -166,7 +162,7 @@ public slots:
     void onViewInfoWindow();
     void onSelectModeTriggered(QAction * action);
     void onDeselect();
-    void onColorProfileTriggered(QAction *);
+    void onColorProfileTriggered(QAction * action);
     void onExportAsPng();
     void onExportAsJpg();
     void onToolsExplode();
@@ -188,7 +184,6 @@ protected:
     FileChangedNotificationWidget * file_changed_notification;
     ERenderMode render_mode;
     EModeSelect select_mode;
-    EColorProfile color_profile_id;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     QStringList recent_files;
@@ -237,6 +232,9 @@ protected:
 
     /// center of bounding box of the whole mesh
     vtkVector3d center_of_bounds;
+
+    std::size_t color_profile_idx;
+    std::vector<ColorProfile *> color_profiles;
 
 protected:
     static QColor SIDESET_CLR;

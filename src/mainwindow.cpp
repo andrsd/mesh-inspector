@@ -46,6 +46,7 @@
 #include "nodesetobject.h"
 #include "exodusiireader.h"
 #include "boundingbox.h"
+#include "colorprofile.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 
@@ -95,7 +96,7 @@ MainWindow::MainWindow(QWidget * parent) :
     file_changed_notification(nullptr),
     render_mode(SHADED_WITH_EDGES),
     select_mode(MODE_SELECT_NONE),
-    color_profile_id(COLOR_PROFILE_DEFAULT),
+    color_profile_idx(0),
     menu_bar(new QMenuBar(nullptr)),
     recent_menu(nullptr),
     export_menu(nullptr),
@@ -138,12 +139,12 @@ MainWindow::MainWindow(QWidget * parent) :
     if (!this->restoreGeometry(geom.toByteArray()))
         this->resize(default_size);
     this->recent_files = this->settings->value("recent_files", QStringList()).toStringList();
+    loadColorProfiles();
 
     setupWidgets();
     setupMenuBar();
     updateWindowTitle();
     updateMenuBar();
-    loadColorProfiles();
 
     setAcceptDrops(true);
 
@@ -171,6 +172,8 @@ MainWindow::~MainWindow()
     delete this->info_window;
     delete this->info_dock;
     delete this->explode;
+    for (auto & it : this->color_profiles)
+        delete it;
 }
 
 void
@@ -359,9 +362,18 @@ void
 MainWindow::setupColorProfileMenu(QMenu * menu)
 {
     this->color_profile_action_group = new QActionGroup(this);
-    this->color_profile_id = static_cast<EColorProfile>(
-        this->settings->value("color_profile", COLOR_PROFILE_DEFAULT).toInt());
-    // TODO: fill in color profile
+    this->color_profile_idx = this->settings->value("color_profile", 0).toInt();
+
+    for (std::size_t id = 0; id < this->color_profiles.size(); id++) {
+        auto * cp = this->color_profiles[id];
+        auto * action = menu->addAction(cp->getName());
+        action->setCheckable(true);
+        action->setData((uint) id);
+        this->color_profile_action_group->addAction(action);
+        if (id == this->color_profile_idx)
+            action->setChecked(true);
+    }
+
     connect(this->color_profile_action_group,
             SIGNAL(triggered(QAction *)),
             this,
@@ -839,7 +851,15 @@ MainWindow::selectPoint(const QPoint & pt)
 void
 MainWindow::setColorProfile()
 {
-    double bkgnd[3] = { 82 / 256., 87 / 256., 110 / 256. };
+    ColorProfile * profile;
+    if (this->color_profile_idx < this->color_profiles.size())
+        profile = this->color_profiles[this->color_profile_idx];
+    else
+        profile = this->color_profiles[0];
+
+    const auto & qclr = profile->getColor("bkgnd");
+    double bkgnd[3] = { qclr.redF(), qclr.greenF(), qclr.blueF() };
+
     this->vtk_renderer->SetBackground(bkgnd);
     this->vtk_renderer->SetBackground2(bkgnd);
 }
@@ -847,6 +867,21 @@ MainWindow::setColorProfile()
 void
 MainWindow::loadColorProfiles()
 {
+    // Maybe store these as resources and pull it from there
+    std::map<QString, QColor> cp_default_color_map;
+    cp_default_color_map["bkgnd"] = QColor(82, 87, 110);
+    auto * cp_default = new ColorProfile("Default", cp_default_color_map);
+    this->color_profiles.push_back(cp_default);
+
+    std::map<QString, QColor> cp_light_color_map;
+    cp_light_color_map["bkgnd"] = QColor(255, 255, 255);
+    auto * cp_light = new ColorProfile("Light", cp_light_color_map);
+    this->color_profiles.push_back(cp_light);
+
+    std::map<QString, QColor> cp_dark_color_map;
+    cp_dark_color_map["bkgnd"] = QColor(0, 0, 0);
+    auto * cp_dark = new ColorProfile("Dark", cp_dark_color_map);
+    this->color_profiles.push_back(cp_dark);
 }
 
 QString
@@ -955,7 +990,7 @@ void
 MainWindow::closeEvent(QCloseEvent * event)
 {
     this->settings->setValue("tools/select_mode", this->select_mode);
-    this->settings->setValue("color_profile", this->color_profile_id);
+    this->settings->setValue("color_profile", (uint) this->color_profile_idx);
     this->settings->setValue("window/geometry", this->saveGeometry());
     this->settings->setValue("recent_files", this->recent_files);
     QMainWindow::closeEvent(event);
@@ -1294,8 +1329,11 @@ MainWindow::onDeselect()
 }
 
 void
-MainWindow::onColorProfileTriggered(QAction *)
+MainWindow::onColorProfileTriggered(QAction * action)
 {
+    action->setChecked(true);
+    this->color_profile_idx = action->data().toInt();
+    setColorProfile();
 }
 
 void
