@@ -22,6 +22,7 @@ QList<QColor> InfoWindow::colors({ QColor(156, 207, 237),
                                    QColor(250, 182, 0) });
 
 InfoWindow::InfoWindow(QWidget * parent) :
+    QScrollArea(parent),
     widget(nullptr),
     layout(nullptr),
     lbl_info(nullptr),

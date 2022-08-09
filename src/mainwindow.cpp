@@ -175,7 +175,7 @@ MainWindow::setupWidgets()
     this->vtk_renderer = vtkRenderer::New();
     this->vtk_render_window->AddRenderer(this->vtk_renderer);
 
-    this->info_window = new InfoWindow(this);
+    this->info_window = new InfoWindow();
 
     this->info_dock = new QDockWidget("Information", this);
     this->info_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
