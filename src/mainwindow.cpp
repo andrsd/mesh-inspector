@@ -32,6 +32,8 @@
 #include "vtkProperty.h"
 #include "vtkCamera.h"
 #include "vtkCubeAxesActor.h"
+#include "vtkWindowToImageFilter.h"
+#include "vtkPNGWriter.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "filechangednotificationwidget.h"
@@ -1285,6 +1287,19 @@ MainWindow::onColorProfileTriggered(QAction *)
 void
 MainWindow::onExportAsPng()
 {
+    auto fname = getFileName("Export to PNG", "PNG files (*.png)", "png");
+    if (!fname.isNull()) {
+        auto * windowToImageFilter = vtkWindowToImageFilter::New();
+        windowToImageFilter->SetInput(this->vtk_render_window);
+        windowToImageFilter->SetInputBufferTypeToRGBA();
+        windowToImageFilter->ReadFrontBufferOff();
+        windowToImageFilter->Update();
+
+        auto * writer = vtkPNGWriter::New();
+        writer->SetFileName(fname.toStdString().c_str());
+        writer->SetInputConnection(windowToImageFilter->GetOutputPort());
+        writer->Write();
+    }
 }
 
 void
