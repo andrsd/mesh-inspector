@@ -10,6 +10,9 @@ int
 main(int argc, char * argv[])
 {
     QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(MESH_INSPECTOR_APP_NAME);
     QCoreApplication::setApplicationVersion(MESH_INSPECTOR_VERSION);
