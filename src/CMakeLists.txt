@@ -4,6 +4,7 @@ add_executable(
         blockobject.cpp
         boundingbox.cpp
         exodusiireader.cpp
+        explodewidget.cpp
         filechangednotificationwidget.cpp
         infowindow.cpp
         main.cpp

@@ -54,8 +54,20 @@ MeshObject::setVisible(bool visible)
         this->actor->VisibilityOff();
 }
 
+void
+MeshObject::setPosition(double x, double y, double z)
+{
+    this->actor->SetPosition(x, y, z);
+}
+
+const BoundingBox &
+MeshObject::getBounds() const
+{
+    return this->bounds;
+}
+
 vtkVector3d
-MeshObject::getCenterOfBounds()
+MeshObject::getCenterOfBounds() const
 {
     return this->center_of_bounds;
 }

@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QColor>
+#include "vtkVector.h"
 
 class Reader;
 class QSettings;
@@ -20,6 +21,7 @@ class QShortcut;
 class InfoWindow;
 class AboutDialog;
 class NotificationWidget;
+class ExplodeWidget;
 class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
@@ -168,7 +170,7 @@ public slots:
     void onExportAsPng();
     void onExportAsJpg();
     void onToolsExplode();
-    void onExplodeValueChanged();
+    void onExplodeValueChanged(double value);
     void updateViewModeLocation();
     void onMinimize();
     void onBringAllToFront();
@@ -202,6 +204,7 @@ protected:
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
+    ExplodeWidget * explode;
 
     QAction * new_action;
     QAction * open_action;
@@ -231,6 +234,9 @@ protected:
     BlockObject * selected_block;
     std::map<int, SideSetObject *> side_sets;
     std::map<int, NodeSetObject *> node_sets;
+
+    /// center of bounding box of the whole mesh
+    vtkVector3d center_of_bounds;
 
 protected:
     static QColor SIDESET_CLR;

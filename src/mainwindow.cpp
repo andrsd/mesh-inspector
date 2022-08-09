@@ -35,14 +35,17 @@
 #include "vtkWindowToImageFilter.h"
 #include "vtkPNGWriter.h"
 #include "vtkJPEGWriter.h"
+#include "vtkMath.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "filechangednotificationwidget.h"
+#include "explodewidget.h"
 #include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
 #include "nodesetobject.h"
 #include "exodusiireader.h"
+#include "boundingbox.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 
@@ -107,6 +110,7 @@ MainWindow::MainWindow(QWidget * parent) :
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
+    explode(nullptr),
     new_action(nullptr),
     open_action(nullptr),
     close_action(nullptr),
@@ -166,6 +170,7 @@ MainWindow::~MainWindow()
     delete this->vtk_widget;
     delete this->info_window;
     delete this->info_dock;
+    delete this->explode;
 }
 
 void
@@ -284,6 +289,9 @@ MainWindow::setupFileChangedNotificationWidget()
 void
 MainWindow::setupExplodeWidgets()
 {
+    this->explode = new ExplodeWidget(this);
+    connect(this->explode, SIGNAL(valueChanged(double)), this, SLOT(onExplodeValueChanged(double)));
+    this->explode->setVisible(false);
 }
 
 void
@@ -968,19 +976,21 @@ MainWindow::onLoadFinished()
     addSideSets();
     addNodeSets();
 
-    // auto gmin = QVector3D(float('inf'), float('inf'), float('inf'));
-    // auto gmax = QVector3D(float('-inf'), float('-inf'), float('-inf'));
-    // for block in self._blocks.values():
-    //     bmin, bmax = block.bounds
-    //     gmin = common.point_min(bmin, gmin)
-    //     gmax = common.point_max(bmax, gmax)
-    // bnds = [gmin.x(), gmax.x(), gmin.y(), gmax.y(), gmin.z(), gmax.z()]
-    // self.boundsChanged.emit(bnds)
-
-    // self._com = common.centerOfBounds(bnds)
-    // self._cube_axes_actor.SetBounds(*bnds)
+    BoundingBox bbox;
+    int idx = 0;
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        if (idx == 0)
+            bbox = block->getBounds();
+        else
+            bbox.doUnion(block->getBounds());
+        idx++;
+    }
+    this->cube_axes_actor
+        ->SetBounds(bbox.min(0), bbox.max(0), bbox.min(1), bbox.max(1), bbox.min(2), bbox.max(2));
     this->vtk_renderer->AddViewProp(this->cube_axes_actor);
 
+    this->center_of_bounds = bbox.center();
     this->info_window->setSummary(reader->getTotalNumberOfElements(),
                                   reader->getTotalNumberOfNodes());
 
@@ -1323,11 +1333,27 @@ MainWindow::onExportAsJpg()
 void
 MainWindow::onToolsExplode()
 {
+    this->explode->adjustSize();
+    auto render_win_geom = geometry();
+    int left = (render_win_geom.width() - this->explode->width()) / 2;
+    int top = render_win_geom.height() - this->explode->height() - 10;
+    this->explode->setGeometry(left, top, this->explode->width(), this->explode->height());
+    this->explode->show();
 }
 
 void
-MainWindow::onExplodeValueChanged()
+MainWindow::onExplodeValueChanged(double value)
 {
+    double dist = value / this->explode->range();
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        auto blk_cob = block->getCenterOfBounds();
+        vtkVector3d dir;
+        vtkMath::Subtract(blk_cob, this->center_of_bounds, dir);
+        dir.Normalize();
+        vtkMath::MultiplyScalar(dir.GetData(), dist);
+        block->setPosition(dir[0], dir[1], dir[2]);
+    }
 }
 
 void

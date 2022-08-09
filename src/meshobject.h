@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BoundingBox.h"
+#include "boundingbox.h"
 #include "vtkVector.h"
 
 class vtkExtractBlock;
@@ -18,9 +18,11 @@ public:
     bool visible();
     vtkActor * getActor();
     vtkProperty * getProperty();
-    vtkVector3d getCenterOfBounds();
+    const BoundingBox & getBounds() const;
+    vtkVector3d getCenterOfBounds() const;
 
     void setVisible(bool visible);
+    void setPosition(double x, double y, double z);
 
 protected:
     vtkVector3d computeCenterOfBounds();
