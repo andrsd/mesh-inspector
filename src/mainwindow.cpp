@@ -266,7 +266,7 @@ MainWindow::setupViewModeWidget(QMainWindow * wnd)
 
     this->view_mode = new QPushButton(wnd);
     this->view_mode->setFixedSize(60, 32);
-    // this->view_mode->setIcon(Assets().icons['render-mode']);
+    this->view_mode->setIcon(QPixmap(":/resources/render-mode.svg"));
     this->view_mode->setMenu(this->view_menu);
     this->view_mode->show();
 }

@@ -13,6 +13,7 @@ add_executable(
         nodesetobject.cpp
         reader.cpp
         sidesetobject.cpp
+        resources.qrc
 )
 
 target_include_directories(
