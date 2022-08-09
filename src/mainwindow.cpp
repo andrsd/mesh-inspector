@@ -839,8 +839,20 @@ MainWindow::loadColorProfiles()
 }
 
 QString
-MainWindow::getFileName()
+MainWindow::getFileName(const QString & window_title,
+                        const QString & name_filter,
+                        const QString & default_suffix)
 {
+    QFileDialog dialog;
+    dialog.setWindowTitle(window_title);
+    dialog.setNameFilter(name_filter);
+    dialog.setFileMode(QFileDialog::AnyFile);
+    dialog.setAcceptMode(QFileDialog::AcceptSave);
+    dialog.setDefaultSuffix(default_suffix);
+
+    if (dialog.exec() == QDialog::Accepted)
+        return QString(dialog.selectedFiles()[0]);
+
     return QString();
 }
 

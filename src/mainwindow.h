@@ -123,7 +123,9 @@ protected:
     void selectPoint(const QPoint & pt);
     void setColorProfile();
     void loadColorProfiles();
-    QString getFileName(/*window_title, name_filter, default_suffix*/);
+    QString getFileName(const QString & window_title,
+                        const QString & name_filter,
+                        const QString & default_suffix);
     void buildRecentFilesMenu();
     void addToRecentFiles(const QString & file_name);
 
