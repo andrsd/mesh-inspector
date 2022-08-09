@@ -20,6 +20,7 @@ class QShortcut;
 class InfoWindow;
 class AboutDialog;
 class NotificationWidget;
+class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
 class vtkRenderWindowInteractor;
@@ -180,6 +181,7 @@ protected:
     QTimer update_timer;
     QFileSystemWatcher * file_watcher;
     NotificationWidget * notification;
+    FileChangedNotificationWidget * file_changed_notification;
     ERenderMode render_mode;
     EModeSelect select_mode;
     EColorProfile color_profile_id;

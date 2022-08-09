@@ -3,6 +3,7 @@ add_executable(
         aboutdlg.cpp
         blockobject.cpp
         exodusiireader.cpp
+        filechangednotificationwidget.cpp
         infowindow.cpp
         main.cpp
         mainwindow.cpp

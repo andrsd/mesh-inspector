@@ -34,6 +34,7 @@
 #include "vtkCubeAxesActor.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
+#include "filechangednotificationwidget.h"
 #include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
@@ -85,6 +86,7 @@ MainWindow::MainWindow(QWidget * parent) :
     file_name(),
     file_watcher(new QFileSystemWatcher()),
     notification(nullptr),
+    file_changed_notification(nullptr),
     render_mode(SHADED_WITH_EDGES),
     select_mode(MODE_SELECT_NONE),
     color_profile_id(COLOR_PROFILE_DEFAULT),
@@ -271,6 +273,9 @@ MainWindow::setupNotificationWidget()
 void
 MainWindow::setupFileChangedNotificationWidget()
 {
+    this->file_changed_notification = new FileChangedNotificationWidget(this);
+    this->file_changed_notification->setVisible(false);
+    connect(this->file_changed_notification, SIGNAL(reloaded()), this, SLOT(onReloadFile()));
 }
 
 void
@@ -769,6 +774,15 @@ MainWindow::showNotification(const QString & text, int ms)
 void
 MainWindow::showFileChangedNotification()
 {
+    this->file_changed_notification->adjustSize();
+    auto width = getRenderWindowWidth();
+    int left = (width - this->file_changed_notification->width()) / 2;
+    int top = 10;
+    this->file_changed_notification->setGeometry(left,
+                                                 top,
+                                                 this->file_changed_notification->width(),
+                                                 this->file_changed_notification->height());
+    this->file_changed_notification->show();
 }
 
 void
@@ -960,7 +974,7 @@ MainWindow::onLoadFinished()
     addToRecentFiles(this->file_name);
     buildRecentFilesMenu();
     this->file_watcher->addPath(this->file_name);
-    // this->file_changed_notification->setFileName(this->file_name);
+    this->file_changed_notification->setFileName(this->file_name);
 
     // self._selection = Selection(self._geometry.GetOutput())
     // self._setSelectionProperties(self._selection)
@@ -1179,6 +1193,7 @@ MainWindow::onFileChanged(const QString & path)
 void
 MainWindow::onReloadFile()
 {
+    loadFile(this->file_name);
 }
 
 void
