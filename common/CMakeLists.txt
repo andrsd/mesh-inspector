@@ -15,6 +15,7 @@ add_library(
         colorpicker.cpp
         expandablewidget.cpp
         horzline.cpp
+        infowidget.cpp
         loadfileevent.cpp
         notificationwidget.cpp
         otreeview.cpp

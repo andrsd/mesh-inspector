@@ -34,6 +34,7 @@ class BlockObject;
 class SideSetObject;
 class NodeSetObject;
 class ColorProfile;
+class InfoWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -112,7 +113,7 @@ protected:
     void setSelectionProperties();
     void showNotification(const QString & text, int ms = 5000);
     void showFileChangedNotification();
-    void showSelectedMeshEntity();
+    void showSelectedMeshEntity(const QString & info);
     void hideSelectedMeshEntity();
     void deselectBlocks();
     // void blockActorToId(actor);
@@ -201,6 +202,7 @@ protected:
     InfoWindow * info_window;
     AboutDialog * about_dlg;
     ExplodeWidget * explode;
+    InfoWidget * selected_mesh_ent_info;
 
     QAction * new_action;
     QAction * open_action;

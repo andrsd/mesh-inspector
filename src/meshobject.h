@@ -3,6 +3,7 @@
 #include "boundingbox.h"
 #include "vtkVector.h"
 
+class vtkDataObject;
 class vtkExtractBlock;
 class vtkCompositeDataGeometryFilter;
 class vtkPolyDataMapper;
@@ -20,6 +21,8 @@ public:
     vtkProperty * getProperty();
     const BoundingBox & getBounds() const;
     vtkVector3d getCenterOfBounds() const;
+    int getNumCells() const;
+    int getNumPoints() const;
 
     void setVisible(bool visible);
     void setPosition(double x, double y, double z);
@@ -27,6 +30,7 @@ public:
 protected:
     vtkVector3d computeCenterOfBounds();
 
+    vtkDataObject * data_object;
     vtkCompositeDataGeometryFilter * geometry;
     vtkPolyDataMapper * mapper;
     vtkActor * actor;

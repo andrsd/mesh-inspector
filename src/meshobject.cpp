@@ -1,4 +1,5 @@
 #include "meshobject.h"
+#include "vtkDataObject.h"
 #include "vtkExtractBlock.h"
 #include "vtkCompositeDataGeometryFilter.h"
 #include "vtkPolyDataMapper.h"
@@ -7,6 +8,8 @@
 
 MeshObject::MeshObject(vtkExtractBlock * eb)
 {
+    this->data_object = eb->GetOutput();
+
     this->geometry = vtkCompositeDataGeometryFilter::New();
     this->geometry->SetInputConnection(0, eb->GetOutputPort(0));
     this->geometry->Update();
@@ -70,4 +73,16 @@ vtkVector3d
 MeshObject::getCenterOfBounds() const
 {
     return this->center_of_bounds;
+}
+
+int
+MeshObject::getNumCells() const
+{
+    return this->data_object->GetNumberOfElements(vtkDataSet::CELL);
+}
+
+int
+MeshObject::getNumPoints() const
+{
+    return this->data_object->GetNumberOfElements(vtkDataSet::POINT);
 }

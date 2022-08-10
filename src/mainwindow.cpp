@@ -49,6 +49,7 @@
 #include "colorprofile.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
+#include "common/infowidget.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -112,6 +113,7 @@ MainWindow::MainWindow(QWidget * parent) :
     info_window(nullptr),
     about_dlg(nullptr),
     explode(nullptr),
+    selected_mesh_ent_info(nullptr),
     new_action(nullptr),
     open_action(nullptr),
     close_action(nullptr),
@@ -172,6 +174,7 @@ MainWindow::~MainWindow()
     delete this->info_window;
     delete this->info_dock;
     delete this->explode;
+    delete this->selected_mesh_ent_info;
     for (auto & it : this->color_profiles)
         delete it;
 }
@@ -200,8 +203,8 @@ MainWindow::setupWidgets()
     setupViewModeWidget(this);
     setupFileChangedNotificationWidget();
     setupNotificationWidget();
-    // this->selected_mesh_ent_info = SelectedMeshEntityInfoWidget(self)
-    // this->selected_mesh_ent_info.setVisible(False)
+    this->selected_mesh_ent_info = new InfoWidget(this);
+    this->selected_mesh_ent_info->setVisible(false);
 
     this->deselect_sc = new QShortcut(QKeySequence(Qt::Key_Space), this);
     connect(this->deselect_sc, SIGNAL(activated()), this, SLOT(onDeselect()));
@@ -813,14 +816,18 @@ MainWindow::showFileChangedNotification()
 }
 
 void
-MainWindow::showSelectedMeshEntity()
+MainWindow::showSelectedMeshEntity(const QString & info)
 {
+    this->selected_mesh_ent_info->setText(info);
+    this->selected_mesh_ent_info->adjustSize();
+    this->selected_mesh_ent_info->move(10, 10);
+    this->selected_mesh_ent_info->show();
 }
 
 void
 MainWindow::hideSelectedMeshEntity()
 {
-    // this->selected_mesh_ent_info->hide();
+    this->selected_mesh_ent_info->hide();
 }
 
 void
@@ -1283,9 +1290,13 @@ MainWindow::onBlockSelectionChanged(int block_id)
     const auto & it = this->blocks.find(block_id);
     if (it != this->blocks.end()) {
         BlockObject * block = it->second;
-        // TODO
-        // this->selected_mesh_ent_info.setBlockInfo(block_id, block->info());
-        showSelectedMeshEntity();
+        auto info = QString("Block: %1\n"
+                            "Cells: %2\n"
+                            "Points: %3")
+                        .arg(block_id)
+                        .arg(block->getNumCells())
+                        .arg(block->getNumPoints());
+        showSelectedMeshEntity(info);
     }
     else
         hideSelectedMeshEntity();
@@ -1297,8 +1308,13 @@ MainWindow::onSideSetSelectionChanged(int sideset_id)
     const auto & it = this->side_sets.find(sideset_id);
     if (it != this->side_sets.end()) {
         auto * sideset = it->second;
-        // this->selected_mesh_ent_info->setSidesetInfo(sideset_id, sideset->info);
-        showSelectedMeshEntity();
+        auto info = QString("Side set: %1\n"
+                            "Cells: %2\n"
+                            "Points: %3")
+                        .arg(sideset_id)
+                        .arg(sideset->getNumCells())
+                        .arg(sideset->getNumPoints());
+        showSelectedMeshEntity(info);
     }
     else
         hideSelectedMeshEntity();
@@ -1310,8 +1326,11 @@ MainWindow::onNodeSetSelectionChanged(int nodeset_id)
     const auto & it = this->node_sets.find(nodeset_id);
     if (it != this->node_sets.end()) {
         auto * nodeset = it->second;
-        // this->selected_mesh_ent_info->setNodesetInfo(sideset_id, sideset->info);
-        showSelectedMeshEntity();
+        auto info = QString("Node set: %1\n"
+                            "Points: %2")
+                        .arg(nodeset_id)
+                        .arg(nodeset->getNumPoints());
+        showSelectedMeshEntity(info);
     }
     else
         hideSelectedMeshEntity();
