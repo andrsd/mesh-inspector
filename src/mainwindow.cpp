@@ -1269,8 +1269,6 @@ MainWindow::onBlockSelectionChanged(int block_id)
         // TODO
         // this->selected_mesh_ent_info.setBlockInfo(block_id, block->info());
         showSelectedMeshEntity();
-        this->selected_block = block;
-        setBlockProperties(block, true);
     }
     else
         hideSelectedMeshEntity();
