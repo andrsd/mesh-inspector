@@ -12,6 +12,7 @@
 #include "common/horzline.h"
 #include "common/expandablewidget.h"
 #include "common/otreeview.h"
+#include "common/colorpicker.h"
 
 QList<QColor> InfoWindow::colors({ QColor(156, 207, 237),
                                    QColor(165, 165, 165),
@@ -40,7 +41,8 @@ InfoWindow::InfoWindow(QWidget * parent) :
     y_range(nullptr),
     z_range(nullptr),
     dimensions(nullptr),
-    range_expd(nullptr)
+    range_expd(nullptr),
+    color_picker(nullptr)
 {
     setupWidgets();
 
@@ -62,8 +64,11 @@ InfoWindow::setupWidgets()
     this->layout->setContentsMargins(20, 10, 20, 10);
     this->layout->setSpacing(8);
 
-    // this->color_picker = new ColorPicker(self);
-    // this->color_picker.colorChanged.connect(self.onBlockColorPicked);
+    this->color_picker = new ColorPicker(this);
+    connect(this->color_picker,
+            SIGNAL(colorChanged(const QColor &)),
+            this,
+            SLOT(onBlockColorPicked(const QColor &)));
 
     setupBlocksWidgets();
     this->layout->addWidget(new HorzLine());
@@ -385,6 +390,16 @@ InfoWindow::onShowAllBlocks()
 void
 InfoWindow::onAppearance()
 {
+    auto * selection_model = this->blocks->selectionModel();
+    auto indexes = selection_model->selectedIndexes();
+    if (indexes.length() == 0)
+        return;
+    auto index = indexes[0];
+    auto clr_index = index.siblingAtColumn(IDX_COLOR);
+    auto qcolor = this->block_model->itemFromIndex(clr_index)->data().value<QColor>();
+    this->color_picker->setData(clr_index);
+    this->color_picker->setColor(qcolor);
+    this->color_picker->show();
 }
 
 void
@@ -499,4 +514,13 @@ InfoWindow::setBounds(double xmin, double xmax, double ymin, double ymax, double
                        .arg(QString::number(zmin, format, precision))
                        .arg(QString::number(zmax, format, precision));
     this->z_range->setText(1, z_range);
+}
+
+void
+InfoWindow::onBlockColorPicked(const QColor & qcolor)
+{
+    auto index = this->color_picker->data().value<QModelIndex>();
+    auto * item = this->block_model->itemFromIndex(index);
+    item->setForeground(QBrush(qcolor));
+    item->setData(qcolor);
 }

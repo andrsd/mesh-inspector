@@ -15,6 +15,7 @@ class QTreeWidgetItem;
 class QCheckBox;
 class QStandardItem;
 class QItemSelection;
+class ColorPicker;
 
 class InfoWindow : public QScrollArea {
     Q_OBJECT
@@ -47,6 +48,7 @@ protected slots:
                                  const QItemSelection & deselected);
     void onNameContextMenu(QStandardItem * item, const QPoint & point);
     void onBlockCustomContextMenu(const QPoint &);
+    void onBlockColorPicked(const QColor & qcolor);
 
     void onSideSetChanged(QStandardItem * item);
     void onSideSetSelectionChanged(const QItemSelection & selected,
@@ -94,6 +96,7 @@ protected:
     QTreeWidgetItem * z_range;
     QCheckBox * dimensions;
     ExpandableWidget * range_expd;
+    ColorPicker * color_picker;
 
 protected:
     static const int IDX_NAME = 0;
