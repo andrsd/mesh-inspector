@@ -3,4 +3,7 @@
     <qresource>
         <file>../resources/render-mode.svg</file>
     </qresource>
+    <qresource>
+        <file alias="license">../LICENSE</file>
+    </qresource>
 </RCC>

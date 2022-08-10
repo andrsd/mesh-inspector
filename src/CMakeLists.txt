@@ -8,6 +8,7 @@ add_executable(
         explodewidget.cpp
         filechangednotificationwidget.cpp
         infowindow.cpp
+        licensedlg.cpp
         main.cpp
         mainwindow.cpp
         meshobject.cpp

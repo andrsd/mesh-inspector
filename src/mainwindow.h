@@ -21,6 +21,7 @@ class QDockWidget;
 class QShortcut;
 class InfoWindow;
 class AboutDialog;
+class LicenseDialog;
 class NotificationWidget;
 class ExplodeWidget;
 class FileChangedNotificationWidget;
@@ -176,6 +177,7 @@ public slots:
     void onBringAllToFront();
     void onShowMainWindow();
     void onAbout();
+    void onViewLicense();
 
 protected:
     QSettings * settings;
@@ -205,6 +207,7 @@ protected:
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
+    LicenseDialog * license_dlg;
     ExplodeWidget * explode;
     InfoWidget * selected_mesh_ent_info;
 
@@ -224,6 +227,7 @@ protected:
     QAction * bring_all_to_front;
     QAction * show_main_window;
     QAction * about_box_action;
+    QAction * view_license_action;
 
     QActionGroup * visual_repr;
     QActionGroup * color_profile_action_group;

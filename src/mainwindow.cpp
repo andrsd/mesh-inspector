@@ -38,6 +38,7 @@
 #include "vtkMath.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
+#include "licensedlg.h"
 #include "filechangednotificationwidget.h"
 #include "explodewidget.h"
 #include "reader.h"
@@ -116,6 +117,7 @@ MainWindow::MainWindow(QWidget * parent) :
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
+    license_dlg(nullptr),
     explode(nullptr),
     selected_mesh_ent_info(nullptr),
     new_action(nullptr),
@@ -329,6 +331,9 @@ MainWindow::setupMenuBar()
     // for linux and windows
     file_menu->addSeparator();
     this->about_box_action = file_menu->addAction("About", this, SLOT(onAbout()));
+    this->about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
+    this->view_license_action = file_menu->addAction("View license", this, SLOT(onViewLicense()));
+    this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
 
     QMenu * view_menu = this->menu_bar->addMenu("View");
     view_menu->addAction(this->shaded_action);
@@ -1478,4 +1483,12 @@ MainWindow::onAbout()
     if (this->about_dlg == nullptr)
         this->about_dlg = new AboutDialog(this);
     this->about_dlg->show();
+}
+
+void
+MainWindow::onViewLicense()
+{
+    if (this->license_dlg == nullptr)
+        this->license_dlg = new LicenseDialog(this);
+    this->license_dlg->show();
 }
