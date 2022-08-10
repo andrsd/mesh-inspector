@@ -47,6 +47,8 @@
 #include "exodusiireader.h"
 #include "boundingbox.h"
 #include "colorprofile.h"
+#include "ointeractorstyle2d.h"
+#include "ointeractorstyle3d.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 #include "common/infowidget.h"
@@ -109,6 +111,8 @@ MainWindow::MainWindow(QWidget * parent) :
     vtk_interactor(nullptr),
     ori_marker(nullptr),
     cube_axes_actor(nullptr),
+    interactor_style_2d(nullptr),
+    interactor_style_3d(nullptr),
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
@@ -136,6 +140,9 @@ MainWindow::MainWindow(QWidget * parent) :
     deselect_sc(nullptr),
     selected_block(nullptr)
 {
+    this->interactor_style_2d = new OInteractorStyle2D(this);
+    this->interactor_style_3d = new OInteractorStyle3D(this);
+
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
     if (!this->restoreGeometry(geom.toByteArray()))
@@ -1060,11 +1067,10 @@ MainWindow::onLoadFinished()
 
     this->updateMenuBar();
 
-    // if reader.getDimensionality() == 3:
-    //     style = OtterInteractorStyle3D(self)
-    // else:
-    //     style = OtterInteractorStyle2D(self)
-    // self._vtk_interactor.SetInteractorStyle(style)
+    if (reader->getDimensionality() == 3)
+        this->vtk_interactor->SetInteractorStyle(this->interactor_style_3d);
+    else
+        this->vtk_interactor->SetInteractorStyle(this->interactor_style_2d);
 
     auto * camera = this->vtk_renderer->GetActiveCamera();
     auto * focal_point = camera->GetFocalPoint();
@@ -1339,6 +1345,13 @@ MainWindow::onNodeSetSelectionChanged(int nodeset_id)
 void
 MainWindow::onClicked(const QPoint & pt)
 {
+    onDeselect();
+    if (this->select_mode == MODE_SELECT_BLOCKS)
+        selectBlock(pt);
+    else if (this->select_mode == MODE_SELECT_CELLS)
+        selectCell(pt);
+    else if (this->select_mode == MODE_SELECT_POINTS)
+        selectPoint(pt);
 }
 
 void

@@ -35,6 +35,8 @@ class SideSetObject;
 class NodeSetObject;
 class ColorProfile;
 class InfoWidget;
+class OInteractorStyle2D;
+class OInteractorStyle3D;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -198,6 +200,8 @@ protected:
     vtkRenderWindowInteractor * vtk_interactor;
     vtkOrientationMarkerWidget * ori_marker;
     vtkCubeAxesActor * cube_axes_actor;
+    OInteractorStyle2D * interactor_style_2d;
+    OInteractorStyle3D * interactor_style_3d;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;

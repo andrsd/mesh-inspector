@@ -12,6 +12,9 @@ add_executable(
         mainwindow.cpp
         meshobject.cpp
         nodesetobject.cpp
+        ointeractorinterface.cpp
+        ointeractorstyle2d.cpp
+        ointeractorstyle3d.cpp
         reader.cpp
         sidesetobject.cpp
         resources.qrc
