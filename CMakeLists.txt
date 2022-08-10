@@ -4,6 +4,11 @@ project(mesh-inspector
     VERSION 1.0
     LANGUAGES C CXX)
 
+set(MESH_INSPECTOR_COPYRIGHT
+    "Copyright © 2022-present, David Andrš, All Rights Reserved"
+)
+mark_as_advanced(FORCE MESH_INSPECTOR_COPYRIGHT)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)

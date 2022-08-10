@@ -2,4 +2,4 @@
 
 #define MESH_INSPECTOR_APP_NAME "Mesh Inspector"
 #define MESH_INSPECTOR_VERSION "@mesh-inspector_VERSION@"
-#define MESH_INSPECTOR_COPYRIGHT "Copyright © 2022-present, David Andrš, All Rights Reserved"
+#define MESH_INSPECTOR_COPYRIGHT "@MESH_INSPECTOR_COPYRIGHT@"
