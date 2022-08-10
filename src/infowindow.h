@@ -74,6 +74,7 @@ protected:
     void setupNodesetsWidgets();
     void setupSummaryWidgets();
     void setupRangeWidgets();
+    void setColorPickerColorFromIndex(const QModelIndex & index);
 
     QWidget * widget;
     QVBoxLayout * layout;

@@ -281,18 +281,32 @@ InfoWindow::onBlockChanged(QStandardItem * item)
 }
 
 void
+InfoWindow::setColorPickerColorFromIndex(const QModelIndex & index)
+{
+    auto clr_index = index.siblingAtColumn(IDX_COLOR);
+    auto * clr_item = this->block_model->itemFromIndex(clr_index);
+    auto qcolor = clr_item->data().value<QColor>();
+    this->color_picker->setData(clr_index);
+    this->color_picker->setColor(qcolor);
+}
+
+void
 InfoWindow::onBlockSelectionChanged(const QItemSelection & selected,
                                     const QItemSelection & deselected)
 {
     if (selected.indexes().length() > 0) {
         this->sidesets->clearSelection();
         this->nodesets->clearSelection();
-        auto * item = this->block_model->itemFromIndex(selected.indexes()[0]);
+        auto index = selected.indexes()[0];
+        auto * item = this->block_model->itemFromIndex(index);
         int block_id = item->data().toInt();
+        setColorPickerColorFromIndex(index);
         emit blockSelectionChanged(block_id);
     }
-    else
+    else {
+        this->color_picker->setData(QVariant());
         emit blockSelectionChanged(-1);
+    }
 }
 
 void
@@ -395,10 +409,7 @@ InfoWindow::onAppearance()
     if (indexes.length() == 0)
         return;
     auto index = indexes[0];
-    auto clr_index = index.siblingAtColumn(IDX_COLOR);
-    auto qcolor = this->block_model->itemFromIndex(clr_index)->data().value<QColor>();
-    this->color_picker->setData(clr_index);
-    this->color_picker->setColor(qcolor);
+    setColorPickerColorFromIndex(index);
     this->color_picker->show();
 }
 
@@ -519,8 +530,11 @@ InfoWindow::setBounds(double xmin, double xmax, double ymin, double ymax, double
 void
 InfoWindow::onBlockColorPicked(const QColor & qcolor)
 {
-    auto index = this->color_picker->data().value<QModelIndex>();
-    auto * item = this->block_model->itemFromIndex(index);
-    item->setForeground(QBrush(qcolor));
-    item->setData(qcolor);
+    QVariant data = this->color_picker->data();
+    if (data.isValid()) {
+        auto index = data.value<QModelIndex>();
+        auto * item = this->block_model->itemFromIndex(index);
+        item->setForeground(QBrush(qcolor));
+        item->setData(qcolor);
+    }
 }
