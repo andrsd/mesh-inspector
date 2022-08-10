@@ -12,6 +12,7 @@ add_library(
     ${PROJECT_NAME}
     SHARED
         clickablelabel.cpp
+        colorpicker.cpp
         expandablewidget.cpp
         horzline.cpp
         loadfileevent.cpp
