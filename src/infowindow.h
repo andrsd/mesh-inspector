@@ -30,6 +30,7 @@ public:
 signals:
     void blockVisibilityChanged(int block_number, bool visible);
     void blockColorChanged(int block_number, QColor color);
+    void blockOpacityChanged(int block_id, double opacity);
     void blockSelectionChanged(int block_number);
     void sideSetVisibilityChanged(int sideset_id, bool visible);
     void sideSetSelectionChanged(int sideset_id);
@@ -49,6 +50,7 @@ protected slots:
     void onNameContextMenu(QStandardItem * item, const QPoint & point);
     void onBlockCustomContextMenu(const QPoint &);
     void onBlockColorPicked(const QColor & qcolor);
+    void onBlockOpacityChanged(double opacity);
 
     void onSideSetChanged(QStandardItem * item);
     void onSideSetSelectionChanged(const QItemSelection & selected,

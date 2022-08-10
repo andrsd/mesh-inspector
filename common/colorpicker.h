@@ -29,6 +29,7 @@ public:
 
 signals:
     void colorChanged(const QColor & color);
+    void opacityChanged(double opacity);
 
 protected slots:
     void onColorPicked(QAbstractButton * button);
@@ -45,6 +46,7 @@ protected:
     void fillLayoutWithColors2(int st_row, int st_col);
     void updateColorSample();
     void updateColorWidgets();
+    void updateOpacityWidgets();
 
     int id;
     QColor qcolor;

@@ -69,6 +69,10 @@ InfoWindow::setupWidgets()
             SIGNAL(colorChanged(const QColor &)),
             this,
             SLOT(onBlockColorPicked(const QColor &)));
+    connect(this->color_picker,
+            SIGNAL(opacityChanged(double)),
+            this,
+            SLOT(onBlockOpacityChanged(double)));
 
     setupBlocksWidgets();
     this->layout->addWidget(new HorzLine());
@@ -283,11 +287,13 @@ InfoWindow::onBlockChanged(QStandardItem * item)
 void
 InfoWindow::setColorPickerColorFromIndex(const QModelIndex & index)
 {
+    blockSignals(true);
     auto clr_index = index.siblingAtColumn(IDX_COLOR);
     auto * clr_item = this->block_model->itemFromIndex(clr_index);
     auto qcolor = clr_item->data().value<QColor>();
     this->color_picker->setData(clr_index);
     this->color_picker->setColor(qcolor);
+    blockSignals(false);
 }
 
 void
@@ -536,5 +542,24 @@ InfoWindow::onBlockColorPicked(const QColor & qcolor)
         auto * item = this->block_model->itemFromIndex(index);
         item->setForeground(QBrush(qcolor));
         item->setData(qcolor);
+    }
+}
+
+void
+InfoWindow::onBlockOpacityChanged(double opacity)
+{
+    QVariant data = this->color_picker->data();
+    if (data.isValid()) {
+        auto clr_index = data.value<QModelIndex>();
+        auto * clr_item = this->block_model->itemFromIndex(clr_index);
+        auto color = clr_item->foreground().color();
+        color.setAlphaF(opacity);
+        clr_item->setForeground(QBrush(color));
+        clr_item->setData(color);
+
+        auto index = clr_index.siblingAtColumn(IDX_NAME);
+        auto * item = this->block_model->itemFromIndex(index);
+        auto block_id = item->data().toInt();
+        emit blockOpacityChanged(block_id, opacity);
     }
 }

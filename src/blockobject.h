@@ -19,7 +19,9 @@ public:
     vtkActor * getSilhouetteActor();
     vtkProperty * getSilhouetteProperty();
     const QColor & getColor();
+    double getOpacity();
     void setColor(const QColor & color);
+    void setOpacity(double opacity);
     void setSilhouetteVisible(bool visible);
 
 protected:
@@ -29,4 +31,5 @@ protected:
     vtkPolyDataMapper * silhouette_mapper;
     vtkActor * silhouette_actor;
     QColor color;
+    double opacity;
 };

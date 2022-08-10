@@ -11,7 +11,8 @@ BlockObject::BlockObject(vtkExtractBlock * eb, vtkCamera * camera) :
     MeshObject(eb),
     silhouette(nullptr),
     silhouette_mapper(nullptr),
-    silhouette_actor(nullptr)
+    silhouette_actor(nullptr),
+    opacity(1.)
 {
     vtkDataObject * data_object = eb->GetOutput();
 
@@ -62,10 +63,22 @@ BlockObject::getColor()
     return this->color;
 }
 
+double
+BlockObject::getOpacity()
+{
+    return this->opacity;
+}
+
 void
 BlockObject::setColor(const QColor & color)
 {
     this->color = color;
+}
+
+void
+BlockObject::setOpacity(double opacity)
+{
+    this->opacity = opacity;
 }
 
 void

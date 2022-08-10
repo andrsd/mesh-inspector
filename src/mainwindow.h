@@ -138,6 +138,7 @@ public slots:
     void onClose();
     void onLoadFinished();
     void onBlockVisibilityChanged(int block_id, bool visible);
+    void onBlockOpacityChanged(int block_id, double opacity);
     void onBlockColorChanged(int block_id, QColor color);
     void onSideSetVisibilityChanged(int sideset_id, bool visible);
     void onNodeSetVisibilityChanged(int nodeset_id, bool visible);

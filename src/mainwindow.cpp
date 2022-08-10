@@ -428,6 +428,10 @@ MainWindow::connectSignals()
             this,
             SLOT(onBlockVisibilityChanged(int, bool)));
     connect(this->info_window,
+            SIGNAL(blockOpacityChanged(int, double)),
+            this,
+            SLOT(onBlockOpacityChanged(int, double)));
+    connect(this->info_window,
             SIGNAL(blockColorChanged(int, QColor)),
             this,
             SLOT(onBlockColorChanged(int, QColor)));
@@ -703,13 +707,13 @@ MainWindow::setDeselectedBlockProperties(BlockObject * block)
     if (this->render_mode == SHADED) {
         auto & clr = block->getColor();
         property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
-        property->SetOpacity(1.0);
+        property->SetOpacity(block->getOpacity());
         property->SetEdgeVisibility(false);
     }
     else if (this->render_mode == SHADED_WITH_EDGES) {
         auto & clr = block->getColor();
         property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
-        property->SetOpacity(1.0);
+        property->SetOpacity(block->getOpacity());
         property->SetEdgeVisibility(true);
         property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                                SIDESET_EDGE_CLR.greenF(),
@@ -1072,6 +1076,19 @@ MainWindow::onBlockVisibilityChanged(int block_id, bool visible)
             block->setSilhouetteVisible(visible);
         else
             block->setSilhouetteVisible(false);
+    }
+}
+
+void
+MainWindow::onBlockOpacityChanged(int block_id, double opacity)
+{
+    BlockObject * block = getBlock(block_id);
+    if (block) {
+        block->setOpacity(opacity);
+        if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
+            auto * property = block->getProperty();
+            property->SetOpacity(opacity);
+        }
     }
 }
 

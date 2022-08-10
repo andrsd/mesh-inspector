@@ -278,6 +278,7 @@ ColorPicker::setColor(const QColor & qcolor)
 {
     this->qcolor = qcolor;
     updateColorWidgets();
+    updateOpacityWidgets();
 }
 
 QColor
@@ -313,8 +314,15 @@ ColorPicker::updateColorWidgets()
     this->red->setText(QString::number(this->qcolor.red()));
     this->green->setText(QString::number(this->qcolor.green()));
     this->blue->setText(QString::number(this->qcolor.blue()));
-    this->opacity->setText(QString::number(this->qcolor.alphaF()));
     updateColorSample();
+}
+
+void
+ColorPicker::updateOpacityWidgets()
+{
+    double opacity = this->qcolor.alphaF();
+    this->opacity->setText(QString::number(opacity, 'f', 2));
+    this->opacity_slider->setValue(opacity * 100);
 }
 
 void
@@ -322,6 +330,7 @@ ColorPicker::onColorPicked(QAbstractButton * button)
 {
     int id = this->color_group->id(button);
     this->qcolor = this->color_map[id];
+    this->qcolor.setAlphaF(this->opacity_slider->value() / 100.);
     updateColorWidgets();
     emit colorChanged(this->qcolor);
 }
@@ -329,9 +338,12 @@ ColorPicker::onColorPicked(QAbstractButton * button)
 void
 ColorPicker::onOpacitySliderChanged(int value)
 {
+    double opacity = value / 100.;
     blockSignals(true);
-    this->opacity->setText(QString::number(value / 100., 'f', 2));
+    this->qcolor.setAlphaF(opacity);
+    updateOpacityWidgets();
     blockSignals(false);
+    emit opacityChanged(opacity);
 }
 
 void
@@ -339,11 +351,12 @@ ColorPicker::onOpacityChanged(const QString & text)
 {
     blockSignals(true);
     if (text.length() > 0) {
-        auto val = text.toDouble() * 100;
-        this->opacity_slider->setValue(val);
+        auto opacity = text.toDouble();
+        this->qcolor.setAlphaF(opacity);
     }
     else
-        this->opacity_slider->setValue(0.);
+        this->qcolor.setAlphaF(0.);
+    updateOpacityWidgets();
     blockSignals(false);
 }
 
