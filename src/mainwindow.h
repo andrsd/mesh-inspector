@@ -30,6 +30,7 @@ class vtkRenderer;
 class vtkRenderWindowInteractor;
 class vtkOrientationMarkerWidget;
 class vtkCompositeDataGeometryFilter;
+class vtkActor;
 class vtkCubeAxesActor;
 class BlockObject;
 class SideSetObject;
@@ -119,7 +120,7 @@ protected:
     void showSelectedMeshEntity(const QString & info);
     void hideSelectedMeshEntity();
     void deselectBlocks();
-    // void blockActorToId(actor);
+    int blockActorToId(vtkActor * actor);
     void selectBlock(const QPoint & pt);
     void selectCell(const QPoint & pt);
     void selectPoint(const QPoint & pt);

@@ -36,6 +36,7 @@
 #include "vtkPNGWriter.h"
 #include "vtkJPEGWriter.h"
 #include "vtkMath.h"
+#include "vtkPropPicker.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
@@ -402,7 +403,20 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
     this->mode_select_action_group = new QActionGroup(this);
     this->select_mode = static_cast<EModeSelect>(
         this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt());
-    // TODO: fill in selection modes
+
+    QList<QString> names({ QString("None"), QString("Blocks") });
+    QList<EModeSelect> modes({ MODE_SELECT_NONE, MODE_SELECT_BLOCKS });
+    for (int i = 0; i < names.size(); i++) {
+        auto name = names[i];
+        auto mode = modes[i];
+        auto * action = select_menu->addAction(name);
+        action->setCheckable(true);
+        action->setData(mode);
+        this->mode_select_action_group->addAction(action);
+        if (mode == this->select_mode)
+            action->setChecked(true);
+    }
+
     connect(this->mode_select_action_group,
             SIGNAL(triggered(QAction *)),
             this,
@@ -851,14 +865,33 @@ MainWindow::deselectBlocks()
     }
 }
 
-// void
-// MainWindow::blockActorToId(actor)
-// {
-// }
+int
+MainWindow::blockActorToId(vtkActor * actor)
+{
+    // TODO: when we start to have 1000s of actors, this should be done via a
+    // map from 'actor' to 'block_id'
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        if (block->getActor() == actor)
+            return it.first;
+    }
+    return -1;
+}
 
 void
 MainWindow::selectBlock(const QPoint & pt)
 {
+    auto * picker = vtkPropPicker::New();
+    if (picker->PickProp(pt.x(), pt.y(), this->vtk_renderer)) {
+        auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
+        if (actor) {
+            auto blk_id = blockActorToId(actor);
+            auto * block = getBlock(blk_id);
+            onBlockSelectionChanged(blk_id);
+            this->selected_block = block;
+            setBlockProperties(block, true);
+        }
+    }
 }
 
 void
@@ -1373,11 +1406,19 @@ MainWindow::onViewInfoWindow()
 void
 MainWindow::onSelectModeTriggered(QAction * action)
 {
+    action->setChecked(true);
+    this->select_mode = static_cast<EModeSelect>(action->data().toInt());
+    if (this->select_mode == MODE_SELECT_NONE) {
+        deselectBlocks();
+        onDeselect();
+    }
 }
 
 void
 MainWindow::onDeselect()
 {
+    deselectBlocks();
+    hideSelectedMeshEntity();
 }
 
 void
