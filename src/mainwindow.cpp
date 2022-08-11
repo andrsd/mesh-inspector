@@ -1403,6 +1403,11 @@ MainWindow::onExportAsPng()
         writer->SetFileName(fname.toStdString().c_str());
         writer->SetInputConnection(windowToImageFilter->GetOutputPort());
         writer->Write();
+
+        if (writer->GetErrorCode() == 0) {
+            QFileInfo fi(fname);
+            showNotification(QString("Export to '%1' was successful.").arg(fi.fileName()));
+        }
     }
 }
 
@@ -1420,6 +1425,11 @@ MainWindow::onExportAsJpg()
         writer->SetFileName(fname.toStdString().c_str());
         writer->SetInputConnection(windowToImageFilter->GetOutputPort());
         writer->Write();
+
+        if (writer->GetErrorCode() == 0) {
+            QFileInfo fi(fname);
+            showNotification(QString("Export to '%1' was successful.").arg(fi.fileName()));
+        }
     }
 }
 
