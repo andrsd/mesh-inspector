@@ -552,9 +552,8 @@ MainWindow::loadFile(const QString & file_name)
     QFileInfo fi(file_name);
     this->progress =
         new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
-    // this->progress->setWindowModality(Qt::WindowModal);
-    // this->progress->setMinimumDuration(0);
-    // this->progress->show();
+    this->progress->setWindowModality(Qt::WindowModal);
+    this->progress->show();
 
     this->load_thread = new LoadThread(file_name);
     connect(this->load_thread, SIGNAL(finished()), this, SLOT(onLoadFinished()));
@@ -1102,7 +1101,7 @@ MainWindow::onLoadFinished()
     // self._setSelectionProperties(self._selection)
     // self._vtk_renderer.AddActor(self._selection.getActor())
 
-    // this->progress->hide();
+    this->progress->hide();
     delete this->progress;
     this->progress = nullptr;
 
