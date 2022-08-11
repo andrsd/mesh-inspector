@@ -6,6 +6,8 @@
 
 Mesh inspector is a simple tool for inspecting mesh files.
 
+![mesh-inspector](https://user-images.githubusercontent.com/85632/184145308-e61752b8-c343-4e4e-ab95-841872c2dd92.jpg)
+
 ## Features
 
 - View blocks (names, IDs)
