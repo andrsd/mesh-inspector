@@ -22,7 +22,7 @@ Mesh inspector is a simple tool for inspecting mesh files.
 ## Support
 
 If you are having issues, please let us know.
-We have a (discussions)[https://github.com/andrsd/mesh-inspector/discussions] located at here on gihub.
+We have a [discussions](https://github.com/andrsd/mesh-inspector/discussions) located at here on gihub.
 
 ## License
 
