@@ -63,7 +63,7 @@ QColor MainWindow::NODESET_CLR = QColor(168, 91, 2);
 QColor MainWindow::SELECTION_CLR = QColor(255, 173, 79);
 QColor MainWindow::SELECTION_EDGE_CLR = QColor(179, 95, 0);
 
-int MainWindow::SIDESET_EDGE_WIDTH = 5;
+int MainWindow::SIDESET_EDGE_WIDTH = 2;
 
 // Main window - Load thread
 
@@ -786,7 +786,10 @@ MainWindow::setSideSetProperties(SideSetObject * sideset)
         property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                                SIDESET_EDGE_CLR.greenF(),
                                SIDESET_EDGE_CLR.blueF());
-        property->SetLineWidth(SIDESET_EDGE_WIDTH);
+        if (this->render_mode == SHADED_WITH_EDGES) {
+            property->SetLineWidth(SIDESET_EDGE_WIDTH);
+            property->SetEdgeVisibility(true);
+        }
     }
 }
 

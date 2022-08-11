@@ -16,7 +16,7 @@ BlockObject::BlockObject(vtkExtractBlock * eb, vtkCamera * camera) :
 {
     vtkDataObject * data_object = eb->GetOutput();
 
-    this->actor->SetScale(0.99999);
+    this->actor->SetScale(0.999);
     this->actor->VisibilityOn();
 
     this->color = QColor::fromRgbF(1., 1., 1.);
