@@ -511,8 +511,6 @@ MainWindow::setupVtk()
 {
     this->vtk_interactor = this->vtk_render_window->GetInteractor();
 
-    // TODO: set interactor style
-
     // TODO: set background from preferences/templates
     this->vtk_renderer->SetGradientBackground(true);
     // set anti-aliasing on
@@ -819,7 +817,6 @@ MainWindow::showNotification(const QString & text, int ms)
     this->notification->adjustSize();
     auto width = geometry().width();
     auto left = (width - this->notification->width()) / 2;
-    // top = 10
     auto top = height() - this->notification->height() - 10;
     this->notification->setGeometry(left,
                                     top,
@@ -1227,7 +1224,6 @@ MainWindow::onNewFile()
 {
     this->clear();
     this->info_window->clear();
-    // emit boundsChanged([]);
     this->file_name = QString();
     this->updateWindowTitle();
 }
