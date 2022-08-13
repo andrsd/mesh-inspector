@@ -44,7 +44,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: mesh-inspector-${{ github.ref }}-macos-x86_64.zip
+          name: mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip
           path: "${{ github.workspace }}/build/src/mesh-inspector.zip"
 
   create-release:
@@ -60,10 +60,10 @@ jobs:
       - name:
         uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ github.ref }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
           discussion_category_name: announcements
           files: |
-            mesh-inspector-${{ github.ref }}-macos-x86_64.zip
+            mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip
