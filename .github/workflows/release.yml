@@ -39,13 +39,13 @@ jobs:
           macdeployqt ${{ github.workspace }}/build/src/mesh-inspector.app
           cd ${{ github.workspace }}/build/src
           mv mesh-inspector.app "Mesh Inspector.app"
-          zip -r mesh-inspector.zip "Mesh Inspector.app"
+          zip -r mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip "Mesh Inspector.app"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip
-          path: "${{ github.workspace }}/build/src/mesh-inspector.zip"
+          name: mesh-inspector-${{ github.ref_name }}-macos-x86_64
+          path: "${{ github.workspace }}/build/src/mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip"
 
   create-release:
     needs: [build-macos]
@@ -57,7 +57,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v2
 
-      - name:
+      - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref_name }}
