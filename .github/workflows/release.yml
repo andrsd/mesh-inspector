@@ -7,7 +7,7 @@ on: [workflow_dispatch]
 
 jobs:
   build-macos:
-    name: release (macOS X)
+    name: release (macos)
     runs-on: macos-11
     steps:
       - name: Checkout source
@@ -17,6 +17,8 @@ jobs:
         run: |
           brew install vtk qt5
           echo "QT5DIR=$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5" >> $GITHUB_ENV
+          echo "$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/bin" >> $GITHUB_PATH
+          find $(brew --cellar)/qt@5/ -type f -iname macdeployqt
 
       - name: Configure
         run: |
@@ -34,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: mesh-inspector-v0.9-macosx-x86_64
+          name: mesh-inspector-v0.9-macos-x86_64
           path: "${{ github.workspace }}/build/src/Mesh Inspector.app"
 
   create-release:
