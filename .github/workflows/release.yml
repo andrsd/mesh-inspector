@@ -3,11 +3,18 @@ name: release
 env:
   QT_VERSION: 5.15.5_1
 
-on: [workflow_dispatch]
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  discussions: write
 
 jobs:
   build-macos:
-    name: release (macOS X)
+    name: release (macos)
     runs-on: macos-11
     steps:
       - name: Checkout source
@@ -17,6 +24,7 @@ jobs:
         run: |
           brew install vtk qt5
           echo "QT5DIR=$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5" >> $GITHUB_ENV
+          echo "$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/bin" >> $GITHUB_PATH
 
       - name: Configure
         run: |
@@ -29,13 +37,15 @@ jobs:
       - name: Deploy app bundle
         run: |
           macdeployqt ${{ github.workspace }}/build/src/mesh-inspector.app
-          mv ${{ github.workspace }}/build/src/mesh-inspector.app "${{ github.workspace }}/build/src/Mesh Inspector.app"
+          cd ${{ github.workspace }}/build/src
+          mv mesh-inspector.app "Mesh Inspector.app"
+          zip -r mesh-inspector.zip "Mesh Inspector.app"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: mesh-inspector-v0.9-macosx-x86_64
-          path: "${{ github.workspace }}/build/src/Mesh Inspector.app"
+          name: mesh-inspector-${{ github.ref }}-macos-x86_64.zip
+          path: "${{ github.workspace }}/build/src/mesh-inspector.zip"
 
   create-release:
     needs: [build-macos]
@@ -46,3 +56,14 @@ jobs:
 
       - name: Download artifacts
         uses: actions/download-artifact@v2
+
+      - name:
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          discussion_category_name: announcements
+          files: |
+            mesh-inspector-${{ github.ref }}-macos-x86_64.zip
