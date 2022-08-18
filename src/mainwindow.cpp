@@ -37,6 +37,8 @@
 #include "vtkJPEGWriter.h"
 #include "vtkMath.h"
 #include "vtkPropPicker.h"
+#include "vtkPointPicker.h"
+#include "vtkUnstructuredGrid.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
@@ -51,6 +53,7 @@
 #include "colorprofile.h"
 #include "ointeractorstyle2d.h"
 #include "ointeractorstyle3d.h"
+#include "selection.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 #include "common/infowidget.h"
@@ -115,6 +118,7 @@ MainWindow::MainWindow(QWidget * parent) :
     cube_axes_actor(nullptr),
     interactor_style_2d(nullptr),
     interactor_style_3d(nullptr),
+    selection(nullptr),
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
@@ -187,6 +191,7 @@ MainWindow::~MainWindow()
     delete this->selected_mesh_ent_info;
     for (auto & it : this->color_profiles)
         delete it;
+    delete this->selection;
 }
 
 void
@@ -404,8 +409,8 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
     this->select_mode = static_cast<EModeSelect>(
         this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt());
 
-    QList<QString> names({ QString("None"), QString("Blocks") });
-    QList<EModeSelect> modes({ MODE_SELECT_NONE, MODE_SELECT_BLOCKS });
+    QList<QString> names({ QString("None"), QString("Blocks"), QString("Points") });
+    QList<EModeSelect> modes({ MODE_SELECT_NONE, MODE_SELECT_BLOCKS, MODE_SELECT_POINTS });
     for (int i = 0; i < names.size(); i++) {
         auto name = names[i];
         auto mode = modes[i];
@@ -538,6 +543,9 @@ MainWindow::clear()
     auto watched_files = this->file_watcher->files();
     for (auto & file : watched_files)
         this->file_watcher->removePath(file);
+
+    if (this->selection)
+        delete this->selection;
 }
 
 void
@@ -808,6 +816,19 @@ MainWindow::setNodeSetProperties(NodeSetObject * nodeset)
 void
 MainWindow::setSelectionProperties()
 {
+    auto * actor = this->selection->getActor();
+    auto * property = actor->GetProperty();
+    if (this->select_mode == MODE_SELECT_POINTS) {
+        property->SetRepresentationToPoints();
+        property->SetRenderPointsAsSpheres(true);
+        property->SetVertexVisibility(true);
+        property->SetEdgeVisibility(false);
+        property->SetPointSize(15);
+        property->SetColor(SELECTION_CLR.redF(), SELECTION_CLR.greenF(), SELECTION_CLR.blueF());
+        property->SetOpacity(1);
+        property->SetAmbient(1);
+        property->SetDiffuse(0);
+    }
 }
 
 void
@@ -901,6 +922,31 @@ MainWindow::selectCell(const QPoint & pt)
 void
 MainWindow::selectPoint(const QPoint & pt)
 {
+    auto * picker = vtkPointPicker::New();
+    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+        auto point_id = picker->GetPointId();
+        qDebug() << "point_id = " << point_id;
+        this->selection->selectPoint(point_id);
+        setSelectionProperties();
+
+        auto * unstr_grid = this->selection->getSelected();
+        auto * points = unstr_grid->GetPoints();
+        if (points) {
+            double * coords = points->GetPoint(0);
+            char format = 'f';
+            int precision = 5;
+            QString nfo = QString("Node ID: %1\nX: %2\nY: %3\nZ: %4")
+                              .arg(point_id)
+                              .arg(QString::number(coords[0], format, precision))
+                              .arg(QString::number(coords[1], format, precision))
+                              .arg(QString::number(coords[2], format, precision));
+            showSelectedMeshEntity(nfo);
+        }
+        else {
+            QString nfo = QString("Node ID: %1").arg(point_id);
+            showSelectedMeshEntity(nfo);
+        }
+    }
 }
 
 void
@@ -1094,9 +1140,11 @@ MainWindow::onLoadFinished()
     this->file_watcher->addPath(this->file_name);
     this->file_changed_notification->setFileName(this->file_name);
 
-    // self._selection = Selection(self._geometry.GetOutput())
-    // self._setSelectionProperties(self._selection)
-    // self._vtk_renderer.AddActor(self._selection.getActor())
+    if (this->selection)
+        delete this->selection;
+    this->selection = new Selection(reader->getVtkOutputPort());
+    setSelectionProperties();
+    this->vtk_renderer->AddActor(this->selection->getActor());
 
     this->progress->hide();
     delete this->progress;
@@ -1417,6 +1465,8 @@ MainWindow::onDeselect()
 {
     deselectBlocks();
     hideSelectedMeshEntity();
+    if (this->selection)
+        this->selection->clear();
 }
 
 void

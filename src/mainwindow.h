@@ -39,6 +39,7 @@ class ColorProfile;
 class InfoWidget;
 class OInteractorStyle2D;
 class OInteractorStyle3D;
+class Selection;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -205,6 +206,7 @@ protected:
     vtkCubeAxesActor * cube_axes_actor;
     OInteractorStyle2D * interactor_style_2d;
     OInteractorStyle3D * interactor_style_3d;
+    Selection * selection;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;

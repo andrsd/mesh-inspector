@@ -62,7 +62,7 @@ InfoWindow::setupWidgets()
 {
     this->layout = new QVBoxLayout();
     this->layout->setContentsMargins(20, 10, 20, 10);
-    this->layout->setSpacing(8);
+    this->layout->setSpacing(4);
 
     this->color_picker = new ColorPicker(this);
     connect(this->color_picker,

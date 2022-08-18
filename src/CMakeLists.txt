@@ -17,6 +17,7 @@ add_executable(
         ointeractorstyle2d.cpp
         ointeractorstyle3d.cpp
         reader.cpp
+        selection.cpp
         sidesetobject.cpp
         resources.qrc
 )
