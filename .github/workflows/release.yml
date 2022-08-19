@@ -56,8 +56,6 @@ jobs:
 
       - name: Download artifacts
         uses: actions/download-artifact@v2
-        with:
-          path: ${{ github.workspace }}
 
       - name: Create release
         uses: softprops/action-gh-release@v1
@@ -68,4 +66,4 @@ jobs:
           generate_release_notes: true
           discussion_category_name: announcements
           files: |
-            mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip
+            macos-x86_64/mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip
