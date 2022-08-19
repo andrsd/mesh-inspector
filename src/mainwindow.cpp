@@ -925,7 +925,6 @@ MainWindow::selectPoint(const QPoint & pt)
     auto * picker = vtkPointPicker::New();
     if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
         auto point_id = picker->GetPointId();
-        qDebug() << "point_id = " << point_id;
         this->selection->selectPoint(point_id);
         setSelectionProperties();
 
