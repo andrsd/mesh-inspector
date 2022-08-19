@@ -29,6 +29,7 @@ main(int argc, char * argv[])
     const QStringList args = parser.positionalArguments();
 
     app.setQuitOnLastWindowClosed(false);
+    app.setWindowIcon(QIcon(":/resources/app-icon.png"));
     MainWindow w;
     w.show();
 
