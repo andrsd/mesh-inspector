@@ -4,7 +4,7 @@
 
 class vtkActor;
 class vtkDataSetMapper;
-class vtkCompositeDataGeometryFilter;
+class vtkPolyDataAlgorithm;
 class vtkExtractSelection;
 class vtkUnstructuredGrid;
 class vtkSelection;
@@ -24,7 +24,7 @@ public:
 protected:
     void setSelection(vtkSelectionNode * selection_node);
 
-    vtkCompositeDataGeometryFilter * geometry;
+    vtkPolyDataAlgorithm * geometry;
     vtkExtractSelection * extract_selection;
     vtkUnstructuredGrid * selected;
     vtkDataSetMapper * mapper;

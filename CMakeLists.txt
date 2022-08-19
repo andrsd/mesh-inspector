@@ -41,6 +41,7 @@ find_package(VTK
         RenderingQt
         IOExodus
         IOImage
+        IOLegacy
 )
 if(NOT VTK_FOUND)
     message(FATAL_ERROR "Unable to find the VTK build folder.")

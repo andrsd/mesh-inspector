@@ -2,10 +2,8 @@
 
 #include "meshobject.h"
 
-class vtkExtractBlock;
-
 class NodeSetObject : public MeshObject {
 public:
-    NodeSetObject(vtkExtractBlock * eb);
+    NodeSetObject(vtkAlgorithmOutput * alg_output);
     virtual ~NodeSetObject();
 };

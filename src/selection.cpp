@@ -2,23 +2,34 @@
 #include "vtkActor.h"
 #include "vtkDataSetMapper.h"
 #include "vtkCompositeDataGeometryFilter.h"
+#include "vtkGeometryFilter.h"
 #include "vtkExtractSelection.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkSelection.h"
 #include "vtkSelectionNode.h"
+#include "vtkAlgorithmOutput.h"
+#include "vtkMultiBlockDataSet.h"
 
 Selection::Selection(vtkAlgorithmOutput * input_data) :
-    geometry(vtkCompositeDataGeometryFilter::New()),
+    geometry(nullptr),
     extract_selection(vtkExtractSelection::New()),
     selected(vtkUnstructuredGrid::New()),
     mapper(vtkDataSetMapper::New()),
     actor(vtkActor::New()),
     selection(vtkSelection::New())
 {
+    auto * algoritm = input_data->GetProducer();
+    auto * data_object = algoritm->GetOutputDataObject(0);
+    if (dynamic_cast<vtkMultiBlockDataSet *>(data_object))
+        this->geometry = vtkCompositeDataGeometryFilter::New();
+    else
+        this->geometry = vtkGeometryFilter::New();
     this->geometry->SetInputConnection(0, input_data);
     this->geometry->Update();
     this->extract_selection->SetInputData(0, this->geometry->GetOutput());
     this->mapper->SetInputData(this->selected);
+    this->mapper->SetScalarModeToUsePointFieldData();
+    this->mapper->InterpolateScalarsBeforeMappingOn();
     this->actor->SetMapper(this->mapper);
 }
 

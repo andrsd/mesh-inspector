@@ -24,6 +24,7 @@ add_executable(
         selection.cpp
         sidesetobject.cpp
         resources.qrc
+        vtkreader.cpp
         ${APP_ICON_MACOSX}
 )
 

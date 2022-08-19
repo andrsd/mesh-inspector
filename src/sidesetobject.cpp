@@ -1,5 +1,5 @@
 #include "sidesetobject.h"
 
-SideSetObject::SideSetObject(vtkExtractBlock * eb) : MeshObject(eb) {}
+SideSetObject::SideSetObject(vtkAlgorithmOutput * alg_output) : MeshObject(alg_output) {}
 
 SideSetObject::~SideSetObject() {}

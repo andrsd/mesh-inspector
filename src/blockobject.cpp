@@ -1,21 +1,18 @@
 #include "blockobject.h"
 #include "vtkDataObject.h"
-#include "vtkCompositeDataGeometryFilter.h"
 #include "vtkPolyDataMapper.h"
 #include "vtkActor.h"
 #include "vtkProperty.h"
 #include "vtkPolyDataSilhouette.h"
 #include "vtkExtractBlock.h"
 
-BlockObject::BlockObject(vtkExtractBlock * eb, vtkCamera * camera) :
-    MeshObject(eb),
+BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
+    MeshObject(alg_output),
     silhouette(nullptr),
     silhouette_mapper(nullptr),
     silhouette_actor(nullptr),
     opacity(1.)
 {
-    vtkDataObject * data_object = eb->GetOutput();
-
     this->actor->SetScale(0.999);
     this->actor->VisibilityOn();
 

@@ -4,16 +4,16 @@
 #include "vtkVector.h"
 
 class vtkDataObject;
-class vtkExtractBlock;
-class vtkCompositeDataGeometryFilter;
-class vtkPolyDataMapper;
+class vtkAlgorithmOutput;
+class vtkPolyDataAlgorithm;
+class vtkMapper;
 class vtkActor;
 class vtkProperty;
 class vtkVector3d;
 
 class MeshObject {
 public:
-    MeshObject(vtkExtractBlock * eb);
+    MeshObject(vtkAlgorithmOutput * alg_output);
     virtual ~MeshObject();
 
     bool visible();
@@ -31,8 +31,8 @@ protected:
     vtkVector3d computeCenterOfBounds();
 
     vtkDataObject * data_object;
-    vtkCompositeDataGeometryFilter * geometry;
-    vtkPolyDataMapper * mapper;
+    vtkPolyDataAlgorithm * geometry;
+    vtkMapper * mapper;
     vtkActor * actor;
     BoundingBox bounds;
     vtkVector3d center_of_bounds;
