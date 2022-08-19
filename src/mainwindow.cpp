@@ -175,7 +175,6 @@ MainWindow::MainWindow(QWidget * parent) :
     show();
 
     connect(&this->update_timer, SIGNAL(timeout()), this, SLOT(onUpdateWindow()));
-    this->update_timer.start(250);
     QTimer::singleShot(1, this, SLOT(updateViewModeLocation()));
 }
 
@@ -526,6 +525,8 @@ MainWindow::setupVtk()
 void
 MainWindow::clear()
 {
+    this->vtk_renderer->RemoveAllViewProps();
+
     for (auto & it : this->blocks)
         delete it.second;
     this->blocks.clear();
@@ -538,14 +539,14 @@ MainWindow::clear()
         delete it.second;
     this->node_sets.clear();
 
-    this->vtk_renderer->RemoveAllViewProps();
-
     auto watched_files = this->file_watcher->files();
     for (auto & file : watched_files)
         this->file_watcher->removePath(file);
 
-    if (this->selection)
+    if (this->selection) {
         delete this->selection;
+        this->selection = nullptr;
+    }
 }
 
 void
@@ -925,7 +926,6 @@ MainWindow::selectPoint(const QPoint & pt)
     auto * picker = vtkPointPicker::New();
     if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
         auto point_id = picker->GetPointId();
-        qDebug() << "point_id = " << point_id;
         this->selection->selectPoint(point_id);
         setSelectionProperties();
 
@@ -1100,6 +1100,11 @@ MainWindow::closeEvent(QCloseEvent * event)
 void
 MainWindow::onClose()
 {
+    clear();
+    this->info_window->clear();
+    this->file_name = QString();
+    hide();
+    this->update_timer.stop();
 }
 
 void
@@ -1162,6 +1167,9 @@ MainWindow::onLoadFinished()
     camera->SetPosition(focal_point[0], focal_point[1], 1);
     camera->SetRoll(0);
     this->vtk_renderer->ResetCamera();
+
+    showNormal();
+    this->update_timer.start(250);
 }
 
 void
@@ -1274,6 +1282,7 @@ MainWindow::onNewFile()
     this->info_window->clear();
     this->file_name = QString();
     this->updateWindowTitle();
+    showNormal();
 }
 
 void
