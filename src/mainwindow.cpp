@@ -39,6 +39,7 @@
 #include "vtkPropPicker.h"
 #include "vtkPointPicker.h"
 #include "vtkUnstructuredGrid.h"
+#include "vtkCompositeDataGeometryFilter.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
@@ -49,6 +50,7 @@
 #include "sidesetobject.h"
 #include "nodesetobject.h"
 #include "exodusiireader.h"
+#include "vtkreader.h"
 #include "boundingbox.h"
 #include "colorprofile.h"
 #include "ointeractorstyle2d.h"
@@ -74,6 +76,8 @@ MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reade
 {
     if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
         this->reader = new ExodusIIReader(file_name.toStdString());
+    else if (file_name.endsWith(".vtk"))
+        this->reader = new VTKReader(file_name.toStdString());
     else
         this->reader = nullptr;
 }
@@ -440,6 +444,7 @@ MainWindow::updateMenuBar()
     this->export_as_png->setEnabled(has_file);
     this->export_as_jpg->setEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
+    this->close_action->setEnabled(has_file);
 }
 
 void
@@ -624,12 +629,17 @@ MainWindow::addBlocks()
     auto * reader = this->load_thread->getReader();
 
     for (auto & binfo : reader->getBlocks()) {
-        vtkExtractBlock * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
-        eb->AddIndex(binfo.multiblock_index);
-        eb->Update();
+        BlockObject * block = nullptr;
+        if (binfo.multiblock_index != -1) {
+            vtkExtractBlock * eb = vtkExtractBlock::New();
+            eb->SetInputConnection(reader->getVtkOutputPort());
+            eb->AddIndex(binfo.multiblock_index);
+            eb->Update();
 
-        auto * block = new BlockObject(eb, camera);
+            block = new BlockObject(eb->GetOutputPort(), camera);
+        }
+        else
+            block = new BlockObject(reader->getVtkOutputPort(), camera);
         setBlockProperties(block);
         this->blocks[binfo.number] = block;
 
@@ -651,7 +661,7 @@ MainWindow::addSideSets()
         eb->AddIndex(finfo.multiblock_index);
         eb->Update();
 
-        auto sideset = new SideSetObject(eb);
+        auto sideset = new SideSetObject(eb->GetOutputPort());
         this->side_sets[finfo.number] = sideset;
         setSideSetProperties(sideset);
         this->vtk_renderer->AddViewProp(sideset->getActor());
@@ -671,7 +681,7 @@ MainWindow::addNodeSets()
         eb->AddIndex(ninfo.multiblock_index);
         eb->Update();
 
-        auto * nodeset = new NodeSetObject(eb);
+        auto * nodeset = new NodeSetObject(eb->GetOutputPort());
         this->node_sets[ninfo.number] = nodeset;
         this->setNodeSetProperties(nodeset);
         this->vtk_renderer->AddViewProp(nodeset->getActor());
@@ -1284,6 +1294,7 @@ MainWindow::onClearRecentFiles()
 void
 MainWindow::onNewFile()
 {
+    onDeselect();
     this->clear();
     this->info_window->clear();
     this->file_name = QString();

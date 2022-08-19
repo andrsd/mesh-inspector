@@ -1,5 +1,5 @@
 #include "nodesetobject.h"
 
-NodeSetObject::NodeSetObject(vtkExtractBlock * eb) : MeshObject(eb) {}
+NodeSetObject::NodeSetObject(vtkAlgorithmOutput * alg_output) : MeshObject(alg_output) {}
 
 NodeSetObject::~NodeSetObject() {}

@@ -2,10 +2,8 @@
 
 #include "meshobject.h"
 
-class vtkExtractBlock;
-
 class SideSetObject : public MeshObject {
 public:
-    SideSetObject(vtkExtractBlock * eb);
+    SideSetObject(vtkAlgorithmOutput * alg_output);
     virtual ~SideSetObject();
 };

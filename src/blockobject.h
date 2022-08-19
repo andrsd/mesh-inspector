@@ -13,7 +13,7 @@ class vtkPolyDataSilhouette;
 
 class BlockObject : public MeshObject {
 public:
-    BlockObject(vtkExtractBlock * eb, vtkCamera * camera);
+    BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera);
     virtual ~BlockObject();
 
     vtkActor * getSilhouetteActor();

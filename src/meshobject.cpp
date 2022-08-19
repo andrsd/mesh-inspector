@@ -1,20 +1,31 @@
 #include "meshobject.h"
 #include "vtkDataObject.h"
-#include "vtkExtractBlock.h"
+#include "vtkAlgorithmOutput.h"
 #include "vtkCompositeDataGeometryFilter.h"
+#include "vtkGeometryFilter.h"
 #include "vtkPolyDataMapper.h"
+#include "vtkDataSetMapper.h"
+#include "vtkMultiBlockDataSet.h"
 #include "vtkActor.h"
 #include "vtkProperty.h"
 
-MeshObject::MeshObject(vtkExtractBlock * eb)
+MeshObject::MeshObject(vtkAlgorithmOutput * alg_output)
 {
-    this->data_object = eb->GetOutput();
+    auto * algoritm = alg_output->GetProducer();
+    this->data_object = algoritm->GetOutputDataObject(0);
 
-    this->geometry = vtkCompositeDataGeometryFilter::New();
-    this->geometry->SetInputConnection(0, eb->GetOutputPort(0));
+    if (dynamic_cast<vtkMultiBlockDataSet *>(this->data_object)) {
+        this->geometry = vtkCompositeDataGeometryFilter::New();
+        this->mapper = vtkPolyDataMapper::New();
+    }
+    else {
+        this->geometry = vtkGeometryFilter::New();
+        this->mapper = vtkDataSetMapper::New();
+    }
+
+    this->geometry->SetInputConnection(0, alg_output);
     this->geometry->Update();
 
-    this->mapper = vtkPolyDataMapper::New();
     this->mapper->SetInputConnection(this->geometry->GetOutputPort());
     this->mapper->SetScalarModeToUsePointFieldData();
     this->mapper->InterpolateScalarsBeforeMappingOn();
