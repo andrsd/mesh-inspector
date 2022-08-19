@@ -1,5 +1,8 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
+    <qresource alias="app-icon">
+        <file>../resources/app-icon.png</file>
+    </qresource>
     <qresource>
         <file>../resources/render-mode.svg</file>
     </qresource>
