@@ -216,6 +216,8 @@ protected:
 
     QAction * new_action;
     QAction * open_action;
+    QAction * export_as_png;
+    QAction * export_as_jpg;
     QAction * close_action;
     QAction * clear_recent_file;
     QAction * shaded_action;
