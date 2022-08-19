@@ -127,6 +127,8 @@ MainWindow::MainWindow(QWidget * parent) :
     selected_mesh_ent_info(nullptr),
     new_action(nullptr),
     open_action(nullptr),
+    export_as_png(nullptr),
+    export_as_jpg(nullptr),
     close_action(nullptr),
     clear_recent_file(nullptr),
     shaded_action(nullptr),
@@ -374,8 +376,8 @@ MainWindow::setupMenuBar()
 void
 MainWindow::setupExportMenu(QMenu * menu)
 {
-    menu->addAction("PNG...", this, SLOT(onExportAsPng()));
-    menu->addAction("JPG...", this, SLOT(onExportAsJpg()));
+    this->export_as_png = menu->addAction("PNG...", this, SLOT(onExportAsPng()));
+    this->export_as_jpg = menu->addAction("JPG...", this, SLOT(onExportAsJpg()));
 }
 
 void
@@ -434,7 +436,10 @@ MainWindow::updateMenuBar()
     this->show_main_window->setChecked(active_window == this);
 
     this->view_info_wnd_action->setChecked(this->info_window->isVisible());
-    this->tools_explode_action->setEnabled(!this->file_name.isEmpty());
+    bool has_file = !this->file_name.isEmpty();
+    this->export_as_png->setEnabled(has_file);
+    this->export_as_jpg->setEnabled(has_file);
+    this->tools_explode_action->setEnabled(has_file);
 }
 
 void
@@ -1105,6 +1110,7 @@ MainWindow::onClose()
     this->file_name = QString();
     hide();
     this->update_timer.stop();
+    updateMenuBar();
 }
 
 void
