@@ -440,6 +440,7 @@ MainWindow::updateMenuBar()
     this->export_as_png->setEnabled(has_file);
     this->export_as_jpg->setEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
+    this->close_action->setEnabled(has_file);
 }
 
 void
