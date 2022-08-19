@@ -1294,6 +1294,7 @@ MainWindow::onClearRecentFiles()
 void
 MainWindow::onNewFile()
 {
+    onDeselect();
     this->clear();
     this->info_window->clear();
     this->file_name = QString();
