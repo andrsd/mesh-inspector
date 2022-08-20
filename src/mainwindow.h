@@ -116,12 +116,16 @@ protected:
     void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties(NodeSetObject * nodeset);
     void setSelectionProperties();
+    void setHighlightProperties();
     void showNotification(const QString & text, int ms = 5000);
     void showFileChangedNotification();
     void showSelectedMeshEntity(const QString & info);
     void hideSelectedMeshEntity();
     void deselectBlocks();
     int blockActorToId(vtkActor * actor);
+    void highlightBlock(const QPoint & pt);
+    void highlightCell(const QPoint & pt);
+    void highlightPoint(const QPoint & pt);
     void selectBlock(const QPoint & pt);
     void selectCell(const QPoint & pt);
     void selectPoint(const QPoint & pt);
@@ -208,6 +212,7 @@ protected:
     OInteractorStyle2D * interactor_style_2d;
     OInteractorStyle3D * interactor_style_3d;
     Selection * selection;
+    Selection * highlight;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
@@ -259,6 +264,7 @@ protected:
     static QColor NODESET_CLR;
     static QColor SELECTION_CLR;
     static QColor SELECTION_EDGE_CLR;
+    static QColor HIGHLIGHT_CLR;
 
     static int SIDESET_EDGE_WIDTH;
 };

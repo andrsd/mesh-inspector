@@ -67,6 +67,7 @@ QColor MainWindow::SIDESET_EDGE_CLR = QColor(26, 26, 102);
 QColor MainWindow::NODESET_CLR = QColor(168, 91, 2);
 QColor MainWindow::SELECTION_CLR = QColor(255, 173, 79);
 QColor MainWindow::SELECTION_EDGE_CLR = QColor(179, 95, 0);
+QColor MainWindow::HIGHLIGHT_CLR = QColor(255, 211, 79);
 
 int MainWindow::SIDESET_EDGE_WIDTH = 2;
 
@@ -123,6 +124,7 @@ MainWindow::MainWindow(QWidget * parent) :
     interactor_style_2d(nullptr),
     interactor_style_3d(nullptr),
     selection(nullptr),
+    highlight(nullptr),
     info_dock(nullptr),
     info_window(nullptr),
     about_dlg(nullptr),
@@ -197,6 +199,7 @@ MainWindow::~MainWindow()
     for (auto & it : this->color_profiles)
         delete it;
     delete this->selection;
+    delete this->highlight;
 }
 
 void
@@ -557,6 +560,10 @@ MainWindow::clear()
         delete this->selection;
         this->selection = nullptr;
     }
+    if (this->highlight) {
+        delete this->highlight;
+        this->highlight = nullptr;
+    }
 }
 
 void
@@ -849,6 +856,24 @@ MainWindow::setSelectionProperties()
 }
 
 void
+MainWindow::setHighlightProperties()
+{
+    auto * actor = this->highlight->getActor();
+    auto * property = actor->GetProperty();
+    if (this->select_mode == MODE_SELECT_POINTS) {
+        property->SetRepresentationToPoints();
+        property->SetRenderPointsAsSpheres(true);
+        property->SetVertexVisibility(true);
+        property->SetEdgeVisibility(false);
+        property->SetPointSize(15);
+        property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        property->SetOpacity(1);
+        property->SetAmbient(1);
+        property->SetDiffuse(0);
+    }
+}
+
+void
 MainWindow::showNotification(const QString & text, int ms)
 {
     this->notification->setText(text);
@@ -913,6 +938,30 @@ MainWindow::blockActorToId(vtkActor * actor)
             return it.first;
     }
     return -1;
+}
+
+void
+MainWindow::highlightBlock(const QPoint & pt)
+{
+}
+
+void
+MainWindow::highlightCell(const QPoint & pt)
+{
+}
+
+void
+MainWindow::highlightPoint(const QPoint & pt)
+{
+    auto * picker = vtkPointPicker::New();
+    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+        auto point_id = picker->GetPointId();
+        this->highlight->selectPoint(point_id);
+        setHighlightProperties();
+    }
+    else
+        this->highlight->clear();
+    picker->Delete();
 }
 
 void
@@ -1167,6 +1216,12 @@ MainWindow::onLoadFinished()
     this->selection = new Selection(reader->getVtkOutputPort());
     setSelectionProperties();
     this->vtk_renderer->AddActor(this->selection->getActor());
+
+    if (this->highlight)
+        delete this->highlight;
+    this->highlight = new Selection(reader->getVtkOutputPort());
+    setHighlightProperties();
+    this->vtk_renderer->AddActor(this->highlight->getActor());
 
     this->progress->hide();
     delete this->progress;
@@ -1468,6 +1523,12 @@ MainWindow::onClicked(const QPoint & pt)
 void
 MainWindow::onMouseMove(const QPoint & pt)
 {
+    if (this->select_mode == MODE_SELECT_BLOCKS)
+        highlightBlock(pt);
+    else if (this->select_mode == MODE_SELECT_CELLS)
+        highlightCell(pt);
+    else if (this->select_mode == MODE_SELECT_POINTS)
+        highlightPoint(pt);
 }
 
 void
@@ -1489,6 +1550,8 @@ MainWindow::onSelectModeTriggered(QAction * action)
     if (this->select_mode == MODE_SELECT_NONE) {
         deselectBlocks();
         onDeselect();
+        if (this->highlight)
+            this->highlight->clear();
     }
 }
 
