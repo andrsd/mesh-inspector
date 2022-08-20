@@ -562,6 +562,7 @@ MainWindow::clear()
 void
 MainWindow::loadFile(const QString & file_name)
 {
+    onDeselect();
     this->clear();
     if (!this->checkFileExists(file_name))
         return;
