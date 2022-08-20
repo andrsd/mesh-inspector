@@ -15,6 +15,7 @@ protected:
     virtual void onKeyPress(vtkObject * object, unsigned long event, void * ctx);
     virtual void onKeyRelease(vtkObject * object, unsigned long event, void * ctx);
     virtual void onChar(vtkObject * object, unsigned long event, void * ctx);
+    virtual void onMouseMove(vtkObject * object, unsigned long event, void * ctx);
 
     MainWindow * widget;
     QPoint last_mouse_pos;

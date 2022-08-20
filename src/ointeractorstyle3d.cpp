@@ -10,6 +10,7 @@ OInteractorStyle3D::OInteractorStyle3D(MainWindow * widget) :
     AddObserver(vtkCommand::KeyPressEvent, this, &OInteractorStyle3D::onKeyPress);
     AddObserver(vtkCommand::KeyReleaseEvent, this, &OInteractorStyle3D::onKeyRelease);
     AddObserver(vtkCommand::CharEvent, this, &OInteractorStyle3D::onChar);
+    AddObserver(vtkCommand::MouseMoveEvent, this, &OInteractorStyle3D::onMouseMove);
 }
 
 void
@@ -24,4 +25,11 @@ OInteractorStyle3D::onLeftButtonRelease(vtkObject * object, unsigned long event,
 {
     OInteractorInterface::onLeftButtonRelease(object, event, ctx);
     vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+}
+
+void
+OInteractorStyle3D::onMouseMove(vtkObject * object, unsigned long event, void * ctx)
+{
+    OInteractorInterface::onMouseMove(object, event, ctx);
+    vtkInteractorStyleTrackballCamera::OnMouseMove();
 }

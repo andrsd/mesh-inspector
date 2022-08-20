@@ -166,6 +166,7 @@ public slots:
     void onSideSetSelectionChanged(int sideset_id);
     void onNodeSetSelectionChanged(int nodeset_id);
     void onClicked(const QPoint & pt);
+    void onMouseMove(const QPoint & pt);
     void onViewInfoWindow();
     void onSelectModeTriggered(QAction * action);
     void onDeselect();

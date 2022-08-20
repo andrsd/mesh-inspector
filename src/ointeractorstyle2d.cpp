@@ -10,6 +10,7 @@ OInteractorStyle2D::OInteractorStyle2D(MainWindow * widget) :
     AddObserver(vtkCommand::KeyPressEvent, this, &OInteractorStyle2D::onKeyPress);
     AddObserver(vtkCommand::KeyReleaseEvent, this, &OInteractorStyle2D::onKeyRelease);
     AddObserver(vtkCommand::CharEvent, this, &OInteractorStyle2D::onChar);
+    AddObserver(vtkCommand::MouseMoveEvent, this, &OInteractorStyle2D::onMouseMove);
 }
 
 void
@@ -24,4 +25,11 @@ OInteractorStyle2D::onLeftButtonRelease(vtkObject * object, unsigned long event,
 {
     OInteractorInterface::onLeftButtonRelease(object, event, ctx);
     vtkInteractorStyleImage::OnLeftButtonUp();
+}
+
+void
+OInteractorStyle2D::onMouseMove(vtkObject * object, unsigned long event, void * ctx)
+{
+    OInteractorInterface::onMouseMove(object, event, ctx);
+    vtkInteractorStyleImage::OnMouseMove();
 }

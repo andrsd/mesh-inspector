@@ -1466,6 +1466,11 @@ MainWindow::onClicked(const QPoint & pt)
 }
 
 void
+MainWindow::onMouseMove(const QPoint & pt)
+{
+}
+
+void
 MainWindow::onViewInfoWindow()
 {
     if (this->info_dock->isVisible())
