@@ -66,3 +66,15 @@ void
 OInteractorInterface::onChar(vtkObject * object, unsigned long event, void * ctx)
 {
 }
+
+void
+OInteractorInterface::onMouseMove(vtkObject * object, unsigned long event, void * ctx)
+{
+    auto * interactor_style = dynamic_cast<vtkInteractorStyle *>(object);
+    if (interactor_style) {
+        auto * interactor = interactor_style->GetInteractor();
+        auto pos = interactor->GetEventPosition();
+        auto pt = QPoint(pos[0], pos[1]);
+        this->widget->onMouseMove(pt);
+    }
+}
