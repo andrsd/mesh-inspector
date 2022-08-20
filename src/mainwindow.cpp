@@ -153,7 +153,8 @@ MainWindow::MainWindow(QWidget * parent) :
     mode_select_action_group(nullptr),
     windows_action_group(nullptr),
     deselect_sc(nullptr),
-    selected_block(nullptr)
+    selected_block(nullptr),
+    highlighted_block(nullptr)
 {
     this->interactor_style_2d = new OInteractorStyle2D(this);
     this->interactor_style_3d = new OInteractorStyle3D(this);
@@ -729,7 +730,7 @@ MainWindow::getNodeSet(int nodeset_id)
 }
 
 void
-MainWindow::setSelectedBlockProperties(BlockObject * block)
+MainWindow::setSelectedBlockProperties(BlockObject * block, bool highlighted)
 {
     auto * property = block->getProperty();
     if (this->render_mode == SHADED) {
@@ -756,10 +757,12 @@ MainWindow::setSelectedBlockProperties(BlockObject * block)
         property->SetOpacity(0.33);
         property->SetEdgeVisibility(false);
     }
+
+    setHighlightedBlockProperties(block, highlighted);
 }
 
 void
-MainWindow::setDeselectedBlockProperties(BlockObject * block)
+MainWindow::setDeselectedBlockProperties(BlockObject * block, bool highlighted)
 {
     auto * property = block->getProperty();
     if (this->render_mode == SHADED) {
@@ -789,19 +792,65 @@ MainWindow::setDeselectedBlockProperties(BlockObject * block)
         property->SetOpacity(0.33);
         property->SetEdgeVisibility(false);
     }
+
+    setHighlightedBlockProperties(block, highlighted);
 }
 
 void
-MainWindow::setBlockProperties(BlockObject * block, bool selected)
+MainWindow::setHighlightedBlockProperties(BlockObject * block, bool highlighted)
+{
+    auto * property = block->getSilhouetteProperty();
+    if (highlighted) {
+        block->setSilhouetteVisible(true);
+
+        if (this->render_mode == SHADED) {
+            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+            property->SetLineWidth(3);
+        }
+        else if (this->render_mode == SHADED_WITH_EDGES) {
+            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+            property->SetLineWidth(3);
+        }
+        else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
+            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+            property->SetLineWidth(3);
+        }
+        else if (this->render_mode == TRANSLUENT) {
+            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+            property->SetLineWidth(3);
+        }
+    }
+    else {
+        if (this->render_mode == SHADED) {
+            block->setSilhouetteVisible(false);
+        }
+        else if (this->render_mode == SHADED_WITH_EDGES) {
+            block->setSilhouetteVisible(false);
+        }
+        else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
+            block->setSilhouetteVisible(true);
+            property->SetColor(0, 0, 0);
+            property->SetLineWidth(3);
+        }
+        else if (this->render_mode == TRANSLUENT) {
+            block->setSilhouetteVisible(true);
+            property->SetColor(0, 0, 0);
+            property->SetLineWidth(3);
+        }
+    }
+}
+
+void
+MainWindow::setBlockProperties(BlockObject * block, bool selected, bool highlighted)
 {
     auto * property = block->getProperty();
     property->SetRepresentationToSurface();
     property->SetAmbient(0.4);
     property->SetDiffuse(0.6);
     if (selected)
-        this->setSelectedBlockProperties(block);
+        this->setSelectedBlockProperties(block, highlighted);
     else
-        this->setDeselectedBlockProperties(block);
+        this->setDeselectedBlockProperties(block, highlighted);
 }
 
 void
@@ -943,6 +992,28 @@ MainWindow::blockActorToId(vtkActor * actor)
 void
 MainWindow::highlightBlock(const QPoint & pt)
 {
+    if (this->highlighted_block) {
+        setBlockProperties(this->highlighted_block,
+                           this->highlighted_block == this->selected_block,
+                           false);
+    }
+
+    auto * picker = vtkPropPicker::New();
+    if (picker->PickProp(pt.x(), pt.y(), this->vtk_renderer)) {
+        auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
+        if (actor) {
+            auto blk_id = blockActorToId(actor);
+            auto * block = getBlock(blk_id);
+            if (block) {
+                this->highlighted_block = block;
+                setBlockProperties(block, this->highlighted_block == this->selected_block, true);
+            }
+        }
+    }
+    else if (this->highlighted_block) {
+        this->highlighted_block = nullptr;
+    }
+    picker->Delete();
 }
 
 void
@@ -975,7 +1046,7 @@ MainWindow::selectBlock(const QPoint & pt)
             auto * block = getBlock(blk_id);
             onBlockSelectionChanged(blk_id);
             this->selected_block = block;
-            setBlockProperties(block, true);
+            setBlockProperties(block, true, this->selected_block == this->highlighted_block);
         }
     }
 }

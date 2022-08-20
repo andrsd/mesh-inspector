@@ -110,9 +110,10 @@ protected:
     BlockObject * getBlock(int block_id);
     SideSetObject * getSideSet(int sideset_id);
     NodeSetObject * getNodeSet(int nodeset_id);
-    void setSelectedBlockProperties(BlockObject * block);
-    void setDeselectedBlockProperties(BlockObject * block);
-    void setBlockProperties(BlockObject * block, bool selected = false);
+    void setSelectedBlockProperties(BlockObject * block, bool highlighted = false);
+    void setDeselectedBlockProperties(BlockObject * block, bool highlighted = false);
+    void setHighlightedBlockProperties(BlockObject * block, bool highlighted);
+    void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
     void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties(NodeSetObject * nodeset);
     void setSelectionProperties();
@@ -249,6 +250,7 @@ protected:
 
     std::map<int, BlockObject *> blocks;
     BlockObject * selected_block;
+    BlockObject * highlighted_block;
     std::map<int, SideSetObject *> side_sets;
     std::map<int, NodeSetObject *> node_sets;
 
