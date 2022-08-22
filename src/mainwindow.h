@@ -137,6 +137,7 @@ protected:
                         const QString & default_suffix);
     void buildRecentFilesMenu();
     void addToRecentFiles(const QString & file_name);
+    QString cellTypeToName(int cell_type);
 
     virtual bool event(QEvent * event);
     virtual void customEvent(QEvent * event);

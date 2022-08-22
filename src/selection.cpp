@@ -78,6 +78,21 @@ Selection::selectPoint(const vtkIdType & point_id)
 }
 
 void
+Selection::selectCell(const vtkIdType & cell_id)
+{
+    auto * ids = vtkIdTypeArray::New();
+    ids->SetNumberOfComponents(1);
+    ids->InsertNextValue(cell_id);
+
+    auto * selection_node = vtkSelectionNode::New();
+    selection_node->SetFieldType(vtkSelectionNode::CELL);
+    selection_node->SetContentType(vtkSelectionNode::INDICES);
+    selection_node->SetSelectionList(ids);
+
+    setSelection(selection_node);
+}
+
+void
 Selection::setSelection(vtkSelectionNode * selection_node)
 {
     this->selection->Delete();
