@@ -38,6 +38,7 @@
 #include "vtkMath.h"
 #include "vtkPropPicker.h"
 #include "vtkPointPicker.h"
+#include "vtkCellPicker.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkCompositeDataGeometryFilter.h"
 #include "infowindow.h"
@@ -418,8 +419,10 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
     this->select_mode = static_cast<EModeSelect>(
         this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt());
 
-    QList<QString> names({ QString("None"), QString("Blocks"), QString("Points") });
-    QList<EModeSelect> modes({ MODE_SELECT_NONE, MODE_SELECT_BLOCKS, MODE_SELECT_POINTS });
+    QList<QString> names(
+        { QString("None"), QString("Blocks"), QString("Cells"), QString("Points") });
+    QList<EModeSelect> modes(
+        { MODE_SELECT_NONE, MODE_SELECT_BLOCKS, MODE_SELECT_CELLS, MODE_SELECT_POINTS });
     for (int i = 0; i < names.size(); i++) {
         auto name = names[i];
         auto mode = modes[i];
@@ -902,6 +905,20 @@ MainWindow::setSelectionProperties()
         property->SetAmbient(1);
         property->SetDiffuse(0);
     }
+    else if (this->select_mode == MODE_SELECT_CELLS) {
+        property->SetRepresentationToSurface();
+        property->SetRenderPointsAsSpheres(false);
+        property->SetVertexVisibility(false);
+        property->EdgeVisibilityOn();
+        property->SetColor(SELECTION_CLR.redF(), SELECTION_CLR.greenF(), SELECTION_CLR.blueF());
+        property->SetLineWidth(7);
+        property->SetEdgeColor(SELECTION_EDGE_CLR.redF(),
+                               SELECTION_EDGE_CLR.greenF(),
+                               SELECTION_EDGE_CLR.blueF());
+        property->SetOpacity(0.5);
+        property->SetAmbient(1);
+        property->SetDiffuse(0);
+    }
 }
 
 void
@@ -917,6 +934,18 @@ MainWindow::setHighlightProperties()
         property->SetPointSize(15);
         property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
         property->SetOpacity(1);
+        property->SetAmbient(1);
+        property->SetDiffuse(0);
+    }
+    else if (this->select_mode == MODE_SELECT_CELLS) {
+        property->SetRepresentationToSurface();
+        property->SetRenderPointsAsSpheres(false);
+        property->SetVertexVisibility(false);
+        property->EdgeVisibilityOn();
+        property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        property->SetLineWidth(7);
+        property->SetEdgeColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
+        property->SetOpacity(0.33);
         property->SetAmbient(1);
         property->SetDiffuse(0);
     }
@@ -1019,6 +1048,15 @@ MainWindow::highlightBlock(const QPoint & pt)
 void
 MainWindow::highlightCell(const QPoint & pt)
 {
+    auto * picker = vtkCellPicker::New();
+    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+        auto cell_id = picker->GetCellId();
+        this->highlight->selectCell(cell_id);
+        setHighlightProperties();
+    }
+    else
+        this->highlight->clear();
+    picker->Delete();
 }
 
 void
@@ -1054,6 +1092,20 @@ MainWindow::selectBlock(const QPoint & pt)
 void
 MainWindow::selectCell(const QPoint & pt)
 {
+    auto * picker = vtkCellPicker::New();
+    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+        auto cell_id = picker->GetCellId();
+        this->selection->selectCell(cell_id);
+        setSelectionProperties();
+
+        auto * unstr_grid = this->selection->getSelected();
+        auto * cell = unstr_grid->GetCell(0);
+        auto cell_type = cell->GetCellType();
+        QString nfo =
+            QString("Element ID: %1\nType: %2").arg(cell_id).arg(cellTypeToName(cell_type));
+        showSelectedMeshEntity(nfo);
+    }
+    picker->Delete();
 }
 
 void
@@ -1756,4 +1808,28 @@ MainWindow::onViewLicense()
     if (this->license_dlg == nullptr)
         this->license_dlg = new LicenseDialog(this);
     this->license_dlg->show();
+}
+
+QString
+MainWindow::cellTypeToName(int cell_type)
+{
+    // clang-format off
+    switch (cell_type) {
+        case 3: return "Edge2";
+        case 5: return "Tri3";
+        case 9: return "Quad4";
+        case 10: return "Tetra4";
+        case 12: return "Hex8";
+        case 13: return "Prism6";
+        case 14: return "Pyramid5";
+        case 21: return "Edge3";
+        case 22: return "Tri6";
+        case 23: return "Quad9";
+        case 24: return "Tetra10";
+        case 25: return "Hex27";
+        case 26: return "Prism18";
+        case 27: return "Pyramid14";
+        default: return QString::number(cell_type);
+    };
+    // clang-format on
 }

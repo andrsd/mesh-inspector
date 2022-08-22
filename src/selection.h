@@ -20,6 +20,7 @@ public:
     vtkUnstructuredGrid * getSelected() const;
     void clear();
     void selectPoint(const vtkIdType & point_id);
+    void selectCell(const vtkIdType & cell_id);
 
 protected:
     void setSelection(vtkSelectionNode * selection_node);
