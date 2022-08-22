@@ -5,7 +5,11 @@ ExodusIIReader::ExodusIIReader(const std::string & file_name) : Reader(file_name
 {
 }
 
-ExodusIIReader::~ExodusIIReader() {}
+ExodusIIReader::~ExodusIIReader()
+{
+    if (this->reader)
+        this->reader->Delete();
+}
 
 void
 ExodusIIReader::load()

@@ -32,6 +32,7 @@ class vtkOrientationMarkerWidget;
 class vtkCompositeDataGeometryFilter;
 class vtkActor;
 class vtkCubeAxesActor;
+class vtkExtractBlock;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -48,6 +49,7 @@ protected:
     class LoadThread : public QThread {
     public:
         LoadThread(const QString & file_name);
+        virtual ~LoadThread();
 
         virtual Reader * getReader();
 
@@ -249,6 +251,7 @@ protected:
 
     QShortcut * deselect_sc;
 
+    std::vector<vtkExtractBlock *> extract_blocks;
     std::map<int, BlockObject *> blocks;
     BlockObject * selected_block;
     BlockObject * highlighted_block;

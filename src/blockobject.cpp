@@ -21,7 +21,12 @@ BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     this->setUpSilhouette(camera);
 }
 
-BlockObject::~BlockObject() {}
+BlockObject::~BlockObject()
+{
+    this->silhouette->Delete();
+    this->silhouette_mapper->Delete();
+    this->silhouette_actor->Delete();
+}
 
 void
 BlockObject::setUpSilhouette(vtkCamera * camera)

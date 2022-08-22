@@ -39,7 +39,12 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output)
     this->center_of_bounds = this->bounds.center();
 }
 
-MeshObject::~MeshObject() {}
+MeshObject::~MeshObject()
+{
+    this->geometry->Delete();
+    this->mapper->Delete();
+    this->actor->Delete();
+}
 
 bool
 MeshObject::visible()

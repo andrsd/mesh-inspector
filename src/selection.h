@@ -24,6 +24,7 @@ public:
 
 protected:
     void setSelection(vtkSelectionNode * selection_node);
+    void freeSelection();
 
     vtkPolyDataAlgorithm * geometry;
     vtkExtractSelection * extract_selection;
