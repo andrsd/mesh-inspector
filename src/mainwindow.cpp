@@ -84,6 +84,11 @@ MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reade
         this->reader = nullptr;
 }
 
+MainWindow::LoadThread::~LoadThread()
+{
+    delete this->reader;
+}
+
 Reader *
 MainWindow::LoadThread::getReader()
 {
@@ -190,18 +195,30 @@ MainWindow::MainWindow(QWidget * parent) :
 
 MainWindow::~MainWindow()
 {
+    clear();
     delete this->settings;
     delete this->file_watcher;
     delete this->menu_bar;
     delete this->vtk_widget;
+    this->vtk_render_window->Delete();
+    this->vtk_renderer->Delete();
     delete this->info_window;
     delete this->info_dock;
     delete this->explode;
     delete this->selected_mesh_ent_info;
     for (auto & it : this->color_profiles)
         delete it;
-    delete this->selection;
-    delete this->highlight;
+    delete this->load_thread;
+    delete this->view_menu;
+    delete this->deselect_sc;
+    delete this->view_mode;
+    delete this->notification;
+    delete this->file_changed_notification;
+    delete this->windows_action_group;
+    delete this->color_profile_action_group;
+    delete this->mode_select_action_group;
+    delete this->about_dlg;
+    delete this->license_dlg;
 }
 
 void
@@ -556,6 +573,10 @@ MainWindow::clear()
         delete it.second;
     this->node_sets.clear();
 
+    for (auto & eb : this->extract_blocks)
+        eb->Delete();
+    this->extract_blocks.clear();
+
     auto watched_files = this->file_watcher->files();
     for (auto & file : watched_files)
         this->file_watcher->removePath(file);
@@ -584,6 +605,7 @@ MainWindow::loadFile(const QString & file_name)
     this->progress->setWindowModality(Qt::WindowModal);
     this->progress->show();
 
+    delete this->load_thread;
     this->load_thread = new LoadThread(file_name);
     connect(this->load_thread, SIGNAL(finished()), this, SLOT(onLoadFinished()));
     this->load_thread->start(QThread::IdlePriority);
@@ -647,6 +669,7 @@ MainWindow::addBlocks()
             eb->SetInputConnection(reader->getVtkOutputPort());
             eb->AddIndex(binfo.multiblock_index);
             eb->Update();
+            this->extract_blocks.push_back(eb);
 
             block = new BlockObject(eb->GetOutputPort(), camera);
         }
@@ -672,6 +695,7 @@ MainWindow::addSideSets()
         eb->SetInputConnection(reader->getVtkOutputPort());
         eb->AddIndex(finfo.multiblock_index);
         eb->Update();
+        this->extract_blocks.push_back(eb);
 
         auto sideset = new SideSetObject(eb->GetOutputPort());
         this->side_sets[finfo.number] = sideset;
@@ -692,6 +716,7 @@ MainWindow::addNodeSets()
         eb->SetInputConnection(reader->getVtkOutputPort());
         eb->AddIndex(ninfo.multiblock_index);
         eb->Update();
+        this->extract_blocks.push_back(eb);
 
         auto * nodeset = new NodeSetObject(eb->GetOutputPort());
         this->node_sets[ninfo.number] = nodeset;
@@ -1087,6 +1112,7 @@ MainWindow::selectBlock(const QPoint & pt)
             setBlockProperties(block, true, this->selected_block == this->highlighted_block);
         }
     }
+    picker->Delete();
 }
 
 void
@@ -1135,6 +1161,7 @@ MainWindow::selectPoint(const QPoint & pt)
             showSelectedMeshEntity(nfo);
         }
     }
+    picker->Delete();
 }
 
 void

@@ -4,7 +4,11 @@
 
 VTKReader::VTKReader(const std::string & file_name) : Reader(file_name), reader(nullptr) {}
 
-VTKReader::~VTKReader() {}
+VTKReader::~VTKReader()
+{
+    if (this->reader)
+        this->reader->Delete();
+}
 
 void
 VTKReader::load()

@@ -40,7 +40,7 @@ Selection::~Selection()
     this->selected->Delete();
     this->mapper->Delete();
     this->actor->Delete();
-    this->selection->Delete();
+    freeSelection();
 }
 
 vtkActor *
@@ -95,7 +95,7 @@ Selection::selectCell(const vtkIdType & cell_id)
 void
 Selection::setSelection(vtkSelectionNode * selection_node)
 {
-    this->selection->Delete();
+    freeSelection();
     this->selection = vtkSelection::New();
     this->selection->AddNode(selection_node);
 
@@ -107,4 +107,15 @@ Selection::setSelection(vtkSelectionNode * selection_node)
     this->selected->ShallowCopy(this->extract_selection->GetOutput());
 
     this->mapper->SetInputData(this->selected);
+}
+
+void
+Selection::freeSelection()
+{
+    for (unsigned int i = 0; i < this->selection->GetNumberOfNodes(); i++) {
+        auto * node = this->selection->GetNode(i);
+        node->GetSelectionList()->Delete();
+        node->Delete();
+    }
+    this->selection->Delete();
 }
