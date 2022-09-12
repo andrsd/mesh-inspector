@@ -52,10 +52,13 @@ protected:
         virtual ~LoadThread();
 
         virtual Reader * getReader();
+        bool hasValidFile();
+        const QString & getFileName();
 
     protected:
         virtual void run();
 
+        QString file_name;
         Reader * reader;
     };
 
@@ -140,6 +143,8 @@ protected:
     void buildRecentFilesMenu();
     void addToRecentFiles(const QString & file_name);
     QString cellTypeToName(int cell_type);
+    void hideLoadProgressBar();
+    void loadIntoVtk();
 
     virtual bool event(QEvent * event);
     virtual void customEvent(QEvent * event);
