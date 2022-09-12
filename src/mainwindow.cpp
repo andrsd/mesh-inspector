@@ -74,7 +74,10 @@ int MainWindow::SIDESET_EDGE_WIDTH = 2;
 
 // Main window - Load thread
 
-MainWindow::LoadThread::LoadThread(const QString & file_name) : QThread(), reader(nullptr)
+MainWindow::LoadThread::LoadThread(const QString & file_name) :
+    QThread(),
+    file_name(file_name),
+    reader(nullptr)
 {
     if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
         this->reader = new ExodusIIReader(file_name.toStdString());
@@ -95,11 +98,23 @@ MainWindow::LoadThread::getReader()
     return this->reader;
 }
 
+bool
+MainWindow::LoadThread::hasValidFile()
+{
+    return this->reader != nullptr;
+}
+
+const QString &
+MainWindow::LoadThread::getFileName()
+{
+    return this->file_name;
+}
+
 void
 MainWindow::LoadThread::run()
 {
-    assert(this->reader != nullptr);
-    this->reader->load();
+    if (this->reader != nullptr)
+        this->reader->load();
 }
 
 // Main window
@@ -1324,7 +1339,31 @@ MainWindow::onClose()
 }
 
 void
+MainWindow::hideLoadProgressBar()
+{
+    this->progress->hide();
+    delete this->progress;
+    this->progress = nullptr;
+}
+
+void
 MainWindow::onLoadFinished()
+{
+    if (this->load_thread->hasValidFile()) {
+        loadIntoVtk();
+        showNormal();
+        this->update_timer.start(250);
+    }
+    else {
+        QFileInfo fi(this->load_thread->getFileName());
+        showNotification(QString("Unsupported file '%1'.").arg(fi.fileName()));
+    }
+    hideLoadProgressBar();
+    this->updateMenuBar();
+}
+
+void
+MainWindow::loadIntoVtk()
 {
     Reader * reader = this->load_thread->getReader();
 
@@ -1373,12 +1412,6 @@ MainWindow::onLoadFinished()
     setHighlightProperties();
     this->vtk_renderer->AddActor(this->highlight->getActor());
 
-    this->progress->hide();
-    delete this->progress;
-    this->progress = nullptr;
-
-    this->updateMenuBar();
-
     if (reader->getDimensionality() == 3)
         this->vtk_interactor->SetInteractorStyle(this->interactor_style_3d);
     else
@@ -1389,9 +1422,6 @@ MainWindow::onLoadFinished()
     camera->SetPosition(focal_point[0], focal_point[1], 1);
     camera->SetRoll(0);
     this->vtk_renderer->ResetCamera();
-
-    showNormal();
-    this->update_timer.start(250);
 }
 
 void
