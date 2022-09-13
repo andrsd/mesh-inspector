@@ -52,6 +52,7 @@
 #include "nodesetobject.h"
 #include "exodusiireader.h"
 #include "vtkreader.h"
+#include "stlreader.h"
 #include "boundingbox.h"
 #include "colorprofile.h"
 #include "ointeractorstyle2d.h"
@@ -83,6 +84,8 @@ MainWindow::LoadThread::LoadThread(const QString & file_name) :
         this->reader = new ExodusIIReader(file_name.toStdString());
     else if (file_name.endsWith(".vtk"))
         this->reader = new VTKReader(file_name.toStdString());
+    else if (file_name.endsWith(".stl"))
+        this->reader = new STLReader(file_name.toStdString());
     else
         this->reader = nullptr;
 }

@@ -40,6 +40,7 @@ find_package(VTK
         RenderingOpenGL2
         RenderingQt
         IOExodus
+        IOGeometry
         IOImage
         IOLegacy
 )

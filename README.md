@@ -16,6 +16,7 @@ Mesh inspector is a simple tool for inspecting mesh files.
 - View mesh dimensions
 - Supported mesh file formats:
   - ExodusII
+  - STL
 - Export to PNG, JPG.
 - Four different view modes
 
