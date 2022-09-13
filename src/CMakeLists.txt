@@ -23,6 +23,7 @@ add_executable(
         reader.cpp
         selection.cpp
         sidesetobject.cpp
+        stlreader.cpp
         resources.qrc
         vtkreader.cpp
         ${APP_ICON_MACOSX}
