@@ -52,6 +52,18 @@ MeshObject::visible()
     return this->actor->GetVisibility();
 }
 
+vtkPolyData *
+MeshObject::getPolyData()
+{
+    return this->geometry->GetOutput();
+}
+
+vtkMapper *
+MeshObject::getMapper()
+{
+    return this->mapper;
+}
+
 vtkActor *
 MeshObject::getActor()
 {

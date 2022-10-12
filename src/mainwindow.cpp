@@ -45,11 +45,19 @@
 #include "vtkCellPicker.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkCompositeDataGeometryFilter.h"
+#include "vtkDoubleArray.h"
+#include "vtkCellData.h"
+#include "vtkMapper.h"
+#include "vtkCellArray.h"
+#include "vtkCellArrayIterator.h"
+#include "vtkLookupTable.h"
+#include "vtkCell.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
 #include "explodewidget.h"
+#include "meshqualitywidget.h"
 #include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
@@ -124,6 +132,19 @@ MainWindow::LoadThread::run()
         this->reader->load();
 }
 
+// MeshQualityMetric
+
+MainWindow::MeshQualityMetric::MeshQualityMetric() : min(0.), max(1.) {}
+
+MainWindow::MeshQualityMetric::~MeshQualityMetric() {}
+
+void
+MainWindow::MeshQualityMetric::free()
+{
+    for (auto & it : this->data)
+        it.second->Delete();
+}
+
 // Main window
 
 MainWindow::MainWindow(QWidget * parent) :
@@ -147,6 +168,7 @@ MainWindow::MainWindow(QWidget * parent) :
     vtk_render_window(nullptr),
     vtk_renderer(nullptr),
     vtk_interactor(nullptr),
+    vtk_lut(nullptr),
     ori_marker(nullptr),
     cube_axes_actor(nullptr),
     interactor_style_2d(nullptr),
@@ -158,6 +180,7 @@ MainWindow::MainWindow(QWidget * parent) :
     about_dlg(nullptr),
     license_dlg(nullptr),
     explode(nullptr),
+    mesh_quality(nullptr),
     selected_mesh_ent_info(nullptr),
     new_action(nullptr),
     open_action(nullptr),
@@ -199,6 +222,7 @@ MainWindow::MainWindow(QWidget * parent) :
         this->resize(default_size);
     this->recent_files = this->settings->value("recent_files", QStringList()).toStringList();
     loadColorProfiles();
+    buildLookupTable();
 
     setupWidgets();
     setupMenuBar();
@@ -233,6 +257,7 @@ MainWindow::~MainWindow()
     delete this->info_window;
     delete this->info_dock;
     delete this->explode;
+    delete this->mesh_quality;
     delete this->selected_mesh_ent_info;
     for (auto & it : this->color_profiles)
         delete it;
@@ -281,6 +306,7 @@ MainWindow::setupWidgets()
     connect(this->deselect_sc, SIGNAL(activated()), this, SLOT(onDeselect()));
 
     setupExplodeWidgets();
+    setupMeshQualityWidget();
 }
 
 void
@@ -372,6 +398,15 @@ MainWindow::setupExplodeWidgets()
 }
 
 void
+MainWindow::setupMeshQualityWidget()
+{
+    this->mesh_quality = new MeshQualityWidget(this);
+    connect(this->mesh_quality, SIGNAL(metricChanged(int)), this, SLOT(onMetricChanged(int)));
+    connect(this->mesh_quality, SIGNAL(closed()), this, SLOT(onMeshQualityClosed()));
+    this->mesh_quality->setVisible(false);
+}
+
+void
 MainWindow::setupMenuBar()
 {
     setMenuBar(this->menu_bar);
@@ -415,6 +450,8 @@ MainWindow::setupMenuBar()
     QMenu * tools_menu = this->menu_bar->addMenu("Tools");
     setupSelectModeMenu(tools_menu);
     this->tools_explode_action = tools_menu->addAction("Explode", this, SLOT(onToolsExplode()));
+    this->tools_mesh_quality_action =
+        tools_menu->addAction("Mesh quality", this, SLOT(onToolsMeshQuality()));
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
@@ -500,6 +537,7 @@ MainWindow::updateMenuBar()
     this->export_as_png->setEnabled(has_file);
     this->export_as_jpg->setEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
+    this->tools_mesh_quality_action->setEnabled(has_file);
     this->close_action->setEnabled(has_file);
 }
 
@@ -609,6 +647,8 @@ MainWindow::clear()
         eb->Delete();
     this->extract_blocks.clear();
 
+    this->mesh_quality_metric.free();
+
     auto watched_files = this->file_watcher->files();
     for (auto & file : watched_files)
         this->file_watcher->removePath(file);
@@ -664,6 +704,18 @@ MainWindow::setupCubeAxesActor()
     this->cube_axes_actor->SetCamera(this->vtk_renderer->GetActiveCamera());
     this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);
     this->cube_axes_actor->SetFlyMode(vtkCubeAxesActor::VTK_FLY_OUTER_EDGES);
+}
+
+void
+MainWindow::buildLookupTable()
+{
+    this->vtk_lut = vtkLookupTable::New();
+    this->vtk_lut->SetTableRange(0, 1);
+    this->vtk_lut->SetHueRange(2. / 3., 0);
+    this->vtk_lut->SetSaturationRange(1, 1);
+    this->vtk_lut->SetValueRange(1, 1);
+    this->vtk_lut->SetNumberOfColors(256);
+    this->vtk_lut->Build();
 }
 
 int
@@ -1389,6 +1441,7 @@ MainWindow::loadIntoVtk()
     addBlocks();
     addSideSets();
     addNodeSets();
+    addMeshQualityMetrics();
 
     BoundingBox bbox;
     int idx = 0;
@@ -1842,6 +1895,47 @@ MainWindow::onExplodeValueChanged(double value)
 }
 
 void
+MainWindow::onToolsMeshQuality()
+{
+    this->mesh_quality->setPosition(geometry());
+    this->mesh_quality->show();
+    auto metric_id = this->mesh_quality->getMetricId();
+    computeMetric(metric_id);
+    onMetricChanged(metric_id);
+}
+
+void
+MainWindow::onMetricChanged(int metric_id)
+{
+    // TODO: get `min` and `max` for the displayed metric
+    double min = 0;
+    double max = 100;
+    for (auto & it : this->blocks) {
+        BlockObject * block = it.second;
+
+        auto * mapper = block->getMapper();
+        mapper->ScalarVisibilityOn();
+        mapper->SelectColorArray("metric1");
+        mapper->SetScalarModeToUseCellFieldData();
+        mapper->InterpolateScalarsBeforeMappingOn();
+        mapper->SetColorModeToMapScalars();
+        mapper->SetLookupTable(this->vtk_lut);
+        mapper->SetScalarRange(min, max);
+    }
+}
+
+void
+MainWindow::onMeshQualityClosed()
+{
+    for (auto & it : this->blocks) {
+        BlockObject * block = it.second;
+
+        auto * mapper = block->getMapper();
+        mapper->ScalarVisibilityOff();
+    }
+}
+
+void
 MainWindow::updateViewModeLocation()
 {
     auto width = this->getRenderWindowWidth();
@@ -1952,4 +2046,60 @@ MainWindow::getVersionFromReply(QNetworkReply * reply)
         return QVersionNumber(match.captured(1).toInt(), match.captured(2).toInt());
     else
         return QVersionNumber(-1);
+}
+
+void
+MainWindow::addMeshQualityMetrics()
+{
+    MeshQualityMetric * metric = &this->mesh_quality_metric;
+    for (auto & it : this->blocks) {
+        BlockObject * block = it.second;
+        vtkPolyData * poly_data = block->getPolyData();
+
+        vtkDoubleArray * data = vtkDoubleArray::New();
+        data->SetName("metric1");
+
+        vtkCellArray * cell_array = poly_data->GetPolys();
+        auto jt = cell_array->NewIterator();
+        for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
+            auto idx = jt->GetCurrentCellId();
+            data->InsertValue(idx, 0.);
+        }
+        jt->Delete();
+
+        metric->data[it.first] = data;
+        vtkCellData * cell_data = poly_data->GetCellData();
+        cell_data->AddArray(data);
+    }
+}
+
+void
+MainWindow::computeMetric(int metric_id)
+{
+    MeshQualityMetric & metric = this->mesh_quality_metric;
+
+    for (auto & it : this->blocks) {
+        auto blk_id = it.first;
+        BlockObject * block = it.second;
+
+        vtkPolyData * poly_data = block->getPolyData();
+        vtkCellArray * cell_array = poly_data->GetPolys();
+        auto jt = cell_array->NewIterator();
+        for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
+            auto idx = jt->GetCurrentCellId();
+
+            vtkCell * cell = poly_data->GetCell(idx);
+            double q = computeQualityDetJac(cell);
+
+            metric.data[blk_id]->SetValue(idx, q);
+        }
+        jt->Delete();
+    }
+}
+
+double
+MainWindow::computeQualityDetJac(vtkCell * cell)
+{
+    double q = 0;
+    return q;
 }

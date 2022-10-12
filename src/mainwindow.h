@@ -27,6 +27,7 @@ class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
 class ExplodeWidget;
+class MeshQualityWidget;
 class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
@@ -36,6 +37,9 @@ class vtkCompositeDataGeometryFilter;
 class vtkActor;
 class vtkCubeAxesActor;
 class vtkExtractBlock;
+class vtkDoubleArray;
+class vtkLookupTable;
+class vtkCell;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -94,6 +98,8 @@ protected:
     void setupNotificationWidget();
     void setupFileChangedNotificationWidget();
     void setupExplodeWidgets();
+    void setupMeshQualityWidget();
+    void computeMetric(int metric_id);
 
     void setupMenuBar();
     void setupExportMenu(QMenu * menu);
@@ -109,12 +115,14 @@ protected:
     void setupVtk();
     void setupOrientationMarker();
     void setupCubeAxesActor();
+    void buildLookupTable();
 
     int getRenderWindowWidth() const;
     bool checkFileExists(const QString & file_name);
     void addBlocks();
     void addSideSets();
     void addNodeSets();
+    void addMeshQualityMetrics();
     BlockObject * getBlock(int block_id);
     SideSetObject * getSideSet(int sideset_id);
     NodeSetObject * getNodeSet(int nodeset_id);
@@ -148,6 +156,7 @@ protected:
     QString cellTypeToName(int cell_type);
     void hideLoadProgressBar();
     void loadIntoVtk();
+    double computeQualityDetJac(vtkCell * cell);
 
     virtual bool event(QEvent * event);
     virtual void customEvent(QEvent * event);
@@ -192,7 +201,10 @@ public slots:
     void onExportAsPng();
     void onExportAsJpg();
     void onToolsExplode();
+    void onToolsMeshQuality();
     void onExplodeValueChanged(double value);
+    void onMetricChanged(int metric_id);
+    void onMeshQualityClosed();
     void updateViewModeLocation();
     void onMinimize();
     void onBringAllToFront();
@@ -223,6 +235,7 @@ protected:
     vtkGenericOpenGLRenderWindow * vtk_render_window;
     vtkRenderer * vtk_renderer;
     vtkRenderWindowInteractor * vtk_interactor;
+    vtkLookupTable * vtk_lut;
     vtkOrientationMarkerWidget * ori_marker;
     vtkCubeAxesActor * cube_axes_actor;
     OInteractorStyle2D * interactor_style_2d;
@@ -234,6 +247,7 @@ protected:
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
     ExplodeWidget * explode;
+    MeshQualityWidget * mesh_quality;
     InfoWidget * selected_mesh_ent_info;
 
     QAction * new_action;
@@ -248,6 +262,7 @@ protected:
     QAction * transluent_action;
     QAction * view_info_wnd_action;
     QAction * tools_explode_action;
+    QAction * tools_mesh_quality_action;
     QAction * perspective_action;
     QAction * ori_marker_action;
     QAction * minimize;
@@ -270,6 +285,17 @@ protected:
     BlockObject * highlighted_block;
     std::map<int, SideSetObject *> side_sets;
     std::map<int, NodeSetObject *> node_sets;
+
+    struct MeshQualityMetric {
+        std::map<int, vtkDoubleArray *> data;
+        double min;
+        double max;
+
+        MeshQualityMetric();
+        virtual ~MeshQualityMetric();
+        void free();
+    };
+    MeshQualityMetric mesh_quality_metric;
 
     /// center of bounding box of the whole mesh
     vtkVector3d center_of_bounds;

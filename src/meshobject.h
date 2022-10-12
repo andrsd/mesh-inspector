@@ -5,6 +5,7 @@
 
 class vtkDataObject;
 class vtkAlgorithmOutput;
+class vtkPolyData;
 class vtkPolyDataAlgorithm;
 class vtkMapper;
 class vtkActor;
@@ -17,6 +18,8 @@ public:
     virtual ~MeshObject();
 
     bool visible();
+    vtkPolyData * getPolyData();
+    vtkMapper * getMapper();
     vtkActor * getActor();
     vtkProperty * getProperty();
     const BoundingBox & getBounds() const;
