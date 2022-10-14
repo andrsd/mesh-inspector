@@ -1,7 +1,7 @@
 name: code-ql
 
 env:
-  QT_VERSION: 5.15.5_2
+  QT_VERSION: 6.3.2
 
 on:
   push:

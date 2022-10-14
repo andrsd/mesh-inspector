@@ -1,7 +1,7 @@
 name: build
 
 env:
-  QT_VERSION: 5.15.5_2
+  QT_VERSION: 6.3.2
 
 on:
   push:
@@ -27,19 +27,19 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update -qq
-          sudo apt install libvtk9-qt-dev
-          echo "QT5DIR=/usr/lib/x86_64-linux-gnu/cmake/Qt5" >> $GITHUB_ENV
+          sudo apt install qt6-base-dev libvtk9-qt-dev
+          echo "QT6DIR=/usr/lib/x86_64-linux-gnu/cmake/Qt6" >> $GITHUB_ENV
 
       - name: Install dependencies (macOS)
         if: startsWith(matrix.os, 'macos')
         run: |
-          brew install vtk qt5
-          echo "QT5DIR=$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5" >> $GITHUB_ENV
+          brew install vtk qt6
+          echo "QT6DIR=$(brew --cellar)/qt@6/${{ env.QT_VERSION }}/lib/cmake/Qt6" >> $GITHUB_ENV
 
       - name: Configure
         run: |
           cmake -S . -B ${{ github.workspace }}/build \
-            -DQt5_DIR=${{ env.QT5DIR }}
+            -DQt6_DIR=${{ env.QT6DIR }}
 
       - name: Build
         run: make -C ${{ github.workspace }}/build
