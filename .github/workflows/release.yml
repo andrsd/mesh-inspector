@@ -1,7 +1,7 @@
 name: release
 
 env:
-  QT_VERSION: 5.15.6
+  QT_VERSION: 6.3.2
 
 on:
   push:
@@ -22,14 +22,14 @@ jobs:
 
       - name: Install dependencies (macOS)
         run: |
-          brew install vtk qt5
-          echo "QT5DIR=$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/lib/cmake/Qt5" >> $GITHUB_ENV
-          echo "$(brew --cellar)/qt@5/${{ env.QT_VERSION }}/bin" >> $GITHUB_PATH
+          brew install vtk qt6
+          echo "QT6DIR=$(brew --cellar)/qt@6/${{ env.QT_VERSION }}/lib/cmake/Qt6" >> $GITHUB_ENV
+          echo "$(brew --cellar)/qt@6/${{ env.QT_VERSION }}/bin" >> $GITHUB_PATH
 
       - name: Configure
         run: |
           cmake -S . -B ${{ github.workspace }}/build \
-            -DQt5_DIR=${{ env.QT5DIR }}
+            -DQt6_DIR=${{ env.QT6DIR }}
 
       - name: Build
         run: make -C ${{ github.workspace }}/build
