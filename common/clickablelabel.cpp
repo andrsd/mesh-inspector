@@ -3,7 +3,7 @@
 ClickableLabel::ClickableLabel(QWidget * parent) : QLabel(parent) {}
 
 void
-ClickableLabel::enterEvent(QEvent * event)
+ClickableLabel::enterEvent(QEnterEvent * event)
 {
     auto f = this->font();
     f.setUnderline(true);

@@ -51,7 +51,7 @@ OInteractorInterface::onKeyPress(vtkObject * object, unsigned long event, void *
         // FIXME: get the modifiers from interactor
         auto mods = Qt::NoModifier;
         if (seq.count() > 0) {
-            auto * e = new QKeyEvent(QEvent::KeyPress, seq[0], mods);
+            auto * e = new QKeyEvent(QEvent::KeyPress, seq[0].toCombined(), mods);
             QCoreApplication::postEvent(this->widget, e);
         }
     }

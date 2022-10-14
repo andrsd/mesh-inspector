@@ -365,9 +365,9 @@ MainWindow::setupMenuBar()
 {
     setMenuBar(this->menu_bar);
     QMenu * file_menu = this->menu_bar->addMenu("File");
-    this->new_action = file_menu->addAction("New", this, SLOT(onNewFile()), QKeySequence("Ctrl+N"));
+    this->new_action = file_menu->addAction("New", QKeySequence("Ctrl+N"), this, SLOT(onNewFile()));
     this->open_action =
-        file_menu->addAction("Open", this, SLOT(onOpenFile()), QKeySequence("Ctrl+O"));
+        file_menu->addAction("Open", QKeySequence("Ctrl+O"), this, SLOT(onOpenFile()));
     this->recent_menu = file_menu->addMenu("Open Recent");
     buildRecentFilesMenu();
     file_menu->addSeparator();
@@ -375,7 +375,7 @@ MainWindow::setupMenuBar()
     setupExportMenu(export_menu);
     file_menu->addSeparator();
     this->close_action =
-        file_menu->addAction("Close", this, SLOT(onClose()), QKeySequence("Ctrl+W"));
+        file_menu->addAction("Close", QKeySequence("Ctrl+W"), this, SLOT(onClose()));
 
     // The "About" item is fine here, since we assume Mac and that will
     // place the item into different submenu but this will need to be fixed
@@ -404,7 +404,7 @@ MainWindow::setupMenuBar()
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
-        window_menu->addAction("Minimize", this, SLOT(onMinimize()), QKeySequence("Ctrl+M"));
+        window_menu->addAction("Minimize", QKeySequence("Ctrl+M"), this, SLOT(onMinimize()));
     window_menu->addSeparator();
     this->bring_all_to_front =
         window_menu->addAction("Bring All to Front", this, SLOT(onBringAllToFront()));
