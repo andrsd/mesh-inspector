@@ -7,7 +7,7 @@
 class QWidget;
 class QVBoxLayout;
 class QLabel;
-class QStandardItemModel;
+class MeshModel;
 class OTreeView;
 class QTreeWidget;
 class ExpandableWidget;
@@ -24,6 +24,7 @@ public:
     explicit InfoWindow(QWidget * parent = nullptr);
 
     void clear();
+    void init();
     void setSummary(int total_elems, int total_nodes);
     void setBounds(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
 
@@ -44,22 +45,11 @@ public slots:
     void onNodeSetAdded(int id, const QString & name);
 
 protected slots:
-    void onBlockChanged(QStandardItem * item);
-    void onBlockSelectionChanged(const QItemSelection & selected,
-                                 const QItemSelection & deselected);
-    void onNameContextMenu(QStandardItem * item, const QPoint & point);
-    void onBlockCustomContextMenu(const QPoint &);
+    void onItemChanged(QStandardItem * item);
+    void onItemSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+    void onItemCustomContextMenu(const QPoint & point);
     void onBlockColorPicked(const QColor & qcolor);
     void onBlockOpacityChanged(double opacity);
-
-    void onSideSetChanged(QStandardItem * item);
-    void onSideSetSelectionChanged(const QItemSelection & selected,
-                                   const QItemSelection & deselected);
-
-    void onNodeSetChanged(QStandardItem * item);
-    void onNodeSetSelectionChanged(const QItemSelection & selected,
-                                   const QItemSelection & deselected);
-
     void onDimensionsStateChanged(int state);
 
     void onHideBlock();
@@ -72,23 +62,24 @@ protected slots:
 protected:
     void setupWidgets();
     void setupBlocksWidgets();
-    void setupSidesetsWidgets();
-    void setupNodesetsWidgets();
     void setupSummaryWidgets();
     void setupRangeWidgets();
     void setColorPickerColorFromIndex(const QModelIndex & index);
 
+    void onBlockChanged(QStandardItem * item);
+    void onSideSetChanged(QStandardItem * item);
+    void onNodeSetChanged(QStandardItem * item);
+
+    void onNameContextMenu(QStandardItem * item, const QPoint & point);
+
+    void onBlockSelectionChanged(QStandardItem * item);
+    void onSideSetSelectionChanged(QStandardItem * item);
+    void onNodeSetSelectionChanged(QStandardItem * item);
+
     QWidget * widget;
     QVBoxLayout * layout;
-    QLabel * lbl_info;
-    QStandardItemModel * block_model;
-    OTreeView * blocks;
-    QStandardItemModel * nodeset_model;
-    OTreeView * nodesets;
-    ExpandableWidget * nodesets_expd;
-    QStandardItemModel * sideset_model;
-    OTreeView * sidesets;
-    ExpandableWidget * sidesets_expd;
+    MeshModel * mesh_model;
+    OTreeView * mesh_view;
     QTreeWidget * totals;
     QTreeWidgetItem * total_elements;
     QTreeWidgetItem * total_nodes;
@@ -100,6 +91,10 @@ protected:
     QCheckBox * dimensions;
     ExpandableWidget * range_expd;
     ColorPicker * color_picker;
+
+    QStandardItem * block_root;
+    QStandardItem * sideset_root;
+    QStandardItem * nodeset_root;
 
 protected:
     static const int IDX_NAME = 0;

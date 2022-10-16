@@ -1371,6 +1371,7 @@ MainWindow::loadIntoVtk()
     Reader * reader = this->load_thread->getReader();
 
     this->info_window->clear();
+    this->info_window->init();
     addBlocks();
     addSideSets();
     addNodeSets();

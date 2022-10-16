@@ -2,17 +2,18 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QStandardItemModel>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QCheckBox>
 #include <QBrush>
 #include <QMenu>
 #include <QLocale>
+#include <QDebug>
 #include "common/horzline.h"
 #include "common/expandablewidget.h"
 #include "common/otreeview.h"
 #include "common/colorpicker.h"
+#include "meshmodel.h"
 
 QList<QColor> InfoWindow::colors({ QColor(156, 207, 237),
                                    QColor(165, 165, 165),
@@ -26,13 +27,8 @@ InfoWindow::InfoWindow(QWidget * parent) :
     QScrollArea(parent),
     widget(nullptr),
     layout(nullptr),
-    lbl_info(nullptr),
-    block_model(nullptr),
-    blocks(nullptr),
-    nodeset_model(nullptr),
-    nodesets(nullptr),
-    sideset_model(nullptr),
-    sidesets(nullptr),
+    mesh_model(nullptr),
+    mesh_view(nullptr),
     totals(nullptr),
     total_elements(nullptr),
     totals_expd(nullptr),
@@ -42,7 +38,11 @@ InfoWindow::InfoWindow(QWidget * parent) :
     z_range(nullptr),
     dimensions(nullptr),
     range_expd(nullptr),
-    color_picker(nullptr)
+    color_picker(nullptr),
+
+    block_root(nullptr),
+    sideset_root(nullptr),
+    nodeset_root(nullptr)
 {
     setupWidgets();
 
@@ -76,109 +76,39 @@ InfoWindow::setupWidgets()
 
     setupBlocksWidgets();
     this->layout->addWidget(new HorzLine());
-    setupSidesetsWidgets();
-    this->layout->addWidget(new HorzLine());
-    setupNodesetsWidgets();
-    this->layout->addWidget(new HorzLine());
     setupSummaryWidgets();
     this->layout->addWidget(new HorzLine());
     setupRangeWidgets();
     this->layout->addWidget(new HorzLine());
-
-    this->layout->addStretch();
 }
 
 void
 InfoWindow::setupBlocksWidgets()
 {
-    this->lbl_info = new QLabel("Blocks");
-    this->lbl_info->setStyleSheet("color: #444;"
-                                  "font-weight: bold;");
-    this->layout->addWidget(this->lbl_info);
-
-    this->block_model = new QStandardItemModel();
-    this->block_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    connect(this->block_model,
+    this->mesh_model = new MeshModel();
+    this->mesh_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
+    connect(this->mesh_model,
             SIGNAL(itemChanged(QStandardItem *)),
             this,
-            SLOT(onBlockChanged(QStandardItem *)));
-    this->blocks = new OTreeView();
-    this->blocks->setFixedHeight(250);
-    this->blocks->setRootIsDecorated(false);
-    this->blocks->setModel(this->block_model);
-    this->blocks->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->blocks->setColumnWidth(0, 170);
-    this->blocks->setColumnWidth(1, 20);
-    this->blocks->setColumnWidth(2, 40);
-    this->blocks->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(this->blocks,
+            SLOT(onItemChanged(QStandardItem *)));
+    this->mesh_view = new OTreeView();
+    this->mesh_view->setRootIsDecorated(true);
+    this->mesh_view->setModel(this->mesh_model);
+    this->mesh_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->mesh_view->setColumnWidth(0, 170);
+    this->mesh_view->setColumnWidth(1, 20);
+    this->mesh_view->setColumnWidth(2, 40);
+    this->mesh_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(this->mesh_view,
             SIGNAL(customContextMenuRequested(const QPoint &)),
             this,
-            SLOT(onBlockCustomContextMenu(const QPoint &)));
-    auto * sel_model = this->blocks->selectionModel();
+            SLOT(onItemCustomContextMenu(const QPoint &)));
+    auto * sel_model = this->mesh_view->selectionModel();
     connect(sel_model,
             SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
             this,
-            SLOT(onBlockSelectionChanged(const QItemSelection &, const QItemSelection &)));
-    this->layout->addWidget(this->blocks);
-}
-
-void
-InfoWindow::setupSidesetsWidgets()
-{
-    this->sideset_model = new QStandardItemModel();
-    this->sideset_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    connect(this->sideset_model,
-            SIGNAL(itemChanged(QStandardItem *)),
-            this,
-            SLOT(onSideSetChanged(QStandardItem *)));
-
-    this->sidesets = new OTreeView();
-    this->sidesets->setFixedHeight(150);
-    this->sidesets->setRootIsDecorated(false);
-    this->sidesets->setModel(this->sideset_model);
-    this->sidesets->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->sidesets->setColumnWidth(0, 190);
-    this->sidesets->setColumnWidth(2, 40);
-    this->sidesets->hideColumn(IDX_COLOR);
-    auto * sel_model = this->sidesets->selectionModel();
-    connect(sel_model,
-            SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
-            this,
-            SLOT(onSideSetSelectionChanged(const QItemSelection &, const QItemSelection &)));
-
-    this->sidesets_expd = new ExpandableWidget("Side sets");
-    this->sidesets_expd->setWidget(this->sidesets);
-    this->layout->addWidget(this->sidesets_expd);
-}
-
-void
-InfoWindow::setupNodesetsWidgets()
-{
-    this->nodeset_model = new QStandardItemModel();
-    this->nodeset_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    connect(this->nodeset_model,
-            SIGNAL(itemChanged(QStandardItem *)),
-            this,
-            SLOT(onNodeSetChanged(QStandardItem *)));
-
-    this->nodesets = new OTreeView();
-    this->nodesets->setFixedHeight(150);
-    this->nodesets->setRootIsDecorated(false);
-    this->nodesets->setModel(this->nodeset_model);
-    this->nodesets->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->nodesets->setColumnWidth(0, 190);
-    this->nodesets->setColumnWidth(2, 40);
-    this->nodesets->hideColumn(IDX_COLOR);
-    auto * sel_model = this->nodesets->selectionModel();
-    connect(sel_model,
-            SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
-            this,
-            SLOT(onNodeSetSelectionChanged(const QItemSelection &, const QItemSelection &)));
-
-    this->nodesets_expd = new ExpandableWidget("Node sets");
-    this->nodesets_expd->setWidget(this->nodesets);
-    this->layout->addWidget(this->nodesets_expd);
+            SLOT(onItemSelectionChanged(const QItemSelection &, const QItemSelection &)));
+    this->layout->addWidget(this->mesh_view);
 }
 
 void
@@ -232,27 +162,53 @@ InfoWindow::setupRangeWidgets()
 void
 InfoWindow::clear()
 {
-    this->block_model->removeRows(0, this->block_model->rowCount());
-    this->sideset_model->removeRows(0, this->sideset_model->rowCount());
-    this->sidesets_expd->setNumberOfItems(0);
-    this->nodeset_model->removeRows(0, this->nodeset_model->rowCount());
-    this->nodesets_expd->setNumberOfItems(0);
+    this->mesh_model->removeRows(0, this->mesh_model->rowCount());
 
     this->total_elements->setText(1, "");
     this->total_nodes->setText(1, "");
 }
 
 void
+InfoWindow::init()
+{
+    auto * si_name = new QStandardItem();
+    si_name->setText("Blocks");
+    si_name->setCheckable(true);
+    si_name->setCheckState(Qt::Checked);
+    si_name->setAutoTristate(true);
+    this->mesh_model->setItem(0, si_name);
+    this->block_root = this->mesh_model->item(0);
+    this->mesh_view->expand(this->block_root->index());
+
+    si_name = new QStandardItem();
+    si_name->setText("Side sets");
+    si_name->setCheckable(true);
+    si_name->setCheckState(Qt::Unchecked);
+    si_name->setAutoTristate(true);
+    this->mesh_model->setItem(1, si_name);
+    this->sideset_root = this->mesh_model->item(1);
+
+    si_name = new QStandardItem();
+    si_name->setText("Node sets");
+    si_name->setCheckable(true);
+    si_name->setCheckState(Qt::Unchecked);
+    si_name->setAutoTristate(true);
+    this->mesh_model->setItem(2, si_name);
+    this->nodeset_root = this->mesh_model->item(2);
+}
+
+void
 InfoWindow::onBlockAdded(int id, const QString & name)
 {
-    int row = this->block_model->rowCount();
+    QModelIndex index = this->block_root->index();
+    int row = this->mesh_model->rowCount(index);
 
     auto * si_name = new QStandardItem();
     si_name->setText(name);
     si_name->setCheckable(true);
     si_name->setCheckState(Qt::Checked);
     si_name->setData(id);
-    this->block_model->setItem(row, IDX_NAME, si_name);
+    this->block_root->setChild(row, IDX_NAME, si_name);
 
     auto * si_clr = new QStandardItem();
     si_clr->setText("\u25a0");
@@ -260,11 +216,26 @@ InfoWindow::onBlockAdded(int id, const QString & name)
     auto color = InfoWindow::colors[clr_idx];
     si_clr->setForeground(QBrush(color));
     si_clr->setData(color);
-    this->block_model->setItem(row, IDX_COLOR, si_clr);
+    this->block_root->setChild(row, IDX_COLOR, si_clr);
 
     auto * si_id = new QStandardItem();
     si_id->setText(QString::number(id));
-    this->block_model->setItem(row, IDX_ID, si_id);
+    this->block_root->setChild(row, IDX_ID, si_id);
+
+    QString text = QString("Blocks (%1)").arg(this->block_root->rowCount());
+    this->block_root->setText(text);
+}
+
+void
+InfoWindow::onItemChanged(QStandardItem * item)
+{
+    auto * parent = item->parent();
+    if (parent == this->block_root)
+        onBlockChanged(item);
+    else if (parent == this->sideset_root)
+        onSideSetChanged(item);
+    else if (parent == this->nodeset_root)
+        onNodeSetChanged(item);
 }
 
 void
@@ -277,9 +248,9 @@ InfoWindow::onBlockChanged(QStandardItem * item)
     }
     else if (item->column() == IDX_COLOR) {
         auto color = item->foreground().color();
-        auto index = this->block_model->indexFromItem(item);
+        auto index = this->mesh_model->indexFromItem(item);
         auto name_index = index.siblingAtColumn(IDX_NAME);
-        int block_id = this->block_model->itemFromIndex(name_index)->data().toInt();
+        int block_id = this->mesh_model->itemFromIndex(name_index)->data().toInt();
         emit blockColorChanged(block_id, color);
     }
 }
@@ -289,7 +260,7 @@ InfoWindow::setColorPickerColorFromIndex(const QModelIndex & index)
 {
     blockSignals(true);
     auto clr_index = index.siblingAtColumn(IDX_COLOR);
-    auto * clr_item = this->block_model->itemFromIndex(clr_index);
+    auto * clr_item = this->mesh_model->itemFromIndex(clr_index);
     auto qcolor = clr_item->data().value<QColor>();
     this->color_picker->setData(clr_index);
     this->color_picker->setColor(qcolor);
@@ -297,16 +268,34 @@ InfoWindow::setColorPickerColorFromIndex(const QModelIndex & index)
 }
 
 void
-InfoWindow::onBlockSelectionChanged(const QItemSelection & selected,
-                                    const QItemSelection & deselected)
+InfoWindow::onItemSelectionChanged(const QItemSelection & selected,
+                                   const QItemSelection & deselected)
 {
     if (selected.indexes().length() > 0) {
-        this->sidesets->clearSelection();
-        this->nodesets->clearSelection();
         auto index = selected.indexes()[0];
-        auto * item = this->block_model->itemFromIndex(index);
+        auto * item = this->mesh_model->itemFromIndex(index);
+
+        auto * parent = item->parent();
+        if (parent == this->block_root)
+            onBlockSelectionChanged(item);
+        else if (parent == this->sideset_root)
+            onSideSetSelectionChanged(item);
+        else if (parent == this->nodeset_root)
+            onNodeSetSelectionChanged(item);
+    }
+    else {
+        onBlockSelectionChanged(nullptr);
+        onSideSetSelectionChanged(nullptr);
+        onNodeSetSelectionChanged(nullptr);
+    }
+}
+
+void
+InfoWindow::onBlockSelectionChanged(QStandardItem * item)
+{
+    if (item) {
         int block_id = item->data().toInt();
-        setColorPickerColorFromIndex(index);
+        setColorPickerColorFromIndex(item->index());
         emit blockSelectionChanged(block_id);
     }
     else {
@@ -334,12 +323,15 @@ InfoWindow::onNameContextMenu(QStandardItem * item, const QPoint & point)
 }
 
 void
-InfoWindow::onBlockCustomContextMenu(const QPoint & point)
+InfoWindow::onItemCustomContextMenu(const QPoint & point)
 {
-    auto index = this->blocks->indexAt(point);
+    auto index = this->mesh_view->indexAt(point);
     if (index.isValid()) {
-        auto * item = this->block_model->itemFromIndex(index);
-        onNameContextMenu(item, this->blocks->viewport()->mapToGlobal(point));
+        auto * item = this->mesh_model->itemFromIndex(index);
+
+        auto * parent = item->parent();
+        if (parent == this->block_root)
+            onNameContextMenu(item, this->mesh_view->viewport()->mapToGlobal(point));
     }
 }
 
@@ -352,11 +344,11 @@ InfoWindow::onDimensionsStateChanged(int state)
 void
 InfoWindow::onHideBlock()
 {
-    auto * selection_model = this->blocks->selectionModel();
+    auto * selection_model = this->mesh_view->selectionModel();
     auto indexes = selection_model->selectedIndexes();
     if (indexes.length() > 0) {
         auto index = indexes[0];
-        auto * item = this->block_model->itemFromIndex(index);
+        auto * item = this->mesh_model->itemFromIndex(index);
         item->setCheckState(Qt::Unchecked);
     }
 }
@@ -364,13 +356,13 @@ InfoWindow::onHideBlock()
 void
 InfoWindow::onHideOtherBlocks()
 {
-    auto * selection_model = this->blocks->selectionModel();
+    auto * selection_model = this->mesh_view->selectionModel();
     auto indexes = selection_model->selectedIndexes();
     if (indexes.length() > 0) {
         auto index = indexes[0];
-        for (int row = 0; row < this->block_model->rowCount(); row++) {
+        for (int row = 0; row < this->block_root->rowCount(); row++) {
             if (row != index.row()) {
-                auto * item = this->block_model->item(row, 0);
+                auto * item = this->block_root->child(row, 0);
                 item->setCheckState(Qt::Unchecked);
             }
         }
@@ -380,8 +372,8 @@ InfoWindow::onHideOtherBlocks()
 void
 InfoWindow::onHideAllBlocks()
 {
-    for (int row = 0; row < this->block_model->rowCount(); row++) {
-        auto * item = this->block_model->item(row, 0);
+    for (int row = 0; row < this->block_root->rowCount(); row++) {
+        auto * item = this->block_root->child(row, 0);
         item->setCheckState(Qt::Unchecked);
     }
 }
@@ -389,11 +381,11 @@ InfoWindow::onHideAllBlocks()
 void
 InfoWindow::onShowBlock()
 {
-    auto * selection_model = this->blocks->selectionModel();
+    auto * selection_model = this->mesh_view->selectionModel();
     auto indexes = selection_model->selectedIndexes();
     if (indexes.length() > 0) {
         auto index = indexes[0];
-        auto * item = this->block_model->itemFromIndex(index);
+        auto * item = this->mesh_model->itemFromIndex(index);
         item->setCheckState(Qt::Checked);
     }
 }
@@ -401,8 +393,8 @@ InfoWindow::onShowBlock()
 void
 InfoWindow::onShowAllBlocks()
 {
-    for (int row = 0; row < this->block_model->rowCount(); row++) {
-        auto * item = this->block_model->item(row, 0);
+    for (int row = 0; row < this->block_root->rowCount(); row++) {
+        auto * item = this->block_root->child(row, 0);
         item->setCheckState(Qt::Checked);
     }
 }
@@ -410,7 +402,7 @@ InfoWindow::onShowAllBlocks()
 void
 InfoWindow::onAppearance()
 {
-    auto * selection_model = this->blocks->selectionModel();
+    auto * selection_model = this->mesh_view->selectionModel();
     auto indexes = selection_model->selectedIndexes();
     if (indexes.length() == 0)
         return;
@@ -422,19 +414,21 @@ InfoWindow::onAppearance()
 void
 InfoWindow::onSideSetAdded(int id, const QString & name)
 {
-    auto row = this->sideset_model->rowCount();
+    QModelIndex index = this->sideset_root->index();
+    auto row = this->mesh_model->rowCount(index);
 
     auto * si_name = new QStandardItem();
     si_name->setText(name);
     si_name->setCheckable(true);
     si_name->setData(id);
-    this->sideset_model->setItem(row, IDX_NAME, si_name);
+    this->sideset_root->setChild(row, IDX_NAME, si_name);
 
     auto * si_id = new QStandardItem();
     si_id->setText(QString::number(id));
-    this->sideset_model->setItem(row, IDX_ID, si_id);
+    this->sideset_root->setChild(row, IDX_ID, si_id);
 
-    this->sidesets_expd->setNumberOfItems(this->sideset_model->rowCount());
+    QString text = QString("Side sets (%1)").arg(this->sideset_root->rowCount());
+    this->sideset_root->setText(text);
 }
 
 void
@@ -448,37 +442,35 @@ InfoWindow::onSideSetChanged(QStandardItem * item)
 }
 
 void
-InfoWindow::onSideSetSelectionChanged(const QItemSelection & selected,
-                                      const QItemSelection & deselected)
+InfoWindow::onSideSetSelectionChanged(QStandardItem * item)
 {
-    if (selected.indexes().length() > 0) {
-        this->blocks->clearSelection();
-        this->nodesets->clearSelection();
-        auto index = selected.indexes()[0];
-        auto * item = this->sideset_model->itemFromIndex(index);
+    if (item) {
         auto sideset_id = item->data().toInt();
         emit sideSetSelectionChanged(sideset_id);
     }
-    else
+    else {
         emit sideSetSelectionChanged(-1);
+    }
 }
 
 void
 InfoWindow::onNodeSetAdded(int id, const QString & name)
 {
-    auto row = this->nodeset_model->rowCount();
+    QModelIndex index = this->nodeset_root->index();
+    auto row = this->mesh_model->rowCount(index);
 
     auto * si_name = new QStandardItem();
     si_name->setText(name);
     si_name->setCheckable(true);
     si_name->setData(id);
-    this->nodeset_model->setItem(row, IDX_NAME, si_name);
+    this->nodeset_root->setChild(row, IDX_NAME, si_name);
 
     auto * si_id = new QStandardItem();
     si_id->setText(QString::number(id));
-    this->nodeset_model->setItem(row, IDX_ID, si_id);
+    this->nodeset_root->setChild(row, IDX_ID, si_id);
 
-    this->nodesets_expd->setNumberOfItems(this->nodeset_model->rowCount());
+    QString text = QString("Node sets (%1)").arg(this->nodeset_root->rowCount());
+    this->nodeset_root->setText(text);
 }
 
 void
@@ -492,19 +484,15 @@ InfoWindow::onNodeSetChanged(QStandardItem * item)
 }
 
 void
-InfoWindow::onNodeSetSelectionChanged(const QItemSelection & selected,
-                                      const QItemSelection & deselected)
+InfoWindow::onNodeSetSelectionChanged(QStandardItem * item)
 {
-    if (selected.indexes().length() > 0) {
-        this->blocks->clearSelection();
-        this->sidesets->clearSelection();
-        auto index = selected.indexes()[0];
-        auto * item = this->nodeset_model->itemFromIndex(index);
-        auto sideset_id = item->data().toInt();
-        emit nodeSetSelectionChanged(sideset_id);
+    if (item) {
+        auto nodeset_id = item->data().toInt();
+        emit nodeSetSelectionChanged(nodeset_id);
     }
-    else
+    else {
         emit nodeSetSelectionChanged(-1);
+    }
 }
 
 void
@@ -539,7 +527,7 @@ InfoWindow::onBlockColorPicked(const QColor & qcolor)
     QVariant data = this->color_picker->data();
     if (data.isValid()) {
         auto index = data.value<QModelIndex>();
-        auto * item = this->block_model->itemFromIndex(index);
+        auto * item = this->mesh_model->itemFromIndex(index);
         item->setForeground(QBrush(qcolor));
         item->setData(qcolor);
     }
@@ -551,14 +539,14 @@ InfoWindow::onBlockOpacityChanged(double opacity)
     QVariant data = this->color_picker->data();
     if (data.isValid()) {
         auto clr_index = data.value<QModelIndex>();
-        auto * clr_item = this->block_model->itemFromIndex(clr_index);
+        auto * clr_item = this->mesh_model->itemFromIndex(clr_index);
         auto color = clr_item->foreground().color();
         color.setAlphaF(opacity);
         clr_item->setForeground(QBrush(color));
         clr_item->setData(color);
 
         auto index = clr_index.siblingAtColumn(IDX_NAME);
-        auto * item = this->block_model->itemFromIndex(index);
+        auto * item = this->mesh_model->itemFromIndex(index);
         auto block_id = item->data().toInt();
         emit blockOpacityChanged(block_id, opacity);
     }
