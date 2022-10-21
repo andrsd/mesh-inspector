@@ -1,7 +1,9 @@
 name: code-ql
 
 env:
-  QT_VERSION: 5.15.6
+  QT_VERSION: 6.2.4
+  VTK_VERSION: 9.1.0
+  CACHE_NUM: 0
 
 on:
   push:
@@ -29,19 +31,28 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt install libgl1-mesa-dev
+
+    - name: Cache environment
+      id: cache-env
+      uses: actions/cache@v3
+      with:
+        path: ${{ github.workspace }}/Qt
+        key: ${{ runner.os }}-qt-cache-${{ env.CACHE_NUM }}
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
 
-    - name: Install dependencies
-      run: |
-          sudo apt-get update -qq
-          sudo apt install libvtk9-qt-dev
-
     - name: Configure
       run: |
-        cmake -S . -B ${{ github.workspace }}/build
+        cmake \
+          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64 \
+          -S . -B ${{ github.workspace }}/build
 
     - name: Build
       run: make -C ${{ github.workspace }}/build
