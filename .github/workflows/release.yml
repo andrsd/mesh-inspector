@@ -69,6 +69,7 @@ jobs:
         run: |
           cmake \
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
+            -DCMAKE_BUILD_TYPE=Release \
             -S . -B ${{ github.workspace }}/build
 
       - name: Build
