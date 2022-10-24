@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QTimer>
 #include <QColor>
+#include <QVersionNumber>
 #include "vtkVector.h"
 #include <vector>
 
@@ -19,6 +20,8 @@ class QPushButton;
 class QVTKOpenGLNativeWidget;
 class QDockWidget;
 class QShortcut;
+class QNetworkAccessManager;
+class QNetworkReply;
 class InfoWindow;
 class AboutDialog;
 class LicenseDialog;
@@ -153,6 +156,8 @@ protected:
     virtual void dropEvent(QDropEvent * event);
     virtual void closeEvent(QCloseEvent * event);
 
+    QVersionNumber getVersionFromReply(QNetworkReply * reply);
+
 public slots:
     void onClose();
     void onLoadFinished();
@@ -194,6 +199,8 @@ public slots:
     void onShowMainWindow();
     void onAbout();
     void onViewLicense();
+    void onCheckForUpdate();
+    void onHttpReply(QNetworkReply * reply);
 
 protected:
     QSettings * settings;
@@ -247,6 +254,7 @@ protected:
     QAction * bring_all_to_front;
     QAction * show_main_window;
     QAction * about_box_action;
+    QAction * check_update_action;
     QAction * view_license_action;
 
     QActionGroup * visual_repr;
@@ -268,6 +276,8 @@ protected:
 
     std::size_t color_profile_idx;
     std::vector<ColorProfile *> color_profiles;
+
+    QNetworkAccessManager * namgr;
 
 protected:
     static QColor SIDESET_CLR;

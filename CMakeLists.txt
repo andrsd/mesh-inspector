@@ -9,6 +9,9 @@ set(MESH_INSPECTOR_COPYRIGHT
 )
 mark_as_advanced(FORCE MESH_INSPECTOR_COPYRIGHT)
 
+math(EXPR MESH_INSPECTOR_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
+math(EXPR MESH_INSPECTOR_MINOR_VERSION ${PROJECT_VERSION_MINOR})
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -23,6 +26,7 @@ find_package(Qt6 REQUIRED
         Core
         Gui
         Widgets
+        Network
 )
 
 find_package(VTK

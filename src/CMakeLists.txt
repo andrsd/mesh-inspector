@@ -43,6 +43,7 @@ target_link_libraries(
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
+        Qt6::Network
         common
         ${VTK_LIBRARIES}
 )
