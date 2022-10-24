@@ -23,6 +23,10 @@
 #include <QProgressDialog>
 #include <QVector3D>
 #include <QShortcut>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QJsonDocument>
 #include "QVTKOpenGLNativeWidget.h"
 #include "vtkGenericOpenGLRenderWindow.h"
 #include "vtkRenderer.h"
@@ -178,8 +182,14 @@ MainWindow::MainWindow(QWidget * parent) :
     windows_action_group(nullptr),
     deselect_sc(nullptr),
     selected_block(nullptr),
-    highlighted_block(nullptr)
+    highlighted_block(nullptr),
+    namgr(new QNetworkAccessManager())
 {
+    connect(this->namgr,
+            SIGNAL(finished(QNetworkReply *)),
+            this,
+            SLOT(onHttpReply(QNetworkReply *)));
+
     this->interactor_style_2d = new OInteractorStyle2D(this);
     this->interactor_style_3d = new OInteractorStyle3D(this);
 
@@ -237,6 +247,7 @@ MainWindow::~MainWindow()
     delete this->mode_select_action_group;
     delete this->about_dlg;
     delete this->license_dlg;
+    delete this->namgr;
 }
 
 void
@@ -383,6 +394,9 @@ MainWindow::setupMenuBar()
     file_menu->addSeparator();
     this->about_box_action = file_menu->addAction("About", this, SLOT(onAbout()));
     this->about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
+    this->check_update_action =
+        file_menu->addAction("Check for update...", this, SLOT(onCheckForUpdate()));
+    this->check_update_action->setMenuRole(QAction::ApplicationSpecificRole);
     this->view_license_action = file_menu->addAction("View license", this, SLOT(onViewLicense()));
     this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
 
@@ -1893,4 +1907,49 @@ MainWindow::cellTypeToName(int cell_type)
         default: return QString::number(cell_type);
     };
     // clang-format on
+}
+
+void
+MainWindow::onCheckForUpdate()
+{
+    QNetworkRequest request;
+    request.setUrl(QUrl("https://api.github.com/repos/andrsd/mesh-inspector/releases/latest"));
+    request.setRawHeader(QByteArray("Accept"), QByteArray("application/vnd.github+json"));
+    request.setRawHeader(QByteArray("Authorization"),
+                         QByteArray("Bearer "
+                                    "github_pat_11AAAU5AA0uy230CCje7ng_"
+                                    "8pj7WNyfPIj8TZZRv7ZSF4RmpULmyRtN0Y9glzoh0bePPT6765WCoolMPhf"));
+    this->namgr->get(request);
+}
+
+void
+MainWindow::onHttpReply(QNetworkReply * reply)
+{
+    if (reply->error() == QNetworkReply::NoError) {
+        QVersionNumber latest = getVersionFromReply(reply);
+        QVersionNumber current(MESH_INSPECTOR_MAJOR_VERSION, MESH_INSPECTOR_MINOR_VERSION);
+
+        if (QVersionNumber::compare(latest, current) == 0)
+            showNotification("You are running the latest version.");
+        else
+            showNotification(QString("A newer version (%1.%2) is available.")
+                                 .arg(latest.majorVersion())
+                                 .arg(latest.minorVersion()));
+    }
+    else
+        showNotification("Check for a new version failed.");
+}
+
+QVersionNumber
+MainWindow::getVersionFromReply(QNetworkReply * reply)
+{
+    QByteArray val = reply->readAll();
+    QJsonDocument doc = QJsonDocument::fromJson(val);
+    auto tag_name = doc["tag_name"].toString();
+    QRegularExpression re("v(\\d+)\\.(\\d+)");
+    QRegularExpressionMatch match = re.match(tag_name);
+    if (match.hasMatch())
+        return QVersionNumber(match.captured(1).toInt(), match.captured(2).toInt());
+    else
+        return QVersionNumber(-1);
 }
