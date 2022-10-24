@@ -83,6 +83,19 @@ protected:
         MODE_SELECT_POINTS = 3
     };
 
+    struct MeshQualityMetric {
+        /// Values per block
+        std::map<int, vtkDoubleArray *> data;
+        /// Minimum value
+        double min;
+        /// Maximum value
+        double max;
+
+        MeshQualityMetric();
+        virtual ~MeshQualityMetric();
+        void free();
+    };
+
 public:
     explicit MainWindow(QWidget * parent = nullptr);
     virtual ~MainWindow();
@@ -166,6 +179,7 @@ protected:
     virtual void closeEvent(QCloseEvent * event);
 
     QVersionNumber getVersionFromReply(QNetworkReply * reply);
+    MeshQualityMetric & getMetric(int metric_id);
 
 public slots:
     void onClose();
@@ -286,15 +300,6 @@ protected:
     std::map<int, SideSetObject *> side_sets;
     std::map<int, NodeSetObject *> node_sets;
 
-    struct MeshQualityMetric {
-        std::map<int, vtkDoubleArray *> data;
-        double min;
-        double max;
-
-        MeshQualityMetric();
-        virtual ~MeshQualityMetric();
-        void free();
-    };
     MeshQualityMetric mesh_quality_metric;
 
     /// center of bounding box of the whole mesh

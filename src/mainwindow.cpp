@@ -1904,12 +1904,17 @@ MainWindow::onToolsMeshQuality()
     onMetricChanged(metric_id);
 }
 
+MainWindow::MeshQualityMetric &
+MainWindow::getMetric(int metric_id)
+{
+    return this->mesh_quality_metric;
+}
+
 void
 MainWindow::onMetricChanged(int metric_id)
 {
-    // TODO: get `min` and `max` for the displayed metric
-    double min = 0;
-    double max = 100;
+    MeshQualityMetric & metric = getMetric(metric_id);
+
     for (auto & it : this->blocks) {
         BlockObject * block = it.second;
 
@@ -1920,7 +1925,7 @@ MainWindow::onMetricChanged(int metric_id)
         mapper->InterpolateScalarsBeforeMappingOn();
         mapper->SetColorModeToMapScalars();
         mapper->SetLookupTable(this->vtk_lut);
-        mapper->SetScalarRange(min, max);
+        mapper->SetScalarRange(metric.min, metric.max);
     }
 }
 
@@ -2076,7 +2081,7 @@ MainWindow::addMeshQualityMetrics()
 void
 MainWindow::computeMetric(int metric_id)
 {
-    MeshQualityMetric & metric = this->mesh_quality_metric;
+    MeshQualityMetric & metric = getMetric(metric_id);
 
     for (auto & it : this->blocks) {
         auto blk_id = it.first;
@@ -2095,6 +2100,9 @@ MainWindow::computeMetric(int metric_id)
         }
         jt->Delete();
     }
+
+    metric.min = 0;
+    metric.max = 100;
 }
 
 double

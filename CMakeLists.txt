@@ -56,4 +56,5 @@ if(NOT(TARGET VTK::GUISupportQt))
 endif()
 
 add_subdirectory(common)
+add_subdirectory(fe)
 add_subdirectory(src)

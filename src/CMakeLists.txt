@@ -46,6 +46,7 @@ target_link_libraries(
         Qt6::Widgets
         Qt6::Network
         common
+        fe
         ${VTK_LIBRARIES}
 )
 
