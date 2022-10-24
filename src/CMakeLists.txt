@@ -15,6 +15,7 @@ add_executable(
         licensedlg.cpp
         main.cpp
         mainwindow.cpp
+        meshmodel.cpp
         meshobject.cpp
         nodesetobject.cpp
         ointeractorinterface.cpp
