@@ -76,7 +76,7 @@ jobs:
 
       - name: Deploy app bundle
         run: |
-          macdeployqt ${{ github.workspace }}/build/src/mesh-inspector.app
+          ${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }}/bin/macdeployqt ${{ github.workspace }}/build/src/mesh-inspector.app
           cd ${{ github.workspace }}/build/src
           mv mesh-inspector.app "Mesh Inspector.app"
           zip -r mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip "Mesh Inspector.app"
