@@ -6,6 +6,12 @@ namespace fe {
 Element::Element(vtkCell * cell) : vtk_cell(cell) {}
 
 int
+Element::get_dim()
+{
+    return this->vtk_cell->GetCellDimension();
+}
+
+int
 Element::get_type()
 {
     return this->vtk_cell->GetCellType();

@@ -9,6 +9,7 @@ class Element {
 public:
     Element(vtkCell * cell);
 
+    int get_dim();
     int get_type();
     int get_num_vertices();
     double * get_vertex_coords(int vtx);

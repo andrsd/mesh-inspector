@@ -37,15 +37,44 @@ class Quadrature3D {
 public:
     Quadrature3D();
 
+    /// Get maximum integration order
+    ///
+    /// @return Maximum integration order
+    int
+    get_max_order() const
+    {
+        return max_order;
+    }
+
+    /// Get points
+    ///
+    /// @param order Integration order
+    /// @return Array of 3D quad points for order `order`
+    QuadPt3D *
+    get_points(int order) const
+    {
+        return this->tables[order];
+    }
+
+    /// Get number of quad points
+    ///
+    /// @param order Integration order
+    /// @return Number of integration points for order `order`
+    inline int
+    get_num_points(int order) const
+    {
+        return this->np[order];
+    };
+
 protected:
     /// maximum order for integration
     int max_order;
     /// number of integration points
     /// indexing: [order]
-    int *np;
+    int * np;
     /// tables with integration points
     /// indexing: [order][point no.]
-    QuadPt3D **tables;
+    QuadPt3D ** tables;
 };
 
 /// Standard quadrature on 3D hexahedron
@@ -62,4 +91,4 @@ public:
     QuadStdTetra();
 };
 
-}
+} // namespace fe
