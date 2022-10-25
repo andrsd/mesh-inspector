@@ -49,6 +49,12 @@ class OInteractorStyle2D;
 class OInteractorStyle3D;
 class Selection;
 
+namespace fe {
+    class RefMap2D;
+    class RefMap3D;
+    class Element;
+}
+
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
@@ -170,6 +176,8 @@ protected:
     void hideLoadProgressBar();
     void loadIntoVtk();
     double computeQualityDetJac(vtkCell * cell);
+    double computeQualityDetJacElem2D(fe::Element * elem);
+    double computeQualityDetJacElem3D(fe::Element * elem);
 
     virtual bool event(QEvent * event);
     virtual void customEvent(QEvent * event);
@@ -301,6 +309,8 @@ protected:
     std::map<int, NodeSetObject *> node_sets;
 
     MeshQualityMetric mesh_quality_metric;
+    fe::RefMap2D * ref_map_2d;
+    fe::RefMap3D * ref_map_3d;
 
     /// center of bounding box of the whole mesh
     vtkVector3d center_of_bounds;

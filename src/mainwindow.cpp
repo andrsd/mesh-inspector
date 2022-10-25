@@ -73,6 +73,10 @@
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 #include "common/infowidget.h"
+#include "fe/refmap2d.h"
+#include "fe/refmap3d.h"
+#include "fe/quadrature2d.h"
+#include "fe/quadrature3d.h"
 
 static const int MAX_RECENT_FILES = 10;
 
@@ -206,6 +210,8 @@ MainWindow::MainWindow(QWidget * parent) :
     deselect_sc(nullptr),
     selected_block(nullptr),
     highlighted_block(nullptr),
+    ref_map_2d(new fe::RefMap2D()),
+    ref_map_3d(new fe::RefMap3D()),
     namgr(new QNetworkAccessManager())
 {
     connect(this->namgr,
@@ -273,6 +279,9 @@ MainWindow::~MainWindow()
     delete this->about_dlg;
     delete this->license_dlg;
     delete this->namgr;
+
+    delete this->ref_map_2d;
+    delete this->ref_map_3d;
 }
 
 void
@@ -2083,6 +2092,7 @@ MainWindow::computeMetric(int metric_id)
 {
     MeshQualityMetric & metric = getMetric(metric_id);
 
+    double max_val = std::numeric_limits<double>::min();
     for (auto & it : this->blocks) {
         auto blk_id = it.first;
         BlockObject * block = it.second;
@@ -2095,6 +2105,7 @@ MainWindow::computeMetric(int metric_id)
 
             vtkCell * cell = poly_data->GetCell(idx);
             double q = computeQualityDetJac(cell);
+            max_val = std::max(max_val, q);
 
             metric.data[blk_id]->SetValue(idx, q);
         }
@@ -2102,12 +2113,65 @@ MainWindow::computeMetric(int metric_id)
     }
 
     metric.min = 0;
-    metric.max = 100;
+    metric.max = max_val;
 }
 
 double
 MainWindow::computeQualityDetJac(vtkCell * cell)
 {
-    double q = 0;
+    fe::Element elem(cell);
+    if (elem.get_dim() == 1)
+        throw std::logic_error("Mesh quality for 1D elements is not implemented yet.");
+    else if (elem.get_dim() == 2)
+        return computeQualityDetJacElem2D(&elem);
+    else if (elem.get_dim() == 3)
+        return computeQualityDetJacElem3D(&elem);
+    else
+        throw std::logic_error("Unsupported spatial dimension.");
+}
+
+double
+MainWindow::computeQualityDetJacElem2D(fe::Element * elem)
+{
+    fe::Quadrature2D * quad = nullptr;
+    if (elem->get_type() == 5)
+        quad = new fe::QuadStdTri();
+    else if (elem->get_type() == 9)
+        quad = new fe::QuadStdQuad();
+    else
+        throw std::logic_error("Unknown 2D element type");
+
+    this->ref_map_2d->set_element(elem);
+    fe::order2_t ord(0);
+    fe::QuadPt2D * qpts = quad->get_points(ord);
+    int n_qpts = quad->get_num_points(ord);
+    double * j = this->ref_map_2d->get_jacobian(n_qpts, qpts, true);
+    double q = j[0];
+    qDebug() << "2d: q = " << q;
+    delete j;
+    delete quad;
+    return q;
+}
+
+double
+MainWindow::computeQualityDetJacElem3D(fe::Element * elem)
+{
+    fe::Quadrature3D * quad = nullptr;
+    if (elem->get_type() == 10)
+        quad = new fe::QuadStdTetra();
+    else if (elem->get_type() == 12)
+        quad = new fe::QuadStdHex();
+    else
+        throw std::logic_error("Unknown or unsupported 3D element type");
+
+    this->ref_map_3d->set_element(elem);
+    fe::order3_t ord(0);
+    fe::QuadPt3D * qpts = quad->get_points(ord);
+    int n_qpts = quad->get_num_points(ord);
+    double * j = this->ref_map_3d->get_jacobian(n_qpts, qpts, true);
+    double q = j[0];
+    qDebug() << "3d: q = " << q;
+    delete j;
+    delete quad;
     return q;
 }
