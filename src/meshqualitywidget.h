@@ -17,6 +17,7 @@ public:
 
     void setPosition(const QRect & geometry);
     int getMetricId();
+    void done();
 
 signals:
     void closed();

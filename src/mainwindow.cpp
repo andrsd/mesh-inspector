@@ -147,6 +147,7 @@ MainWindow::MeshQualityMetric::free()
 {
     for (auto & it : this->data)
         it.second->Delete();
+    this->data.clear();
 }
 
 // Main window
@@ -307,7 +308,6 @@ MainWindow::setupWidgets()
 
     setupViewModeWidget(this);
     setupFileChangedNotificationWidget();
-    setupNotificationWidget();
     this->selected_mesh_ent_info = new InfoWidget(this);
     this->selected_mesh_ent_info->setVisible(false);
 
@@ -316,6 +316,8 @@ MainWindow::setupWidgets()
 
     setupExplodeWidgets();
     setupMeshQualityWidget();
+
+    setupNotificationWidget();
 }
 
 void
@@ -670,6 +672,8 @@ MainWindow::clear()
         delete this->highlight;
         this->highlight = nullptr;
     }
+
+    this->mesh_quality->done();
 }
 
 void
@@ -2090,30 +2094,35 @@ MainWindow::addMeshQualityMetrics()
 void
 MainWindow::computeMetric(int metric_id)
 {
-    MeshQualityMetric & metric = getMetric(metric_id);
+    try {
+        MeshQualityMetric & metric = getMetric(metric_id);
 
-    double max_val = std::numeric_limits<double>::min();
-    for (auto & it : this->blocks) {
-        auto blk_id = it.first;
-        BlockObject * block = it.second;
+        double max_val = std::numeric_limits<double>::min();
+        for (auto & it : this->blocks) {
+            auto blk_id = it.first;
+            BlockObject * block = it.second;
 
-        vtkPolyData * poly_data = block->getPolyData();
-        vtkCellArray * cell_array = poly_data->GetPolys();
-        auto jt = cell_array->NewIterator();
-        for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
-            auto idx = jt->GetCurrentCellId();
+            vtkPolyData * poly_data = block->getPolyData();
+            vtkCellArray * cell_array = poly_data->GetPolys();
+            auto jt = cell_array->NewIterator();
+            for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
+                auto idx = jt->GetCurrentCellId();
 
-            vtkCell * cell = poly_data->GetCell(idx);
-            double q = computeQualityDetJac(cell);
-            max_val = std::max(max_val, q);
+                vtkCell * cell = poly_data->GetCell(idx);
+                double q = computeQualityDetJac(cell);
+                max_val = std::max(max_val, q);
 
-            metric.data[blk_id]->SetValue(idx, q);
+                metric.data[blk_id]->SetValue(idx, q);
+            }
+            jt->Delete();
         }
-        jt->Delete();
-    }
 
-    metric.min = 0;
-    metric.max = max_val;
+        metric.min = 0;
+        metric.max = max_val;
+    }
+    catch (std::exception & e) {
+        showNotification(QString("%1").arg(e.what()));
+    }
 }
 
 double
@@ -2145,9 +2154,8 @@ MainWindow::computeQualityDetJacElem2D(fe::Element * elem)
     fe::order2_t ord(0);
     fe::QuadPt2D * qpts = quad->get_points(ord);
     int n_qpts = quad->get_num_points(ord);
-    double * j = this->ref_map_2d->get_jacobian(n_qpts, qpts, true);
+    double * j = this->ref_map_2d->get_jacobian(n_qpts, qpts, false);
     double q = j[0];
-    qDebug() << "2d: q = " << q;
     delete j;
     delete quad;
     return q;
@@ -2168,9 +2176,8 @@ MainWindow::computeQualityDetJacElem3D(fe::Element * elem)
     fe::order3_t ord(0);
     fe::QuadPt3D * qpts = quad->get_points(ord);
     int n_qpts = quad->get_num_points(ord);
-    double * j = this->ref_map_3d->get_jacobian(n_qpts, qpts, true);
+    double * j = this->ref_map_3d->get_jacobian(n_qpts, qpts, false);
     double q = j[0];
-    qDebug() << "3d: q = " << q;
     delete j;
     delete quad;
     return q;

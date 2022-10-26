@@ -34,7 +34,6 @@ MeshQualityWidget::MeshQualityWidget(QWidget * parent) : QWidget(parent)
     this->metric = new QComboBox();
     this->metric->setEditable(false);
     this->metric->addItem("det(J)");
-    this->metric->addItem("Condition number");
     this->layout->addWidget(this->metric);
 
     this->close = new ClickableLabel();
@@ -79,4 +78,11 @@ int
 MeshQualityWidget::getMetricId()
 {
     return 0;
+}
+
+void
+MeshQualityWidget::done()
+{
+    if (isVisible())
+        onClose();
 }
