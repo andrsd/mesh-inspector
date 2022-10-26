@@ -496,7 +496,7 @@ MainWindow::updateMenuBar()
     this->show_main_window->setChecked(active_window == this);
 
     this->view_info_wnd_action->setChecked(this->info_window->isVisible());
-    bool has_file = !this->file_name.isEmpty();
+    bool has_file = hasFile();
     this->export_as_png->setEnabled(has_file);
     this->export_as_jpg->setEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
@@ -506,13 +506,13 @@ MainWindow::updateMenuBar()
 void
 MainWindow::updateWindowTitle()
 {
-    if (this->file_name.isEmpty())
-        setWindowTitle(MESH_INSPECTOR_APP_NAME);
-    else {
+    if (hasFile()) {
         QFileInfo fi(this->file_name);
         QString title = QString("%1 \u2014 %2").arg(MESH_INSPECTOR_APP_NAME).arg(fi.fileName());
         setWindowTitle(title);
     }
+    else
+        setWindowTitle(MESH_INSPECTOR_APP_NAME);
 }
 
 void
@@ -641,6 +641,12 @@ MainWindow::loadFile(const QString & file_name)
     this->load_thread = new LoadThread(file_name);
     connect(this->load_thread, SIGNAL(finished()), this, SLOT(onLoadFinished()));
     this->load_thread->start(QThread::IdlePriority);
+}
+
+bool
+MainWindow::hasFile()
+{
+    return !this->file_name.isEmpty();
 }
 
 void
@@ -1721,12 +1727,14 @@ MainWindow::onClicked(const QPoint & pt)
 void
 MainWindow::onMouseMove(const QPoint & pt)
 {
-    if (this->select_mode == MODE_SELECT_BLOCKS)
-        highlightBlock(pt);
-    else if (this->select_mode == MODE_SELECT_CELLS)
-        highlightCell(pt);
-    else if (this->select_mode == MODE_SELECT_POINTS)
-        highlightPoint(pt);
+    if (hasFile()) {
+        if (this->select_mode == MODE_SELECT_BLOCKS)
+            highlightBlock(pt);
+        else if (this->select_mode == MODE_SELECT_CELLS)
+            highlightCell(pt);
+        else if (this->select_mode == MODE_SELECT_POINTS)
+            highlightPoint(pt);
+    }
 }
 
 void

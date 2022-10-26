@@ -105,6 +105,7 @@ protected:
     void connectSignals();
     void clear();
     void loadFile(const QString & file_name);
+    bool hasFile();
 
     void setupVtk();
     void setupOrientationMarker();
