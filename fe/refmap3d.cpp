@@ -14,7 +14,6 @@ static ShapeFunction3D ref_map_pss_hex(&ref_map_ss_hex);
 
 RefMap3D::RefMap3D() :
     pss(nullptr),
-    elem(nullptr),
     n_coefs(0),
     coefs(nullptr)
 {
@@ -30,10 +29,7 @@ RefMap3D::set_element(Element * e)
     }
     this->pss->set_active_element(e);
 
-    if (e == this->elem) return;
-    this->elem = e;
-
-    int n_vertices = this->elem->get_num_vertices();
+    int n_vertices = e->get_num_vertices();
 
     // prepare the shapes and coefficients of the reference map
     Shapeset3D *shapeset = this->pss->get_shapeset();

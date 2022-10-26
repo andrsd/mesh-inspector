@@ -20,8 +20,6 @@ public:
 protected:
     /// Shape function
     ShapeFunction3D * pss;
-    /// Active element
-    Element * elem;
     /// Number of coefficients and shape functions
     int n_coefs;
     /// Shape function indices

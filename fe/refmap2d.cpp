@@ -12,24 +12,27 @@ static RefMapShapesetQuad ref_map_ss_quad;
 static ShapeFunction2D ref_map_pss_tri(&ref_map_ss_tri);
 static ShapeFunction2D ref_map_pss_quad(&ref_map_ss_quad);
 
-RefMap2D::RefMap2D() {}
+RefMap2D::RefMap2D() : pss(nullptr), n_coefs(0), coefs(nullptr) {}
 
 void
 RefMap2D::set_element(Element * e)
 {
     switch (e->get_type()) {
-    case 5: this->pss = &ref_map_pss_tri; break;
-    case 9: this->pss = &ref_map_pss_quad; break;
-    default: throw std::logic_error("Not implemented"); break;
+    case 5:
+        this->pss = &ref_map_pss_tri;
+        break;
+    case 9:
+        this->pss = &ref_map_pss_quad;
+        break;
+    default:
+        throw std::logic_error("Not implemented");
+        break;
     }
     this->pss->set_active_element(e);
 
-    if (e == this->elem) return;
-    this->elem = e;
+    int n_vertices = e->get_num_vertices();
 
-    int n_vertices = this->elem->get_num_vertices();
-
-    Shapeset2D *shapeset = this->pss->get_shapeset();
+    Shapeset2D * shapeset = this->pss->get_shapeset();
     for (int i = 0, k = 0; i < n_vertices; i++)
         this->indices[k++] = shapeset->get_vertex_index(i);
     for (int iv = 0; iv < n_vertices; iv++) {
