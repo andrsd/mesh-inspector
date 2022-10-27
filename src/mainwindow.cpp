@@ -772,6 +772,8 @@ MainWindow::addBlocks()
         }
         else
             block = new BlockObject(reader->getVtkOutputPort(), camera);
+        addMeshQualityMetrics(binfo.number, block);
+        block->init();
         setBlockProperties(block);
         this->blocks[binfo.number] = block;
 
@@ -1454,7 +1456,6 @@ MainWindow::loadIntoVtk()
     addBlocks();
     addSideSets();
     addNodeSets();
-    addMeshQualityMetrics();
 
     BoundingBox bbox;
     int idx = 0;
@@ -1908,52 +1909,6 @@ MainWindow::onExplodeValueChanged(double value)
 }
 
 void
-MainWindow::onToolsMeshQuality()
-{
-    this->mesh_quality->setPosition(geometry());
-    this->mesh_quality->show();
-    auto metric_id = this->mesh_quality->getMetricId();
-    computeMetric(metric_id);
-    onMetricChanged(metric_id);
-}
-
-MainWindow::MeshQualityMetric &
-MainWindow::getMetric(int metric_id)
-{
-    return this->mesh_quality_metric;
-}
-
-void
-MainWindow::onMetricChanged(int metric_id)
-{
-    MeshQualityMetric & metric = getMetric(metric_id);
-
-    for (auto & it : this->blocks) {
-        BlockObject * block = it.second;
-
-        auto * mapper = block->getMapper();
-        mapper->ScalarVisibilityOn();
-        mapper->SelectColorArray("metric1");
-        mapper->SetScalarModeToUseCellFieldData();
-        mapper->InterpolateScalarsBeforeMappingOn();
-        mapper->SetColorModeToMapScalars();
-        mapper->SetLookupTable(this->vtk_lut);
-        mapper->SetScalarRange(metric.min, metric.max);
-    }
-}
-
-void
-MainWindow::onMeshQualityClosed()
-{
-    for (auto & it : this->blocks) {
-        BlockObject * block = it.second;
-
-        auto * mapper = block->getMapper();
-        mapper->ScalarVisibilityOff();
-    }
-}
-
-void
 MainWindow::updateViewModeLocation()
 {
     auto width = this->getRenderWindowWidth();
@@ -2067,28 +2022,89 @@ MainWindow::getVersionFromReply(QNetworkReply * reply)
 }
 
 void
-MainWindow::addMeshQualityMetrics()
+MainWindow::onToolsMeshQuality()
 {
-    MeshQualityMetric * metric = &this->mesh_quality_metric;
+    this->mesh_quality->setPosition(geometry());
+    this->mesh_quality->show();
+    auto metric_id = this->mesh_quality->getMetricId();
+    computeMetric(metric_id);
+    onMetricChanged(metric_id);
+}
+
+MainWindow::MeshQualityMetric &
+MainWindow::getMetric(int metric_id)
+{
+    return this->mesh_quality_metric;
+}
+
+void
+MainWindow::onMetricChanged(int metric_id)
+{
+    MeshQualityMetric & metric = getMetric(metric_id);
+
+    for (auto & it : this->blocks) {
+        auto blk_id = it.first;
+        BlockObject * block = it.second;
+        vtkUnstructuredGrid * grid = block->getGrid();
+        vtkCellData * cell_data = grid->GetCellData();
+        //        cell_data->SetActiveScalars("metric1");
+        //        block->update();
+        //        std::cerr << *grid << std::endl;
+        //        vtkCellData * cell_data = grid->GetCellData();
+//        cell_data->SetScalars(cell_data->GetArray("metric1"));
+//        cell_data->Modified();
+//
+//       vtkPolyData * poly_data = block->getPolyData();
+//       poly_data->Modified();
+
+        //        vtkCellArray * cell_array = poly_data->GetPolys();
+        //        int n = poly_data->GetNumberOfCells();
+        //        std::cerr << "n = " << n << std::endl;
+//        std::cerr << *cell_data->GetArray("metric1") << std::endl;
+//        std::cerr << cell_data->GetArray("metric1")->GetTuple1(0) << std::endl;
+//        std::cerr << cell_data->GetArray("metric1")->GetTuple1(1) << std::endl;
+
+        auto * mapper = block->getMapper();
+//        mapper->UpdateDataObject();
+
+        mapper->ScalarVisibilityOn();
+        mapper->SelectColorArray("metric1");
+        mapper->SetScalarModeToUseCellFieldData();
+        mapper->InterpolateScalarsBeforeMappingOn();
+        mapper->SetColorModeToMapScalars();
+        mapper->SetLookupTable(this->vtk_lut);
+//        mapper->SetScalarRange(metric.min, metric.max);
+        mapper->SetScalarRange(0., 7);
+        mapper->Update();
+    }
+}
+
+void
+MainWindow::onMeshQualityClosed()
+{
     for (auto & it : this->blocks) {
         BlockObject * block = it.second;
-        vtkPolyData * poly_data = block->getPolyData();
 
-        vtkDoubleArray * data = vtkDoubleArray::New();
-        data->SetName("metric1");
-
-        vtkCellArray * cell_array = poly_data->GetPolys();
-        auto jt = cell_array->NewIterator();
-        for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
-            auto idx = jt->GetCurrentCellId();
-            data->InsertValue(idx, 0.);
-        }
-        jt->Delete();
-
-        metric->data[it.first] = data;
-        vtkCellData * cell_data = poly_data->GetCellData();
-        cell_data->AddArray(data);
+        auto * mapper = block->getMapper();
+        mapper->ScalarVisibilityOff();
     }
+}
+
+void
+MainWindow::addMeshQualityMetrics(int blk_id, BlockObject * block)
+{
+    vtkUnstructuredGrid * grid = block->getGrid();
+    vtkDoubleArray * data = vtkDoubleArray::New();
+    data->SetName("metric1");
+    vtkCellArray * cell_array = grid->GetCells();
+    auto jt = cell_array->NewIterator();
+    for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
+        auto idx = jt->GetCurrentCellId();
+        data->InsertValue(idx, 0.);
+    }
+    jt->Delete();
+    vtkCellData * cell_data = grid->GetCellData();
+    cell_data->AddArray(data);
 }
 
 void
@@ -2102,23 +2118,52 @@ MainWindow::computeMetric(int metric_id)
             auto blk_id = it.first;
             BlockObject * block = it.second;
 
-            vtkPolyData * poly_data = block->getPolyData();
-            vtkCellArray * cell_array = poly_data->GetPolys();
+//            vtkDoubleArray * data = vtkDoubleArray::New();
+
+            vtkUnstructuredGrid * grid = block->getGrid();
+            if (grid == nullptr)
+                throw std::logic_error("Mesh block is not a unstructured grid");
+            vtkCellArray * cell_array = grid->GetCells();
+            vtkCellData * cell_data = grid->GetCellData();
             auto jt = cell_array->NewIterator();
             for (jt->GoToFirstCell(); !jt->IsDoneWithTraversal(); jt->GoToNextCell()) {
                 auto idx = jt->GetCurrentCellId();
 
-                vtkCell * cell = poly_data->GetCell(idx);
+                vtkCell * cell = grid->GetCell(idx);
                 double q = computeQualityDetJac(cell);
                 max_val = std::max(max_val, q);
 
-                metric.data[blk_id]->SetValue(idx, q);
+//                metric.data[blk_id]->SetValue(idx, q);
+//                cell_data->GetArray("metric1")->SetTuple1(idx, q);
+//                std::cerr << "q[" << idx << "] = " << q << std::endl;
+                cell_data->GetArray("metric1")->SetTuple1(idx, idx);
+//                data->InsertValue(idx, idx);
             }
             jt->Delete();
+
+//            cell_data->SetActiveScalars("metric1");
+//            cell_data->SetScalars(cell_data->GetArray("metric1"));
+
+//            cell_data->SetScalars(data);
+
+            cell_data->GetArray("metric1")->Modified();
+            cell_data->Modified();
+            grid->Modified();
+            vtkPolyData * poly_data = block->getPolyData();
+            poly_data->Modified();
+            block->update();
+
+//            auto * mapper = block->getMapper();
+//            mapper->Update();
         }
+
+        for (auto & eb : this->extract_blocks)
+            eb->Update();
 
         metric.min = 0;
         metric.max = max_val;
+
+        std::cerr << "range = [" << metric.min << ", " << metric.max << "]" << std::endl;
     }
     catch (std::exception & e) {
         showNotification(QString("%1").arg(e.what()));

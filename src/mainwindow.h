@@ -141,7 +141,7 @@ protected:
     void addBlocks();
     void addSideSets();
     void addNodeSets();
-    void addMeshQualityMetrics();
+    void addMeshQualityMetrics(int blk_id, BlockObject * block);
     BlockObject * getBlock(int block_id);
     SideSetObject * getSideSet(int sideset_id);
     NodeSetObject * getNodeSet(int nodeset_id);
