@@ -1,7 +1,7 @@
 #pragma once
 
 #include "shapeset.h"
-#include "function3d.h"
+#include "function1d.h"
 #include "common.h"
 #include "quadrature1d.h"
 #include <stdexcept>
@@ -38,7 +38,7 @@ public:
     /// @param[in] component The number of component of the evaluated function
     /// @param[out] vals The array of values (caller is responsible for freeing this memory)
     void
-    get_values(int n, int index, int np, QuadPt1D * pt, int component, double * vals)
+    get_values(int n, int index, int np, const QuadPt1D * pt, int component, double * vals)
     {
         check_component(component);
         for (int k = 0; k < np; k++)
@@ -66,8 +66,7 @@ public:
     }
 
 protected:
-    // FIXME: 2 == RealFunction1D::VALUE_TYPES
-    shape_fn_1d_t ** shape_table[2];
+    shape_fn_1d_t ** shape_table[RealFunction1D::VALUE_TYPES];
 
     /// Indices of vertex shape functions on reference element, indexing: [vertex shape fn index]
     int * vertex_indices;

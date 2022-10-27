@@ -13,9 +13,11 @@ add_library(
         quadrature2d.cpp
         quadrature3d.cpp
         refdomain.cpp
+        refmap1d.cpp
         refmap2d.cpp
         refmap3d.cpp
         refmapss.cpp
+        shapefunction1d.cpp
         shapefunction2d.cpp
         shapefunction3d.cpp
         shapeset1d.cpp

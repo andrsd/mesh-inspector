@@ -2,6 +2,17 @@
 
 namespace fe {
 
+class Vertex1D {
+public:
+    static const int NUM_COORDS = 2;
+
+    Vertex1D() : x(0.) {}
+    Vertex1D(double _x) : x(_x) {}
+
+    /// x-coordinate
+    double x;
+};
+
 class Vertex2D {
 public:
     static const int NUM_COORDS = 2;

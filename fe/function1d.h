@@ -1,8 +1,8 @@
 #pragma once
 
 #include "common.h"
-#include "quadrature2d.h"
-#include "function2d.h"
+#include "quadrature1d.h"
+#include "function1d.h"
 #include "element.h"
 
 #define CHECK_PARAMS
@@ -13,13 +13,13 @@ namespace fe {
 class Element;
 
 template <typename TYPE>
-class Function2D {
+class Function1D {
 public:
-    Function2D();
-    virtual ~Function2D();
+    Function1D();
+    virtual ~Function1D();
 
     /// @return The polynomial degree of the function currently being represented by the class.
-    order2_t
+    order1_t
     get_fn_order() const
     {
         return order;
@@ -53,30 +53,16 @@ public:
         return cur_node->values[component][DX];
     }
 
-    /// @param component [in] The component of the function (0-2).
-    /// @return The y partial derivative of the function at all points of the current integration
-    /// rule.
-    TYPE *
-    get_dy_values(int component = 0)
-    {
-        CHECK_PARAMS;
-        CHECK_TABLE(DY, "DY values");
-        return cur_node->values[component][DY];
-    }
-
     /// This function provides the both often-used dx and dy values in one call.
     /// @param dx [out] Variable which receives the pointer to the first partial derivatives by x
-    /// @param dy [out] Variable which receives the pointer to the first partial derivatives by y
     /// @param component [in] The component of the function (0 or 1).
     void
-    get_dx_dy_values(TYPE *& dx, TYPE *& dy, int component = 0)
+    get_dx_values(TYPE *& dx, int component = 0)
     {
         CHECK_PARAMS;
         CHECK_TABLE(DX, "DX values");
-        CHECK_TABLE(DY, "DY values");
 
         dx = cur_node->values[component][DX];
-        dy = cur_node->values[component][DY];
     }
 
     /// For internal use.
@@ -91,11 +77,11 @@ public:
     virtual void free() = 0;
 
     /// precalculates the current function at the current integration points.
-    virtual void precalculate(const int np, const QuadPt2D * pt, int mask) = 0;
+    virtual void precalculate(const int np, const QuadPt1D * pt, int mask) = 0;
 
 public:
-    static const int COMPONENTS = 2;
-    static const int VALUE_TYPES = 3;
+    static const int COMPONENTS = 1;
+    static const int VALUE_TYPES = 2;
 
 protected:
     static const int QUAD_COUNT = 8;
@@ -103,7 +89,7 @@ protected:
     /// Active element
     Element * elem;
     /// current function polynomial order
-    order2_t order;
+    order1_t order;
     /// number of vector components
     int num_components;
 
@@ -121,15 +107,15 @@ protected:
     Node * cur_node;
 
     /// list of available quadratures
-    Quadrature2D * quads[QUAD_COUNT];
+    Quadrature1D * quads[QUAD_COUNT];
     /// active quadrature (index into 'quads')
     int cur_quad;
 
     /// searches 'quads' for the given quadrature
-    int find_quad(Quadrature2D * quad);
+    int find_quad(Quadrature1D * quad);
 
     ///
-    int register_quad(Quadrature2D * quad);
+    int register_quad(Quadrature1D * quad);
 
     /// allocates a new Node structure
     virtual Node * new_node(int mask, int num_points);
@@ -156,15 +142,14 @@ protected:
 
 // the order of items must match values of EValueType
 template<typename TYPE>
-int Function2D<TYPE>::idx2mask[][COMPONENTS] = {
-    { FN_VAL_0, FN_VAL_1 },
-    { FN_DX_0,  FN_DX_1  },
-    { FN_DY_0,  FN_DY_1  }
+int Function1D<TYPE>::idx2mask[][COMPONENTS] = {
+    { FN_VAL_0 },
+    { FN_DX_0  },
 };
 
 
 template <typename TYPE>
-Function2D<TYPE>::Function2D() :
+Function1D<TYPE>::Function1D() :
     elem(nullptr),
     order(0),
     cur_node(nullptr),
@@ -174,19 +159,19 @@ Function2D<TYPE>::Function2D() :
 }
 
 template <typename TYPE>
-Function2D<TYPE>::~Function2D()
+Function1D<TYPE>::~Function1D()
 {
 }
 
 
 template <typename TYPE>
-typename Function2D<TYPE>::Node *
-Function2D<TYPE>::new_node(int mask, int num_points)
+typename Function1D<TYPE>::Node *
+Function1D<TYPE>::new_node(int mask, int num_points)
 {
     // get the number of tables
     int nt = 0, m = mask;
-    if (num_components < 2)
-        m &= FN_VAL_0 | FN_DX_0 | FN_DY_0;
+    if (num_components < 1)
+        m &= FN_VAL_0 | FN_DX_0;
     while (m) {
         nt += m & 1;
         m >>= 1;
@@ -210,6 +195,6 @@ Function2D<TYPE>::new_node(int mask, int num_points)
     return node;
 }
 
-typedef Function2D<double> RealFunction2D;
+typedef Function1D<double> RealFunction1D;
 
 } // namespace fe

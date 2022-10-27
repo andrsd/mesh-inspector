@@ -5,6 +5,12 @@
 namespace fe {
 
 inline double
+det(const double1x1 & m)
+{
+    return m[0][0];
+}
+
+inline double
 det(const double2x2 & m)
 {
     return m[0][0] * m[1][1] - m[0][1] * m[1][0];

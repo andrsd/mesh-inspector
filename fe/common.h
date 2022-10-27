@@ -18,6 +18,7 @@ struct Point3D {
 typedef double double2[2];
 typedef double double3[3];
 typedef double double4[4];
+typedef double double1x1[1][1];
 typedef double double2x2[2][2];
 typedef double double3x3[3][3];
 typedef int int2[2];
@@ -48,6 +49,9 @@ enum {
     FN_DY_2   = 0x00400000, /// First derivative in y of the 3rd component required
     FN_DZ_2   = 0x00800000, /// First derivative in y of the 3rd component required
 };
+
+const int FN_VAL_1D = FN_VAL_0;
+const int FN_DX_1D  = FN_DX_0;
 
 const int FN_VAL_2D = FN_VAL_0 | FN_VAL_1;
 const int FN_DX_2D  = FN_DX_0  | FN_DX_1;
