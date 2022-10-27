@@ -50,6 +50,7 @@ class OInteractorStyle3D;
 class Selection;
 
 namespace fe {
+    class RefMap1D;
     class RefMap2D;
     class RefMap3D;
     class Element;
@@ -176,6 +177,7 @@ protected:
     void hideLoadProgressBar();
     void loadIntoVtk();
     double computeQualityDetJac(vtkCell * cell);
+    double computeQualityDetJacElem1D(fe::Element * elem);
     double computeQualityDetJacElem2D(fe::Element * elem);
     double computeQualityDetJacElem3D(fe::Element * elem);
 
@@ -309,6 +311,7 @@ protected:
     std::map<int, NodeSetObject *> node_sets;
 
     MeshQualityMetric mesh_quality_metric;
+    fe::RefMap1D * ref_map_1d;
     fe::RefMap2D * ref_map_2d;
     fe::RefMap3D * ref_map_3d;
 

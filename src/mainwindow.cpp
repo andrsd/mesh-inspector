@@ -73,8 +73,10 @@
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 #include "common/infowidget.h"
+#include "fe/refmap1d.h"
 #include "fe/refmap2d.h"
 #include "fe/refmap3d.h"
+#include "fe/quadrature1d.h"
 #include "fe/quadrature2d.h"
 #include "fe/quadrature3d.h"
 
@@ -211,6 +213,7 @@ MainWindow::MainWindow(QWidget * parent) :
     deselect_sc(nullptr),
     selected_block(nullptr),
     highlighted_block(nullptr),
+    ref_map_1d(new fe::RefMap1D()),
     ref_map_2d(new fe::RefMap2D()),
     ref_map_3d(new fe::RefMap3D()),
     namgr(new QNetworkAccessManager())
@@ -2175,13 +2178,33 @@ MainWindow::computeQualityDetJac(vtkCell * cell)
 {
     fe::Element elem(cell);
     if (elem.get_dim() == 1)
-        throw std::logic_error("Mesh quality for 1D elements is not implemented yet.");
+        return computeQualityDetJacElem1D(&elem);
     else if (elem.get_dim() == 2)
         return computeQualityDetJacElem2D(&elem);
     else if (elem.get_dim() == 3)
         return computeQualityDetJacElem3D(&elem);
     else
         throw std::logic_error("Unsupported spatial dimension.");
+}
+
+double
+MainWindow::computeQualityDetJacElem1D(fe::Element * elem)
+{
+    fe::Quadrature1D * quad = nullptr;
+    if (elem->get_type() == 3)
+        quad = new fe::QuadStd1D();
+    else
+        throw std::logic_error("Unknown 1D element type");
+
+    this->ref_map_1d->set_element(elem);
+    fe::order1_t ord(0);
+    fe::QuadPt1D * qpts = quad->get_points(ord);
+    int n_qpts = quad->get_num_points(ord);
+    double * j = this->ref_map_1d->get_jacobian(n_qpts, qpts, false);
+    double q = j[0];
+    delete j;
+    delete quad;
+    return q;
 }
 
 double
