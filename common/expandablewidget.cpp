@@ -71,6 +71,12 @@ ExpandableWidget::setWidget(QWidget * widget)
 }
 
 void
+ExpandableWidget::setExpanded(bool expanded)
+{
+    onExpandToggled(expanded);
+}
+
+void
 ExpandableWidget::onExpandToggled(bool checked)
 {
     this->widget->setVisible(checked);

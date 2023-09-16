@@ -17,6 +17,7 @@ public:
     void setLabel(const QString & text);
     void setNumberOfItems(int num);
     void setWidget(QWidget * widget);
+    void setExpanded(bool expanded);
 
 protected slots:
     void onExpandToggled(bool checked);
