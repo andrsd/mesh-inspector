@@ -17,6 +17,6 @@ jobs:
     - name: Clang-format style check
       uses: jidicula/clang-format-action@v4.3.0
       with:
-        clang-format-version: '13'
+        clang-format-version: '14'
         check-path: .
         exclude-regex: './resources/'
