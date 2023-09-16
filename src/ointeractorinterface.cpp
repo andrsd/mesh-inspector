@@ -8,73 +8,63 @@
 
 OInteractorInterface::OInteractorInterface(MainWindow * widget) :
     widget(widget),
-    last_mouse_pos(QPoint(-1, -1)),
-    left_button_down(false)
+    last_mouse_pos(QPoint(-1, -1))
 {
 }
 
 void
-OInteractorInterface::onLeftButtonPress(vtkObject * object, unsigned long event, void * ctx)
+OInteractorInterface::onLeftButtonPress(const QPoint & pos)
 {
-    auto * interactor_style = dynamic_cast<vtkInteractorStyle *>(object);
-    if (interactor_style) {
-        this->left_button_down = true;
-        auto * interactor = interactor_style->GetInteractor();
-        auto click_pos = interactor->GetEventPosition();
-        auto pt = QPoint(click_pos[0], click_pos[1]);
-        this->last_mouse_pos = pt;
+    this->last_mouse_pos = pos;
+}
+
+void
+OInteractorInterface::onLeftButtonRelease(const QPoint & pos)
+{
+    if (this->last_mouse_pos == pos)
+        this->widget->onClicked(pos);
+}
+
+void
+OInteractorInterface::onKeyPress(const QKeySequence & seq, const Qt::KeyboardModifiers & mods)
+{
+    if (seq.count() > 0) {
+        auto * e = new QKeyEvent(QEvent::KeyPress, seq[0].toCombined(), mods);
+        QCoreApplication::postEvent(this->widget, e);
     }
 }
 
 void
-OInteractorInterface::onLeftButtonRelease(vtkObject * object, unsigned long event, void * ctx)
-{
-    auto * interactor_style = dynamic_cast<vtkInteractorStyle *>(object);
-    if (interactor_style) {
-        this->left_button_down = false;
-        auto * interactor = interactor_style->GetInteractor();
-        auto click_pos = interactor->GetEventPosition();
-        auto pt = QPoint(click_pos[0], click_pos[1]);
-        if (this->last_mouse_pos == pt)
-            this->widget->onClicked(pt);
-    }
-}
-
-void
-OInteractorInterface::onKeyPress(vtkObject * object, unsigned long event, void * ctx)
-{
-    auto * interactor_style = dynamic_cast<vtkInteractorStyle *>(object);
-    if (interactor_style) {
-        auto * interactor = interactor_style->GetInteractor();
-        auto key = interactor->GetKeyCode();
-        auto seq = QKeySequence(key);
-        // FIXME: get the modifiers from interactor
-        auto mods = Qt::NoModifier;
-        if (seq.count() > 0) {
-            auto * e = new QKeyEvent(QEvent::KeyPress, seq[0].toCombined(), mods);
-            QCoreApplication::postEvent(this->widget, e);
-        }
-    }
-}
-
-void
-OInteractorInterface::onKeyRelease(vtkObject * object, unsigned long event, void * ctx)
+OInteractorInterface::onKeyRelease()
 {
 }
 
 void
-OInteractorInterface::onChar(vtkObject * object, unsigned long event, void * ctx)
+OInteractorInterface::onChar()
 {
 }
 
 void
-OInteractorInterface::onMouseMove(vtkObject * object, unsigned long event, void * ctx)
+OInteractorInterface::onMouseMove(const QPoint & pos)
 {
-    auto * interactor_style = dynamic_cast<vtkInteractorStyle *>(object);
-    if (interactor_style) {
-        auto * interactor = interactor_style->GetInteractor();
-        auto pos = interactor->GetEventPosition();
-        auto pt = QPoint(pos[0], pos[1]);
-        this->widget->onMouseMove(pt);
-    }
+    this->widget->onMouseMove(pos);
+}
+
+Qt::KeyboardModifiers
+OInteractorInterface::getKeyboardModifiers(vtkRenderWindowInteractor * interactor)
+{
+    Qt::KeyboardModifiers mods = Qt::NoModifier;
+#if __APPLE__
+    if (interactor->GetControlKey())
+        mods |= Qt::MetaModifier;
+#else
+    if (interactor->GetControlKey())
+        mods |= Qt::ControlModifier;
+#endif
+    if (interactor->GetShiftKey())
+        mods |= Qt::ShiftModifier;
+    if (interactor->GetAltKey())
+        mods |= Qt::AltModifier;
+
+    return mods;
 }

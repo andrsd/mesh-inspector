@@ -1,35 +1,113 @@
 #include "ointeractorstyle3d.h"
+#include "mainwindow.h"
 #include "vtkCommand.h"
+#include "vtkCallbackCommand.h"
+#include "vtkRenderWindowInteractor.h"
+#include <QKeyEvent>
+#include <QCoreApplication>
 
 OInteractorStyle3D::OInteractorStyle3D(MainWindow * widget) :
     vtkInteractorStyleTrackballCamera(),
     OInteractorInterface(widget)
 {
-    AddObserver(vtkCommand::LeftButtonPressEvent, this, &OInteractorStyle3D::onLeftButtonPress);
-    AddObserver(vtkCommand::LeftButtonReleaseEvent, this, &OInteractorStyle3D::onLeftButtonRelease);
-    AddObserver(vtkCommand::KeyPressEvent, this, &OInteractorStyle3D::onKeyPress);
-    AddObserver(vtkCommand::KeyReleaseEvent, this, &OInteractorStyle3D::onKeyRelease);
-    AddObserver(vtkCommand::CharEvent, this, &OInteractorStyle3D::onChar);
-    AddObserver(vtkCommand::MouseMoveEvent, this, &OInteractorStyle3D::onMouseMove);
 }
 
 void
-OInteractorStyle3D::onLeftButtonPress(vtkObject * object, unsigned long event, void * ctx)
+OInteractorStyle3D::OnLeftButtonDown()
 {
-    OInteractorInterface::onLeftButtonPress(object, event, ctx);
-    vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+    auto event_pos = this->Interactor->GetEventPosition();
+    auto pt = QPoint(event_pos[0], event_pos[1]);
+    OInteractorInterface::onLeftButtonPress(pt);
 }
 
 void
-OInteractorStyle3D::onLeftButtonRelease(vtkObject * object, unsigned long event, void * ctx)
+OInteractorStyle3D::OnLeftButtonUp()
 {
-    OInteractorInterface::onLeftButtonRelease(object, event, ctx);
-    vtkInteractorStyleTrackballCamera::OnLeftButtonUp();
+    auto event_pos = this->Interactor->GetEventPosition();
+    auto pt = QPoint(event_pos[0], event_pos[1]);
+    OInteractorInterface::onLeftButtonRelease(pt);
 }
 
 void
-OInteractorStyle3D::onMouseMove(vtkObject * object, unsigned long event, void * ctx)
+OInteractorStyle3D::OnMiddleButtonDown()
 {
-    OInteractorInterface::onMouseMove(object, event, ctx);
+    int * event_pos = this->Interactor->GetEventPosition();
+    this->FindPokedRenderer(event_pos[0], event_pos[1]);
+    if (this->CurrentRenderer == nullptr)
+        return;
+
+    this->GrabFocus(this->EventCallbackCommand);
+    this->StartPan();
+}
+
+void
+OInteractorStyle3D::OnMiddleButtonUp()
+{
+    switch (this->State) {
+    case VTKIS_PAN:
+        this->EndPan();
+        if (this->Interactor)
+            this->ReleaseFocus();
+        break;
+    }
+}
+
+void
+OInteractorStyle3D::OnRightButtonDown()
+{
+    int * event_pos = this->Interactor->GetEventPosition();
+    this->FindPokedRenderer(event_pos[0], event_pos[1]);
+    if (this->CurrentRenderer == nullptr)
+        return;
+
+    this->GrabFocus(this->EventCallbackCommand);
+    if (this->Interactor->GetControlKey())
+        this->StartPan();
+    else
+        this->StartRotate();
+}
+
+void
+OInteractorStyle3D::OnRightButtonUp()
+{
+    switch (this->State) {
+    case VTKIS_ROTATE:
+        this->EndRotate();
+        break;
+
+    case VTKIS_PAN:
+        this->EndPan();
+        break;
+    }
+
+    if (this->Interactor)
+        this->ReleaseFocus();
+}
+
+void
+OInteractorStyle3D::OnMouseMove()
+{
+    auto event_pos = this->Interactor->GetEventPosition();
+    auto pt = QPoint(event_pos[0], event_pos[1]);
+    OInteractorInterface::onMouseMove(pt);
     vtkInteractorStyleTrackballCamera::OnMouseMove();
+}
+
+void
+OInteractorStyle3D::OnKeyPress()
+{
+    auto key = this->Interactor->GetKeyCode();
+    auto seq = QKeySequence(key);
+    auto mods = getKeyboardModifiers(this->Interactor);
+    OInteractorInterface::onKeyPress(seq, mods);
+}
+
+void
+OInteractorStyle3D::OnKeyRelease()
+{
+}
+
+void
+OInteractorStyle3D::OnChar()
+{
 }

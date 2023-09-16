@@ -3,21 +3,27 @@
 #include <QPoint>
 
 class MainWindow;
+class QKeySequence;
 class vtkObject;
+class vtkRenderWindowInteractor;
 
+/// Common functionality for sending events into the Qt widgets
 class OInteractorInterface {
 public:
     OInteractorInterface(MainWindow * widget);
 
 protected:
-    virtual void onLeftButtonPress(vtkObject * object, unsigned long event, void * ctx);
-    virtual void onLeftButtonRelease(vtkObject * object, unsigned long event, void * ctx);
-    virtual void onKeyPress(vtkObject * object, unsigned long event, void * ctx);
-    virtual void onKeyRelease(vtkObject * object, unsigned long event, void * ctx);
-    virtual void onChar(vtkObject * object, unsigned long event, void * ctx);
-    virtual void onMouseMove(vtkObject * object, unsigned long event, void * ctx);
+    void onLeftButtonPress(const QPoint & pos);
+    void onLeftButtonRelease(const QPoint & pos);
+    void onMouseMove(const QPoint & pos);
 
+    void onKeyPress(const QKeySequence & seq, const Qt::KeyboardModifiers & mods);
+    void onKeyRelease();
+    void onChar();
+
+    Qt::KeyboardModifiers getKeyboardModifiers(vtkRenderWindowInteractor * interactor);
+
+private:
     MainWindow * widget;
     QPoint last_mouse_pos;
-    bool left_button_down;
 };
