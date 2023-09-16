@@ -125,6 +125,7 @@ InfoWindow::setupSummaryWidgets()
 
     this->totals_expd = new ExpandableWidget("Summary");
     this->totals_expd->setWidget(this->totals);
+    this->totals_expd->setExpanded(true);
     this->layout->addWidget(this->totals_expd);
 }
 
@@ -156,6 +157,7 @@ InfoWindow::setupRangeWidgets()
 
     this->range_expd = new ExpandableWidget("Dimensions");
     this->range_expd->setWidget(w);
+    this->range_expd->setExpanded(true);
     this->layout->addWidget(this->range_expd);
 }
 
