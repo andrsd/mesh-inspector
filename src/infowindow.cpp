@@ -166,6 +166,10 @@ InfoWindow::clear()
 
     this->total_elements->setText(1, "");
     this->total_nodes->setText(1, "");
+
+    this->x_range->setText(1, "");
+    this->y_range->setText(1, "");
+    this->z_range->setText(1, "");
 }
 
 void
