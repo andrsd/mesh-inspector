@@ -7,7 +7,6 @@ add_executable(
         aboutdlg.cpp
         blockobject.cpp
         colorprofile.cpp
-        boundingbox.cpp
         exodusiireader.cpp
         explodewidget.cpp
         filechangednotificationwidget.cpp

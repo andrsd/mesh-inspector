@@ -1,7 +1,7 @@
 #pragma once
 
-#include "boundingbox.h"
 #include "vtkVector.h"
+#include "vtkBoundingBox.h"
 
 class vtkDataObject;
 class vtkAlgorithmOutput;
@@ -19,7 +19,7 @@ public:
     bool visible();
     vtkActor * getActor();
     vtkProperty * getProperty();
-    const BoundingBox & getBounds() const;
+    double * getBounds() const;
     vtkVector3d getCenterOfBounds() const;
     int getNumCells() const;
     int getNumPoints() const;
@@ -34,6 +34,6 @@ protected:
     vtkPolyDataAlgorithm * geometry;
     vtkMapper * mapper;
     vtkActor * actor;
-    BoundingBox bounds;
+    vtkBoundingBox bounding_box;
     vtkVector3d center_of_bounds;
 };

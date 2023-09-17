@@ -57,7 +57,6 @@
 #include "exodusiireader.h"
 #include "vtkreader.h"
 #include "stlreader.h"
-#include "boundingbox.h"
 #include "colorprofile.h"
 #include "ointeractorstyle2d.h"
 #include "ointeractorstyle3d.h"
@@ -670,6 +669,26 @@ MainWindow::setupCubeAxesActor()
     this->cube_axes_actor->SetCamera(this->vtk_renderer->GetActiveCamera());
     this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);
     this->cube_axes_actor->SetFlyMode(vtkCubeAxesActor::VTK_FLY_OUTER_EDGES);
+}
+
+void
+MainWindow::computeTotalBoundingBox()
+{
+    vtkBoundingBox bbox;
+    for (auto & it : this->blocks) {
+        auto block = it.second;
+        bbox.AddBounds(block->getBounds());
+    }
+
+    double bounds[6];
+    bbox.GetBounds(bounds);
+    this->cube_axes_actor->SetBounds(bounds);
+    this->vtk_renderer->AddViewProp(this->cube_axes_actor);
+    this->info_window->setBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
+
+    double center[3];
+    bbox.GetCenter(center);
+    this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
 }
 
 int
@@ -1397,23 +1416,7 @@ MainWindow::loadIntoVtk()
     addSideSets();
     addNodeSets();
 
-    BoundingBox bbox;
-    int idx = 0;
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        if (idx == 0)
-            bbox = block->getBounds();
-        else
-            bbox.doUnion(block->getBounds());
-        idx++;
-    }
-    this->cube_axes_actor
-        ->SetBounds(bbox.min(0), bbox.max(0), bbox.min(1), bbox.max(1), bbox.min(2), bbox.max(2));
-    this->vtk_renderer->AddViewProp(this->cube_axes_actor);
-
-    this->center_of_bounds = bbox.center();
-    this->info_window
-        ->setBounds(bbox.min(0), bbox.max(0), bbox.min(1), bbox.max(1), bbox.min(2), bbox.max(2));
+    computeTotalBoundingBox();
 
     this->info_window->setSummary(reader->getTotalNumberOfElements(),
                                   reader->getTotalNumberOfNodes());
