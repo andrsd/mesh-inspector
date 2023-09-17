@@ -22,8 +22,6 @@ public:
 
 protected:
     void readBlockInfo();
-    void readVariableInfo();
-    void readTimeInfo();
 
     vtkExodusIIReader * reader;
     std::map<int, std::map<int, BlockInformation>> block_info;

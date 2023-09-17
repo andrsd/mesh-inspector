@@ -16,13 +16,8 @@ ExodusIIReader::load()
 {
     this->reader = vtkExodusIIReader::New();
 
-    readTimeInfo();
-
     this->reader->SetFileName(this->file_name.c_str());
     this->reader->UpdateInformation();
-    this->reader->SetAllArrayStatus(vtkExodusIIReader::NODAL, 1);
-    this->reader->SetAllArrayStatus(vtkExodusIIReader::ELEM_BLOCK, 1);
-    this->reader->SetAllArrayStatus(vtkExodusIIReader::GLOBAL, 1);
     this->reader->Update();
 
     readBlockInfo();
@@ -32,7 +27,6 @@ ExodusIIReader::load()
             this->reader->SetObjectStatus(info.object_type, info.object_index, 1);
         }
     }
-    readVariableInfo();
 }
 
 std::size_t
@@ -116,14 +110,4 @@ ExodusIIReader::readBlockInfo()
             this->block_info[otype][vtkid] = binfo;
         }
     }
-}
-
-void
-ExodusIIReader::readVariableInfo()
-{
-}
-
-void
-ExodusIIReader::readTimeInfo()
-{
 }
