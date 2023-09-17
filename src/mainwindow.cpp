@@ -1312,6 +1312,7 @@ MainWindow::resizeEvent(QResizeEvent * event)
 {
     QMainWindow::resizeEvent(event);
     updateViewModeLocation();
+    updateExplodeWidgetLocation();
 }
 
 void
@@ -1827,11 +1828,8 @@ void
 MainWindow::onToolsExplode()
 {
     this->explode->adjustSize();
-    auto render_win_geom = geometry();
-    int left = (render_win_geom.width() - this->explode->width()) / 2;
-    int top = render_win_geom.height() - this->explode->height() - 10;
-    this->explode->setGeometry(left, top, this->explode->width(), this->explode->height());
     this->explode->show();
+    updateExplodeWidgetLocation();
 }
 
 void
@@ -1854,6 +1852,15 @@ MainWindow::updateViewModeLocation()
 {
     auto width = this->getRenderWindowWidth();
     this->view_mode->move(width - 5 - this->view_mode->width(), 10);
+}
+
+void
+MainWindow::updateExplodeWidgetLocation()
+{
+    auto width = this->getRenderWindowWidth();
+    int left = (width - this->explode->width()) / 2;
+    int top = geometry().height() - this->explode->height() - 10;
+    this->explode->move(left, top);
 }
 
 void

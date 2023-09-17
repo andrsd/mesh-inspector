@@ -19,7 +19,7 @@ ExplodeWidget::ExplodeWidget(QWidget * parent) : QWidget(parent), max_range(100)
     setGraphicsEffect(this->opacity);
 
     this->layout = new QHBoxLayout();
-    this->layout->setContentsMargins(15, 8, 15, 8);
+    this->layout->setContentsMargins(15, 8, 15, 6);
 
     this->mag_validator = new QDoubleValidator();
     this->mag_validator->setBottom(0.);
@@ -37,6 +37,7 @@ ExplodeWidget::ExplodeWidget(QWidget * parent) : QWidget(parent), max_range(100)
     this->slider->setSingleStep(1);
     this->slider->setPageStep(5);
     this->slider->setFixedWidth(400);
+    this->slider->setFixedHeight(24);
     this->layout->addWidget(this->slider);
 
     this->close = new ClickableLabel();
