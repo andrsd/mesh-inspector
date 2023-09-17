@@ -195,6 +195,7 @@ public slots:
     void onToolsExplode();
     void onExplodeValueChanged(double value);
     void updateViewModeLocation();
+    void updateExplodeWidgetLocation();
     void onMinimize();
     void onBringAllToFront();
     void onShowMainWindow();
