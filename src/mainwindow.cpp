@@ -45,6 +45,8 @@
 #include "vtkCellPicker.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkCompositeDataGeometryFilter.h"
+#include "vtkCaptionActor2D.h"
+#include "vtkTextProperty.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
@@ -651,7 +653,31 @@ MainWindow::hasFile()
 void
 MainWindow::setupOrientationMarker()
 {
+    std::array<QColor, 3> clr({ QColor(188, 39, 26), QColor(65, 147, 41), QColor(0, 0, 200) });
+
     vtkAxesActor * axes = vtkAxesActor::New();
+    axes->SetNormalizedTipLength(0, 0, 0);
+
+    std::array<vtkProperty *, 3> shaft_property({ axes->GetXAxisShaftProperty(),
+                                                  axes->GetYAxisShaftProperty(),
+                                                  axes->GetZAxisShaftProperty() });
+    for (std::size_t i = 0; i < shaft_property.size(); i++) {
+        auto prop = shaft_property[i];
+        prop->SetLineWidth(2);
+        prop->SetColor(clr[i].redF(), clr[i].greenF(), clr[i].blueF());
+    }
+
+    std::array<vtkCaptionActor2D *, 3> caption_actors({ axes->GetXAxisCaptionActor2D(),
+                                                        axes->GetYAxisCaptionActor2D(),
+                                                        axes->GetZAxisCaptionActor2D() });
+    for (std::size_t i = 0; i < caption_actors.size(); i++) {
+        auto text_prop = caption_actors[i]->GetCaptionTextProperty();
+        text_prop->SetColor(clr[i].redF(), clr[i].greenF(), clr[i].blueF());
+        text_prop->BoldOn();
+        text_prop->ItalicOff();
+        text_prop->ShadowOff();
+    }
+
     this->ori_marker = vtkOrientationMarkerWidget::New();
     this->ori_marker->SetDefaultRenderer(this->vtk_renderer);
     this->ori_marker->SetOrientationMarker(axes);
