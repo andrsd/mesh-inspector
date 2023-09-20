@@ -1671,8 +1671,8 @@ MainWindow::onBlockSelectionChanged(int block_id)
                             "Cells: %2\n"
                             "Points: %3")
                         .arg(block_id)
-                        .arg(block->getNumCells())
-                        .arg(block->getNumPoints());
+                        .arg(QLocale::system().toString(block->getNumCells()))
+                        .arg(QLocale::system().toString(block->getNumPoints()));
         showSelectedMeshEntity(info);
     }
     else
@@ -1689,8 +1689,8 @@ MainWindow::onSideSetSelectionChanged(int sideset_id)
                             "Cells: %2\n"
                             "Points: %3")
                         .arg(sideset_id)
-                        .arg(sideset->getNumCells())
-                        .arg(sideset->getNumPoints());
+                        .arg(QLocale::system().toString(sideset->getNumCells()))
+                        .arg(QLocale::system().toString(sideset->getNumPoints()));
         showSelectedMeshEntity(info);
     }
     else
@@ -1706,7 +1706,7 @@ MainWindow::onNodeSetSelectionChanged(int nodeset_id)
         auto info = QString("Node set: %1\n"
                             "Points: %2")
                         .arg(nodeset_id)
-                        .arg(nodeset->getNumPoints());
+                        .arg(QLocale::system().toString(nodeset->getNumPoints()));
         showSelectedMeshEntity(info);
     }
     else
