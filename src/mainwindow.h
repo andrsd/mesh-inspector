@@ -110,6 +110,7 @@ protected:
     void setupVtk();
     void setupOrientationMarker();
     void setupCubeAxesActor();
+    void computeTotalBoundingBox();
 
     int getRenderWindowWidth() const;
     bool checkFileExists(const QString & file_name);

@@ -34,9 +34,10 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output)
     this->actor->SetMapper(this->mapper);
     this->actor->VisibilityOff();
 
-    double * bnds = this->actor->GetBounds();
-    this->bounds = BoundingBox(bnds[0], bnds[1], bnds[2], bnds[3], bnds[4], bnds[5]);
-    this->center_of_bounds = this->bounds.center();
+    this->bounding_box = vtkBoundingBox(this->actor->GetBounds());
+    double center[3];
+    this->bounding_box.GetCenter(center);
+    this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
 }
 
 MeshObject::~MeshObject()
@@ -79,10 +80,10 @@ MeshObject::setPosition(double x, double y, double z)
     this->actor->SetPosition(x, y, z);
 }
 
-const BoundingBox &
+double *
 MeshObject::getBounds() const
 {
-    return this->bounds;
+    return this->actor->GetBounds();
 }
 
 vtkVector3d
