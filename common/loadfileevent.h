@@ -5,7 +5,7 @@
 
 class LoadFileEvent : public QEvent {
 public:
-    LoadFileEvent(const QString & file_name);
+    explicit LoadFileEvent(const QString & file_name);
 
     const QString & fileName() const;
 

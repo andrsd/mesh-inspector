@@ -4,5 +4,5 @@
 
 class HorzLine : public QFrame {
 public:
-    HorzLine(QWidget * parent = nullptr);
+    explicit HorzLine(QWidget * parent = nullptr);
 };

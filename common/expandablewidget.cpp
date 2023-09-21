@@ -42,7 +42,7 @@ ExpandableWidget::ExpandableWidget(const QString & text, QWidget * parent) :
     this->layout->addWidget(this->label, 0, 1);
     setLayout(this->layout);
 
-    connect(this->expand_button, SIGNAL(toggled(bool)), this, SLOT(onExpandToggled(bool)));
+    connect(this->expand_button, &QPushButton::toggled, this, &ExpandableWidget::onExpandToggled);
 }
 
 ExpandableWidget::~ExpandableWidget()
@@ -60,9 +60,9 @@ ExpandableWidget::setLabel(const QString & text)
 }
 
 void
-ExpandableWidget::setWidget(QWidget * widget)
+ExpandableWidget::setWidget(QWidget * w)
 {
-    this->widget = widget;
+    this->widget = w;
     this->layout->addWidget(this->widget, 1, 0, 1, 2);
 
     bool checked = this->expand_button->isChecked();

@@ -13,7 +13,7 @@ class vtkAlgorithmOutput;
 
 class Selection {
 public:
-    Selection(vtkAlgorithmOutput * input_data);
+    explicit Selection(vtkAlgorithmOutput * input_data);
     virtual ~Selection();
 
     vtkActor * getActor() const;

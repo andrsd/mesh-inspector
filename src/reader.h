@@ -23,8 +23,8 @@ public:
     };
 
 public:
-    Reader(const std::string & file_name);
-    virtual ~Reader();
+    explicit Reader(const std::string & file_name);
+    virtual ~Reader() = default;
 
     virtual void load() = 0;
 

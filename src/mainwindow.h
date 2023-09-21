@@ -51,15 +51,15 @@ class MainWindow : public QMainWindow {
 protected:
     class LoadThread : public QThread {
     public:
-        LoadThread(const QString & file_name);
-        virtual ~LoadThread();
+        explicit LoadThread(const QString & file_name);
+        ~LoadThread() override;
 
         virtual Reader * getReader();
         bool hasValidFile();
         const QString & getFileName();
 
     protected:
-        virtual void run();
+        void run() override;
 
         QString file_name;
         Reader * reader;
@@ -81,7 +81,7 @@ protected:
 
 public:
     explicit MainWindow(QWidget * parent = nullptr);
-    virtual ~MainWindow();
+    ~MainWindow() override;
 
 signals:
     void blockAdded(int id, const QString & name);
@@ -151,12 +151,12 @@ protected:
     void hideLoadProgressBar();
     void loadIntoVtk();
 
-    virtual bool event(QEvent * event);
-    virtual void customEvent(QEvent * event);
-    virtual void resizeEvent(QResizeEvent * event);
-    virtual void dragEnterEvent(QDragEnterEvent * event);
-    virtual void dropEvent(QDropEvent * event);
-    virtual void closeEvent(QCloseEvent * event);
+    bool event(QEvent * event) override;
+    void customEvent(QEvent * event) override;
+    void resizeEvent(QResizeEvent * event) override;
+    void dragEnterEvent(QDragEnterEvent * event) override;
+    void dropEvent(QDropEvent * event) override;
+    void closeEvent(QCloseEvent * event) override;
 
     QVersionNumber getVersionFromReply(QNetworkReply * reply);
 

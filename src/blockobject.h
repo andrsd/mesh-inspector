@@ -14,14 +14,14 @@ class vtkPolyDataSilhouette;
 class BlockObject : public MeshObject {
 public:
     BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera);
-    virtual ~BlockObject();
+    ~BlockObject() override;
 
     vtkActor * getSilhouetteActor();
     vtkProperty * getSilhouetteProperty();
     const QColor & getColor();
-    double getOpacity();
-    void setColor(const QColor & color);
-    void setOpacity(double opacity);
+    double getOpacity() const;
+    void setColor(const QColor & clr);
+    void setOpacity(double value);
     void setSilhouetteVisible(bool visible);
 
 protected:

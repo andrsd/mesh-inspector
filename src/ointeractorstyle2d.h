@@ -5,7 +5,7 @@
 
 class OInteractorStyle2D : public vtkInteractorStyleImage, public OInteractorInterface {
 public:
-    OInteractorStyle2D(MainWindow * widget);
+    explicit OInteractorStyle2D(MainWindow * widget);
 
 protected:
     void OnLeftButtonDown() override;

@@ -11,12 +11,12 @@ class ExpandableWidget : public QWidget {
     Q_OBJECT
 
 public:
-    ExpandableWidget(const QString & text, QWidget * parent = nullptr);
-    virtual ~ExpandableWidget();
+    explicit ExpandableWidget(const QString & text, QWidget * parent = nullptr);
+    ~ExpandableWidget() override;
 
     void setLabel(const QString & text);
     void setNumberOfItems(int num);
-    void setWidget(QWidget * widget);
+    void setWidget(QWidget * w);
     void setExpanded(bool expanded);
 
 protected slots:

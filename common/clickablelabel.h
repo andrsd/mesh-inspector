@@ -9,9 +9,9 @@ public:
     explicit ClickableLabel(QWidget * parent = nullptr);
 
 protected:
-    virtual void enterEvent(QEnterEvent * event) override;
-    virtual void leaveEvent(QEvent * event) override;
-    virtual void mouseReleaseEvent(QMouseEvent * ev) override;
+    void enterEvent(QEnterEvent * event) override;
+    void leaveEvent(QEvent * event) override;
+    void mouseReleaseEvent(QMouseEvent * ev) override;
 
 signals:
     void clicked();

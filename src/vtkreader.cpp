@@ -19,7 +19,6 @@ VTKReader::load()
     this->reader->Update();
 
     readBlockInfo();
-    readVariableInfo();
 }
 
 std::size_t
@@ -81,9 +80,4 @@ VTKReader::readBlockInfo()
     binfo.object_index = 0;
     binfo.multiblock_index = -1;
     this->block_info[vtkid] = binfo;
-}
-
-void
-VTKReader::readVariableInfo()
-{
 }

@@ -5,7 +5,7 @@
 
 class OInteractorStyle3D : public vtkInteractorStyleTrackballCamera, public OInteractorInterface {
 public:
-    OInteractorStyle3D(MainWindow * widget);
+    explicit OInteractorStyle3D(MainWindow * widget);
 
 protected:
     void OnLeftButtonDown() override;

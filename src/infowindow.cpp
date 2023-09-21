@@ -2,7 +2,6 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QCheckBox>
 #include <QBrush>
@@ -31,6 +30,7 @@ InfoWindow::InfoWindow(QWidget * parent) :
     mesh_view(nullptr),
     totals(nullptr),
     total_elements(nullptr),
+    total_nodes(nullptr),
     totals_expd(nullptr),
     range(nullptr),
     x_range(nullptr),
@@ -65,14 +65,11 @@ InfoWindow::setupWidgets()
     this->layout->setSpacing(4);
 
     this->color_picker = new ColorPicker(this);
+    connect(this->color_picker, &ColorPicker::colorChanged, this, &InfoWindow::onBlockColorPicked);
     connect(this->color_picker,
-            SIGNAL(colorChanged(const QColor &)),
+            &ColorPicker::opacityChanged,
             this,
-            SLOT(onBlockColorPicked(const QColor &)));
-    connect(this->color_picker,
-            SIGNAL(opacityChanged(double)),
-            this,
-            SLOT(onBlockOpacityChanged(double)));
+            &InfoWindow::onBlockOpacityChanged);
 
     setupBlocksWidgets();
     this->layout->addWidget(new HorzLine());
@@ -87,10 +84,7 @@ InfoWindow::setupBlocksWidgets()
 {
     this->mesh_model = new MeshModel();
     this->mesh_model->setHorizontalHeaderLabels(QStringList({ "Name", "", "ID" }));
-    connect(this->mesh_model,
-            SIGNAL(itemChanged(QStandardItem *)),
-            this,
-            SLOT(onItemChanged(QStandardItem *)));
+    connect(this->mesh_model, &MeshModel::itemChanged, this, &InfoWindow::onItemChanged);
     this->mesh_view = new OTreeView();
     this->mesh_view->setRootIsDecorated(true);
     this->mesh_view->setModel(this->mesh_model);
@@ -100,14 +94,14 @@ InfoWindow::setupBlocksWidgets()
     this->mesh_view->setColumnWidth(2, 40);
     this->mesh_view->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(this->mesh_view,
-            SIGNAL(customContextMenuRequested(const QPoint &)),
+            &OTreeView::customContextMenuRequested,
             this,
-            SLOT(onItemCustomContextMenu(const QPoint &)));
+            &InfoWindow::onItemCustomContextMenu);
     auto * sel_model = this->mesh_view->selectionModel();
     connect(sel_model,
-            SIGNAL(selectionChanged(const QItemSelection &, const QItemSelection &)),
+            &QItemSelectionModel::selectionChanged,
             this,
-            SLOT(onItemSelectionChanged(const QItemSelection &, const QItemSelection &)));
+            &InfoWindow::onItemSelectionChanged);
     this->layout->addWidget(this->mesh_view);
 }
 
@@ -144,7 +138,10 @@ InfoWindow::setupRangeWidgets()
     this->range->addTopLevelItem(this->z_range);
 
     this->dimensions = new QCheckBox("Show dimensions");
-    connect(this->dimensions, SIGNAL(stateChanged(int)), this, SLOT(onDimensionsStateChanged(int)));
+    connect(this->dimensions,
+            &QCheckBox ::stateChanged,
+            this,
+            &InfoWindow::onDimensionsStateChanged);
 
     auto * l = new QVBoxLayout();
     l->setSpacing(8);
@@ -218,7 +215,7 @@ InfoWindow::onBlockAdded(int id, const QString & name)
 
     auto * si_clr = new QStandardItem();
     si_clr->setText("\u25a0");
-    int clr_idx = row % InfoWindow::colors.length();
+    int clr_idx = row % (int) InfoWindow::colors.length();
     auto color = InfoWindow::colors[clr_idx];
     si_clr->setForeground(QBrush(color));
     si_clr->setData(color);
@@ -315,16 +312,16 @@ InfoWindow::onNameContextMenu(QStandardItem * item, const QPoint & point)
 {
     QMenu menu;
     if (item->checkState() == Qt::Checked) {
-        menu.addAction("Hide", this, SLOT(onHideBlock()));
-        menu.addAction("Hide others", this, SLOT(onHideOtherBlocks()));
-        menu.addAction("Hide all", this, SLOT(onHideAllBlocks()));
+        menu.addAction("Hide", this, &InfoWindow::onHideBlock);
+        menu.addAction("Hide others", this, &InfoWindow::onHideOtherBlocks);
+        menu.addAction("Hide all", this, &InfoWindow::onHideAllBlocks);
     }
     else {
-        menu.addAction("Show", this, SLOT(onShowBlock()));
-        menu.addAction("Show all", this, SLOT(onShowAllBlocks()));
+        menu.addAction("Show", this, &InfoWindow::onShowBlock);
+        menu.addAction("Show all", this, &InfoWindow::onShowAllBlocks);
     }
     menu.addSeparator();
-    menu.addAction("Appearance...", this, SLOT(onAppearance()));
+    menu.addAction("Appearance...", this, &InfoWindow::onAppearance);
     menu.exec(point);
 }
 
@@ -513,18 +510,18 @@ InfoWindow::setBounds(double xmin, double xmax, double ymin, double ymax, double
 {
     char format = 'f';
     int precision = 5;
-    auto x_range = QString("%1 to %2")
-                       .arg(QString::number(xmin, format, precision))
-                       .arg(QString::number(xmax, format, precision));
-    this->x_range->setText(1, x_range);
-    auto y_range = QString("%1 to %2")
-                       .arg(QString::number(ymin, format, precision))
-                       .arg(QString::number(ymax, format, precision));
-    this->y_range->setText(1, y_range);
-    auto z_range = QString("%1 to %2")
-                       .arg(QString::number(zmin, format, precision))
-                       .arg(QString::number(zmax, format, precision));
-    this->z_range->setText(1, z_range);
+    auto x_range_str = QString("%1 to %2")
+                           .arg(QString::number(xmin, format, precision))
+                           .arg(QString::number(xmax, format, precision));
+    this->x_range->setText(1, x_range_str);
+    auto y_range_str = QString("%1 to %2")
+                           .arg(QString::number(ymin, format, precision))
+                           .arg(QString::number(ymax, format, precision));
+    this->y_range->setText(1, y_range_str);
+    auto z_range_str = QString("%1 to %2")
+                           .arg(QString::number(zmin, format, precision))
+                           .arg(QString::number(zmax, format, precision));
+    this->z_range->setText(1, z_range_str);
 }
 
 void

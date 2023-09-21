@@ -7,8 +7,8 @@ class QLabel;
 
 class AboutDialog : public QDialog {
 public:
-    AboutDialog(QWidget * parent = nullptr);
-    virtual ~AboutDialog();
+    explicit AboutDialog(QWidget * parent = nullptr);
+    ~AboutDialog() override;
 
 protected:
     QVBoxLayout * layout;

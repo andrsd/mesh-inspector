@@ -47,12 +47,10 @@ ExplodeWidget::ExplodeWidget(QWidget * parent) : QWidget(parent), max_range(100)
 
     this->setLayout(this->layout);
 
-    connect(this->slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderValueChanged(int)));
-    connect(this->magnitude, SIGNAL(editingFinished()), this, SLOT(onMagnitudeChanged()));
-    connect(this->close, SIGNAL(clicked()), this, SLOT(onClose()));
+    connect(this->slider, &QSlider::valueChanged, this, &ExplodeWidget::onSliderValueChanged);
+    connect(this->magnitude, &QLineEdit::editingFinished, this, &ExplodeWidget::onMagnitudeChanged);
+    connect(this->close, &ClickableLabel::clicked, this, &ExplodeWidget::onClose);
 }
-
-ExplodeWidget::~ExplodeWidget() {}
 
 int
 ExplodeWidget::range()

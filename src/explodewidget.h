@@ -15,7 +15,6 @@ class ExplodeWidget : public QWidget {
 
 public:
     explicit ExplodeWidget(QWidget * parent = nullptr);
-    virtual ~ExplodeWidget();
 
     int range();
 
