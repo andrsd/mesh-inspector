@@ -43,11 +43,16 @@
 #include "vtkCompositeDataGeometryFilter.h"
 #include "vtkCaptionActor2D.h"
 #include "vtkTextProperty.h"
+#include "vtkMapper.h"
+#include "vtkCellData.h"
+#include "vtkDoubleArray.h"
+#include "vtkCellQuality.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
 #include "explodewidget.h"
+#include "meshqualitywidget.h"
 #include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
@@ -73,6 +78,8 @@ QColor MainWindow::SELECTION_EDGE_CLR = QColor(179, 95, 0);
 QColor MainWindow::HIGHLIGHT_CLR = QColor(255, 211, 79);
 
 int MainWindow::SIDESET_EDGE_WIDTH = 2;
+
+const char * MainWindow::MESH_QUALITY_FIELD_NAME = "CellQuality";
 
 // Main window - Load thread
 
@@ -155,6 +162,7 @@ MainWindow::MainWindow(QWidget * parent) :
     about_dlg(nullptr),
     license_dlg(nullptr),
     explode(nullptr),
+    mesh_quality(nullptr),
     selected_mesh_ent_info(nullptr),
     new_action(nullptr),
     open_action(nullptr),
@@ -168,6 +176,7 @@ MainWindow::MainWindow(QWidget * parent) :
     transluent_action(nullptr),
     view_info_wnd_action(nullptr),
     tools_explode_action(nullptr),
+    tools_mesh_quality_action(nullptr),
     perspective_action(nullptr),
     ori_marker_action(nullptr),
     minimize(nullptr),
@@ -230,6 +239,7 @@ MainWindow::~MainWindow()
     delete this->info_window;
     delete this->info_dock;
     delete this->explode;
+    delete this->mesh_quality;
     delete this->selected_mesh_ent_info;
     for (auto & it : this->color_profiles)
         delete it;
@@ -278,6 +288,7 @@ MainWindow::setupWidgets()
     connect(this->deselect_sc, &QShortcut::activated, this, &MainWindow::onDeselect);
 
     setupExplodeWidgets();
+    setupMeshQualityWidget();
 }
 
 void
@@ -366,6 +377,18 @@ MainWindow::setupExplodeWidgets()
 }
 
 void
+MainWindow::setupMeshQualityWidget()
+{
+    this->mesh_quality = new MeshQualityWidget(this);
+    connect(this->mesh_quality,
+            &MeshQualityWidget::metricChanged,
+            this,
+            &MainWindow::onMetricChanged);
+    connect(this->mesh_quality, &MeshQualityWidget::closed, this, &MainWindow::onMeshQualityClosed);
+    this->mesh_quality->setVisible(false);
+}
+
+void
 MainWindow::setupMenuBar()
 {
     setMenuBar(this->menu_bar);
@@ -412,6 +435,8 @@ MainWindow::setupMenuBar()
     setupSelectModeMenu(tools_menu);
     this->tools_explode_action =
         tools_menu->addAction("Explode", this, &MainWindow::onToolsExplode);
+    this->tools_mesh_quality_action =
+        tools_menu->addAction("Mesh quality", this, &MainWindow::onToolsMeshQuality);
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
@@ -497,7 +522,11 @@ MainWindow::updateMenuBar()
     this->export_as_png->setEnabled(has_file);
     this->export_as_jpg->setEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
+    this->tools_mesh_quality_action->setEnabled(has_file);
     this->close_action->setEnabled(has_file);
+
+    bool showing_mesh_qality = this->mesh_quality->isVisible();
+    this->visual_repr->setEnabled(!showing_mesh_qality);
 }
 
 void
@@ -576,6 +605,7 @@ MainWindow::setupVtk()
 void
 MainWindow::clear()
 {
+    this->mesh_quality->done();
     this->vtk_renderer->RemoveAllViewProps();
 
     for (auto & it : this->blocks)
@@ -946,6 +976,29 @@ MainWindow::setBlockProperties(BlockObject * block, bool selected, bool highligh
         this->setSelectedBlockProperties(block, highlighted);
     else
         this->setDeselectedBlockProperties(block, highlighted);
+}
+
+void
+MainWindow::setBlockMeshQualityProperties(BlockObject * block, double range[])
+{
+    auto * property = block->getProperty();
+    property->SetRepresentationToSurface();
+    property->SetAmbient(0.4);
+    property->SetDiffuse(0.6);
+    property->SetOpacity(1.0);
+    property->SetEdgeVisibility(true);
+    property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
+                           SIDESET_EDGE_CLR.greenF(),
+                           SIDESET_EDGE_CLR.blueF());
+    property->SetLineWidth(2);
+
+    auto mapper = block->getMapper();
+    mapper->ScalarVisibilityOn();
+    mapper->SelectColorArray(MESH_QUALITY_FIELD_NAME);
+    mapper->SetScalarModeToUseCellFieldData();
+    mapper->InterpolateScalarsBeforeMappingOn();
+    mapper->SetColorModeToMapScalars();
+    mapper->SetScalarRange(range);
 }
 
 void
@@ -1342,6 +1395,7 @@ MainWindow::resizeEvent(QResizeEvent * event)
     QMainWindow::resizeEvent(event);
     updateViewModeLocation();
     updateExplodeWidgetLocation();
+    updateMeshQualityWidgetLocation();
 }
 
 void
@@ -1978,4 +2032,114 @@ MainWindow::getVersionFromReply(QNetworkReply * reply)
         return QVersionNumber(match.captured(1).toInt(), match.captured(2).toInt());
     else
         return QVersionNumber(-1);
+}
+
+void
+MainWindow::onToolsMeshQuality()
+{
+    this->mesh_quality->adjustSize();
+    this->mesh_quality->show();
+    updateMeshQualityWidgetLocation();
+
+    auto metric_id = this->mesh_quality->getMetricId();
+    onMetricChanged(metric_id);
+
+    updateMenuBar();
+}
+
+void
+MainWindow::updateMeshQualityWidgetLocation()
+{
+    auto width = this->getRenderWindowWidth();
+    int left = (width - this->mesh_quality->width()) / 2;
+    int top = geometry().height() - this->mesh_quality->height() - 10;
+    this->mesh_quality->move(left, top);
+}
+
+void
+MainWindow::onMetricChanged(int metric_id)
+{
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+
+        auto grid = block->getUnstructuredGrid();
+        auto cell_quality = vtkCellQuality::New();
+        switch (metric_id) {
+        default:
+        case MESH_METRIC_JACOBIAN:
+            cell_quality->SetQualityMeasureToJacobian();
+            break;
+        case MESH_METRIC_AREA:
+            cell_quality->SetQualityMeasureToArea();
+            break;
+        case MESH_METRIC_VOLUME:
+            cell_quality->SetQualityMeasureToVolume();
+            break;
+        case MESH_METRIC_ASPECT_RATIO:
+            cell_quality->SetQualityMeasureToAspectRatio();
+            break;
+        case MESH_METRIC_CONDITION:
+            cell_quality->SetQualityMeasureToCondition();
+            break;
+        }
+        cell_quality->SetInputData(grid);
+        cell_quality->Update();
+        auto out = cell_quality->GetOutput();
+        grid->GetCellData()->AddArray(out->GetCellData()->GetArray("CellQuality"));
+        cell_quality->Delete();
+    }
+
+    double range[2];
+    getCellQualityRange(range);
+
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        setBlockMeshQualityProperties(block, range);
+        block->modified();
+        block->update();
+    }
+}
+
+void
+MainWindow::getCellQualityRange(double range[])
+{
+    range[0] = std::numeric_limits<double>::max();
+    range[1] = -std::numeric_limits<double>::max();
+    for (auto & it : this->blocks) {
+        auto * block = it.second;
+        auto cell_data = block->getCellData();
+
+        double block_range[2];
+        cell_data->GetRange(MESH_QUALITY_FIELD_NAME, block_range);
+        range[0] = std::min(range[0], block_range[0]);
+        range[1] = std::max(range[1], block_range[1]);
+    }
+}
+
+void
+MainWindow::onMeshQualityClosed()
+{
+    for (auto & it : this->blocks) {
+        BlockObject * block = it.second;
+        auto * mapper = block->getMapper();
+        mapper->ScalarVisibilityOff();
+        block->update();
+    }
+
+    switch (this->render_mode) {
+    case SHADED:
+        onShadedTriggered(true);
+        break;
+    case SHADED_WITH_EDGES:
+        onShadedWithEdgesTriggered(true);
+        break;
+    case HIDDEN_EDGES_REMOVED:
+        onHiddenEdgesRemovedTriggered(true);
+        break;
+    case TRANSLUENT:
+        onTransluentTriggered(true);
+        break;
+    }
+
+    updateMenuBar();
 }

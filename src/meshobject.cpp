@@ -53,6 +53,12 @@ MeshObject::visible()
     return this->actor->GetVisibility();
 }
 
+vtkMapper *
+MeshObject::getMapper() const
+{
+    return this->mapper;
+}
+
 vtkActor *
 MeshObject::getActor()
 {
@@ -63,6 +69,21 @@ vtkProperty *
 MeshObject::getProperty()
 {
     return this->actor->GetProperty();
+}
+
+void
+MeshObject::modified()
+{
+    this->data_object->Modified();
+    this->geometry->Modified();
+    this->mapper->Modified();
+}
+
+void
+MeshObject::update()
+{
+    this->geometry->Update();
+    this->mapper->Update();
 }
 
 void

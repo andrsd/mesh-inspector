@@ -17,6 +17,7 @@ public:
     virtual ~MeshObject();
 
     bool visible();
+    vtkMapper * getMapper() const;
     vtkActor * getActor();
     vtkProperty * getProperty();
     double * getBounds() const;
@@ -24,6 +25,8 @@ public:
     int getNumCells() const;
     int getNumPoints() const;
 
+    virtual void modified();
+    virtual void update();
     void setVisible(bool visible);
     void setPosition(double x, double y, double z);
 
