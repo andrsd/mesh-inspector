@@ -60,9 +60,9 @@ ExpandableWidget::setLabel(const QString & text)
 }
 
 void
-ExpandableWidget::setWidget(QWidget * widget)
+ExpandableWidget::setWidget(QWidget * w)
 {
-    this->widget = widget;
+    this->widget = w;
     this->layout->addWidget(this->widget, 1, 0, 1, 2);
 
     bool checked = this->expand_button->isChecked();

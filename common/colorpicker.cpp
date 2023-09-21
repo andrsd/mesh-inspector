@@ -1,14 +1,11 @@
 #include "colorpicker.h"
 #include <QVBoxLayout>
-#include <QGridLayout>
 #include <QButtonGroup>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QSlider>
 #include <QLineEdit>
 #include <QAbstractButton>
 #include <QIntValidator>
-#include <QDoubleValidator>
 #include <QRadioButton>
 
 QList<QColor> ColorPicker::colors_tl =
@@ -46,8 +43,6 @@ ColorPicker::ColorPicker(QWidget * parent) :
 {
     setUpWidegts();
 }
-
-ColorPicker::~ColorPicker() {}
 
 void
 ColorPicker::setUpWidegts()
@@ -274,9 +269,9 @@ ColorPicker::fillLayoutWithColors2(int st_row, int st_col)
 }
 
 void
-ColorPicker::setColor(const QColor & qcolor)
+ColorPicker::setColor(const QColor & color)
 {
-    this->qcolor = qcolor;
+    this->qcolor = color;
     updateColorWidgets();
     updateOpacityWidgets();
 }
@@ -320,9 +315,9 @@ ColorPicker::updateColorWidgets()
 void
 ColorPicker::updateOpacityWidgets()
 {
-    double opacity = this->qcolor.alphaF();
-    this->opacity->setText(QString::number(opacity, 'f', 2));
-    this->opacity_slider->setValue(opacity * 100);
+    double value = this->qcolor.alphaF();
+    this->opacity->setText(QString::number(value, 'f', 2));
+    this->opacity_slider->setValue(value * 100);
 }
 
 void
@@ -338,12 +333,12 @@ ColorPicker::onColorPicked(QAbstractButton * button)
 void
 ColorPicker::onOpacitySliderChanged(int value)
 {
-    double opacity = value / 100.;
+    double dval = value / 100.;
     blockSignals(true);
-    this->qcolor.setAlphaF(opacity);
+    this->qcolor.setAlphaF(dval);
     updateOpacityWidgets();
     blockSignals(false);
-    emit opacityChanged(opacity);
+    emit opacityChanged(dval);
 }
 
 void
@@ -351,8 +346,8 @@ ColorPicker::onOpacityChanged(const QString & text)
 {
     blockSignals(true);
     if (text.length() > 0) {
-        auto opacity = text.toDouble();
-        this->qcolor.setAlphaF(opacity);
+        auto value = text.toDouble();
+        this->qcolor.setAlphaF(value);
     }
     else
         this->qcolor.setAlphaF(0.);

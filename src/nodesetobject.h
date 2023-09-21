@@ -4,6 +4,5 @@
 
 class NodeSetObject : public MeshObject {
 public:
-    NodeSetObject(vtkAlgorithmOutput * alg_output);
-    virtual ~NodeSetObject();
+    explicit NodeSetObject(vtkAlgorithmOutput * alg_output);
 };

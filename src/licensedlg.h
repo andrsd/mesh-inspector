@@ -7,8 +7,8 @@ class QTextEdit;
 
 class LicenseDialog : public QDialog {
 public:
-    LicenseDialog(QWidget * parent = nullptr);
-    virtual ~LicenseDialog();
+    explicit LicenseDialog(QWidget * parent = nullptr);
+    ~LicenseDialog() override;
 
 protected:
     QVBoxLayout * layout;

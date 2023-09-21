@@ -7,20 +7,16 @@
 #include <QString>
 #include <QProgressDialog>
 #include <QFileSystemWatcher>
-#include <QMenu>
 #include <QActionGroup>
 #include <QSettings>
 #include <QEvent>
 #include <QDragEnterEvent>
-#include <QDropEvent>
 #include <QMimeData>
 #include <QPushButton>
 #include <QFileInfo>
-#include <QtDebug>
 #include <QDockWidget>
 #include <QApplication>
 #include <QFileDialog>
-#include <QProgressDialog>
 #include <QVector3D>
 #include <QShortcut>
 #include <QNetworkAccessManager>
@@ -177,6 +173,9 @@ MainWindow::MainWindow(QWidget * parent) :
     minimize(nullptr),
     bring_all_to_front(nullptr),
     show_main_window(nullptr),
+    about_box_action(nullptr),
+    check_update_action(nullptr),
+    view_license_action(nullptr),
     visual_repr(nullptr),
     color_profile_action_group(nullptr),
     mode_select_action_group(nullptr),
@@ -1296,9 +1295,9 @@ MainWindow::getFileName(const QString & window_title,
     dialog.setDefaultSuffix(default_suffix);
 
     if (dialog.exec() == QDialog::Accepted)
-        return QString(dialog.selectedFiles()[0]);
+        return { dialog.selectedFiles()[0] };
 
-    return QString();
+    return { };
 }
 
 void
@@ -1454,14 +1453,12 @@ MainWindow::loadIntoVtk()
     this->file_watcher->addPath(this->file_name);
     this->file_changed_notification->setFileName(this->file_name);
 
-    if (this->selection)
-        delete this->selection;
+    delete this->selection;
     this->selection = new Selection(reader->getVtkOutputPort());
     setSelectionProperties();
     this->vtk_renderer->AddActor(this->selection->getActor());
 
-    if (this->highlight)
-        delete this->highlight;
+    delete this->highlight;
     this->highlight = new Selection(reader->getVtkOutputPort());
     setHighlightProperties();
     this->vtk_renderer->AddActor(this->highlight->getActor());
@@ -1567,7 +1564,7 @@ MainWindow::onOpenFile()
 void
 MainWindow::onOpenRecentFile()
 {
-    QAction * action = dynamic_cast<QAction *>(this->sender());
+    auto action = dynamic_cast<QAction *>(this->sender());
     if (action != nullptr) {
         auto file_name = action->data();
         loadFile(file_name.toString());
@@ -1949,7 +1946,7 @@ MainWindow::cellTypeToName(int cell_type)
         case 26: return "Prism18";
         case 27: return "Pyramid14";
         default: return QString::number(cell_type);
-    };
+    }
     // clang-format on
 }
 

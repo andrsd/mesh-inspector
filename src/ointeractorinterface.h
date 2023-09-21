@@ -4,13 +4,12 @@
 
 class MainWindow;
 class QKeySequence;
-class vtkObject;
 class vtkRenderWindowInteractor;
 
 /// Common functionality for sending events into the Qt widgets
 class OInteractorInterface {
 public:
-    OInteractorInterface(MainWindow * widget);
+    explicit OInteractorInterface(MainWindow * widget);
 
 protected:
     void onLeftButtonPress(const QPoint & pos);

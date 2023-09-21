@@ -12,7 +12,7 @@ class FileChangedNotificationWidget : public QWidget {
 
 public:
     explicit FileChangedNotificationWidget(QWidget * parent = nullptr);
-    virtual ~FileChangedNotificationWidget();
+    ~FileChangedNotificationWidget() override;
 
     void setFileName(const QString & file_name);
 
@@ -26,8 +26,8 @@ protected slots:
 
 protected:
     void setUpWidgets();
-    void showEvent(QShowEvent * event);
-    void hideEvent(QHideEvent * event);
+    void showEvent(QShowEvent * event) override;
+    void hideEvent(QHideEvent * event) override;
 
     QHBoxLayout * layout;
     QLabel * text;

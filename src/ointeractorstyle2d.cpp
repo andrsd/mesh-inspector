@@ -79,5 +79,5 @@ OInteractorStyle2D::OnMouseMove()
     auto event_pos = this->Interactor->GetEventPosition();
     auto pt = QPoint(event_pos[0], event_pos[1]);
     OInteractorInterface::onMouseMove(pt);
-    vtkInteractorStyleTrackballCamera::OnMouseMove();
+    vtkInteractorStyleImage::OnMouseMove();
 }

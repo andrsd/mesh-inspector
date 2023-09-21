@@ -8,8 +8,8 @@ class QSpinBox;
 
 class SliderWithEdit : public QWidget {
 public:
-    SliderWithEdit(QWidget * parent = nullptr);
-    virtual ~SliderWithEdit();
+    explicit SliderWithEdit(QWidget * parent = nullptr);
+    ~SliderWithEdit() override;
 
     void setRange(int min, int max);
 

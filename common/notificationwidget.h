@@ -11,9 +11,9 @@ class NotificationWidget : public QWidget {
     Q_OBJECT
 
 public:
-    NotificationWidget(QWidget * parent = nullptr);
+    explicit NotificationWidget(QWidget * parent = nullptr);
 
-    void setText(const QString & text);
+    void setText(const QString & str);
     void show(int ms = 2000);
 
 signals:

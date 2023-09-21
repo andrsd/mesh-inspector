@@ -19,10 +19,10 @@ class ColorPicker : public QDialog {
     Q_OBJECT;
 
 public:
-    ColorPicker(QWidget * parent = nullptr);
-    virtual ~ColorPicker();
+    explicit ColorPicker(QWidget * parent = nullptr);
+    ~ColorPicker() = default;
 
-    void setColor(const QColor & qcolor);
+    void setColor(const QColor & color);
     QColor color() const;
     void setData(const QVariant & data);
     QVariant data() const;

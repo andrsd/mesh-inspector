@@ -4,6 +4,5 @@
 
 class SideSetObject : public MeshObject {
 public:
-    SideSetObject(vtkAlgorithmOutput * alg_output);
-    virtual ~SideSetObject();
+    explicit SideSetObject(vtkAlgorithmOutput * alg_output);
 };

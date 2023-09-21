@@ -71,8 +71,8 @@ void
 FileChangedNotificationWidget::setFileName(const QString & file_name)
 {
     QFileInfo fi(file_name);
-    auto text = QString("File '%1' changed").arg(fi.fileName());
-    this->text->setText(text);
+    auto str = QString("File '%1' changed").arg(fi.fileName());
+    this->text->setText(str);
 }
 
 void

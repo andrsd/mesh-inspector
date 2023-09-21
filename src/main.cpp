@@ -2,7 +2,6 @@
 #include "mainwindow.h"
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QStringList>
 #include "QVTKOpenGLNativeWidget.h"
 #include "common/loadfileevent.h"
 

@@ -14,9 +14,9 @@ ColorProfile::getName() const
 }
 
 const QColor &
-ColorProfile::getColor(const QString & name) const
+ColorProfile::getColor(const QString & clr_name) const
 {
-    const auto & it = this->colors.find(name);
+    const auto & it = this->colors.find(clr_name);
     if (it != this->colors.end())
         return it->second;
     else

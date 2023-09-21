@@ -1,7 +1,6 @@
 #include "otreeview.h"
 #include <QPainter>
 #include <QPaintEvent>
-#include <QMouseEvent>
 
 OTreeView::OTreeView(QWidget * parent) : QTreeView(parent), empty_message("No items") {}
 

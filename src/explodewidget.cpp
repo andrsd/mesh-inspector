@@ -52,8 +52,6 @@ ExplodeWidget::ExplodeWidget(QWidget * parent) : QWidget(parent), max_range(100)
     connect(this->close, SIGNAL(clicked()), this, SLOT(onClose()));
 }
 
-ExplodeWidget::~ExplodeWidget() {}
-
 int
 ExplodeWidget::range()
 {

@@ -1,10 +1,8 @@
 #include "blockobject.h"
-#include "vtkDataObject.h"
 #include "vtkPolyDataMapper.h"
 #include "vtkActor.h"
 #include "vtkProperty.h"
 #include "vtkPolyDataSilhouette.h"
-#include "vtkExtractBlock.h"
 
 BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     MeshObject(alg_output),
@@ -66,21 +64,21 @@ BlockObject::getColor()
 }
 
 double
-BlockObject::getOpacity()
+BlockObject::getOpacity() const
 {
     return this->opacity;
 }
 
 void
-BlockObject::setColor(const QColor & color)
+BlockObject::setColor(const QColor & clr)
 {
-    this->color = color;
+    this->color = clr;
 }
 
 void
-BlockObject::setOpacity(double opacity)
+BlockObject::setOpacity(double value)
 {
-    this->opacity = opacity;
+    this->opacity = value;
 }
 
 void

@@ -42,9 +42,9 @@ NotificationWidget::setUpWidgets()
 }
 
 void
-NotificationWidget::setText(const QString & text)
+NotificationWidget::setText(const QString & str)
 {
-    this->text->setText(text);
+    this->text->setText(str);
 }
 
 void

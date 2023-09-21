@@ -2,7 +2,6 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QCheckBox>
 #include <QBrush>
@@ -31,6 +30,7 @@ InfoWindow::InfoWindow(QWidget * parent) :
     mesh_view(nullptr),
     totals(nullptr),
     total_elements(nullptr),
+    total_nodes(nullptr),
     totals_expd(nullptr),
     range(nullptr),
     x_range(nullptr),
@@ -218,7 +218,7 @@ InfoWindow::onBlockAdded(int id, const QString & name)
 
     auto * si_clr = new QStandardItem();
     si_clr->setText("\u25a0");
-    int clr_idx = row % InfoWindow::colors.length();
+    int clr_idx = row % (int) InfoWindow::colors.length();
     auto color = InfoWindow::colors[clr_idx];
     si_clr->setForeground(QBrush(color));
     si_clr->setData(color);
@@ -513,18 +513,18 @@ InfoWindow::setBounds(double xmin, double xmax, double ymin, double ymax, double
 {
     char format = 'f';
     int precision = 5;
-    auto x_range = QString("%1 to %2")
-                       .arg(QString::number(xmin, format, precision))
-                       .arg(QString::number(xmax, format, precision));
-    this->x_range->setText(1, x_range);
-    auto y_range = QString("%1 to %2")
-                       .arg(QString::number(ymin, format, precision))
-                       .arg(QString::number(ymax, format, precision));
-    this->y_range->setText(1, y_range);
-    auto z_range = QString("%1 to %2")
-                       .arg(QString::number(zmin, format, precision))
-                       .arg(QString::number(zmax, format, precision));
-    this->z_range->setText(1, z_range);
+    auto x_range_str = QString("%1 to %2")
+                           .arg(QString::number(xmin, format, precision))
+                           .arg(QString::number(xmax, format, precision));
+    this->x_range->setText(1, x_range_str);
+    auto y_range_str = QString("%1 to %2")
+                           .arg(QString::number(ymin, format, precision))
+                           .arg(QString::number(ymax, format, precision));
+    this->y_range->setText(1, y_range_str);
+    auto z_range_str = QString("%1 to %2")
+                           .arg(QString::number(zmin, format, precision))
+                           .arg(QString::number(zmax, format, precision));
+    this->z_range->setText(1, z_range_str);
 }
 
 void

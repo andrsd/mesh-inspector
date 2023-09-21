@@ -13,7 +13,7 @@ class vtkVector3d;
 
 class MeshObject {
 public:
-    MeshObject(vtkAlgorithmOutput * alg_output);
+    explicit MeshObject(vtkAlgorithmOutput * alg_output);
     virtual ~MeshObject();
 
     bool visible();

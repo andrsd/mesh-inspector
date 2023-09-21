@@ -8,17 +8,17 @@ class vtkExodusIIReader;
 class ExodusIIReader : public Reader {
 public:
     explicit ExodusIIReader(const std::string & file_name);
-    virtual ~ExodusIIReader();
+    ~ExodusIIReader() override;
 
-    virtual void load() override;
-    virtual std::size_t getTotalNumberOfElements() const override;
-    virtual std::size_t getTotalNumberOfNodes() const override;
-    virtual int getDimensionality() const override;
+    void load() override;
+    std::size_t getTotalNumberOfElements() const override;
+    std::size_t getTotalNumberOfNodes() const override;
+    int getDimensionality() const override;
 
-    virtual vtkAlgorithmOutput * getVtkOutputPort() override;
-    virtual std::vector<Reader::BlockInformation> getBlocks() override;
-    virtual std::vector<Reader::BlockInformation> getSideSets() override;
-    virtual std::vector<Reader::BlockInformation> getNodeSets() override;
+    vtkAlgorithmOutput * getVtkOutputPort() override;
+    std::vector<Reader::BlockInformation> getBlocks() override;
+    std::vector<Reader::BlockInformation> getSideSets() override;
+    std::vector<Reader::BlockInformation> getNodeSets() override;
 
 protected:
     void readBlockInfo();
