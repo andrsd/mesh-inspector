@@ -27,6 +27,7 @@ class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
 class ExplodeWidget;
+class MeshQualityWidget;
 class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
@@ -94,6 +95,7 @@ protected:
     void setupNotificationWidget();
     void setupFileChangedNotificationWidget();
     void setupExplodeWidgets();
+    void setupMeshQualityWidget();
 
     void setupMenuBar();
     void setupExportMenu(QMenu * menu);
@@ -124,6 +126,7 @@ protected:
     void setDeselectedBlockProperties(BlockObject * block, bool highlighted = false);
     void setHighlightedBlockProperties(BlockObject * block, bool highlighted);
     void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
+    void setBlockMeshQualityProperties(BlockObject * block, double range[]);
     void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties(NodeSetObject * nodeset);
     void setSelectionProperties();
@@ -160,6 +163,8 @@ protected:
 
     QVersionNumber getVersionFromReply(QNetworkReply * reply);
 
+    void getCellQualityRange(double range[]);
+
 public slots:
     void onClose();
     void onLoadFinished();
@@ -194,9 +199,11 @@ public slots:
     void onExportAsPng();
     void onExportAsJpg();
     void onToolsExplode();
+    void onToolsMeshQuality();
     void onExplodeValueChanged(double value);
     void updateViewModeLocation();
     void updateExplodeWidgetLocation();
+    void updateMeshQualityWidgetLocation();
     void onMinimize();
     void onBringAllToFront();
     void onShowMainWindow();
@@ -204,6 +211,8 @@ public slots:
     void onViewLicense();
     void onCheckForUpdate();
     void onHttpReply(QNetworkReply * reply);
+    void onMetricChanged(int metric_id);
+    void onMeshQualityClosed();
 
 protected:
     QSettings * settings;
@@ -237,6 +246,7 @@ protected:
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
     ExplodeWidget * explode;
+    MeshQualityWidget * mesh_quality;
     InfoWidget * selected_mesh_ent_info;
 
     QAction * new_action;
@@ -251,6 +261,7 @@ protected:
     QAction * transluent_action;
     QAction * view_info_wnd_action;
     QAction * tools_explode_action;
+    QAction * tools_mesh_quality_action;
     QAction * perspective_action;
     QAction * ori_marker_action;
     QAction * minimize;
@@ -291,4 +302,7 @@ protected:
     static QColor HIGHLIGHT_CLR;
 
     static int SIDESET_EDGE_WIDTH;
+
+public:
+    static const char * MESH_QUALITY_FIELD_NAME;
 };

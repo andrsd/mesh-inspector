@@ -10,11 +10,15 @@ class vtkPolyDataMapper;
 class vtkActor;
 class vtkProperty;
 class vtkPolyDataSilhouette;
+class vtkCellData;
+class vtkUnstructuredGrid;
 
 class BlockObject : public MeshObject {
 public:
     BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera);
     ~BlockObject() override;
+    void modified() override;
+    void update() override;
 
     vtkActor * getSilhouetteActor();
     vtkProperty * getSilhouetteProperty();
@@ -23,10 +27,13 @@ public:
     void setColor(const QColor & clr);
     void setOpacity(double value);
     void setSilhouetteVisible(bool visible);
+    vtkCellData * getCellData() const;
+    vtkUnstructuredGrid * getUnstructuredGrid() const;
 
 protected:
     void setUpSilhouette(vtkCamera * camera);
 
+    vtkUnstructuredGrid * grid;
     vtkPolyDataSilhouette * silhouette;
     vtkPolyDataMapper * silhouette_mapper;
     vtkActor * silhouette_actor;

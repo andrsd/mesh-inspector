@@ -3,6 +3,13 @@
 #include "vtkActor.h"
 #include "vtkProperty.h"
 #include "vtkPolyDataSilhouette.h"
+#include "vtkMultiBlockDataSet.h"
+#include "vtkFieldData.h"
+#include "vtkCellData.h"
+#include "vtkUnstructuredGrid.h"
+#include "vtkDoubleArray.h"
+#include "vtkAlgorithmOutput.h"
+#include "mainwindow.h"
 
 BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     MeshObject(alg_output),
@@ -11,6 +18,33 @@ BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     silhouette_actor(nullptr),
     opacity(1.)
 {
+    auto mb_ds = dynamic_cast<vtkMultiBlockDataSet *>(this->data_object);
+    if (mb_ds) {
+        auto n_blocks = mb_ds->GetNumberOfBlocks();
+        for (unsigned int i = 0; i < n_blocks; i++) {
+            auto blk = mb_ds->GetBlock(i);
+
+            auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(blk);
+            if (unstr_grid) {
+                this->grid = unstr_grid;
+                auto n_cells = unstr_grid->GetNumberOfCells();
+
+                auto cell_quality = vtkDoubleArray::New();
+                cell_quality->SetNumberOfTuples(n_cells);
+                for (vtkIdType i = 0; i < n_cells; i++)
+                    cell_quality->SetValue(i, (double) i);
+                cell_quality->SetName(MainWindow::MESH_QUALITY_FIELD_NAME);
+
+                auto cell_data = unstr_grid->GetCellData();
+                cell_data->AddArray(cell_quality);
+            }
+            else
+                std::cerr << "Unknown block type" << std::endl;
+        }
+        modified();
+        update();
+    }
+
     this->actor->SetScale(0.999);
     this->actor->VisibilityOn();
 
@@ -24,6 +58,39 @@ BlockObject::~BlockObject()
     this->silhouette->Delete();
     this->silhouette_mapper->Delete();
     this->silhouette_actor->Delete();
+}
+
+void
+BlockObject::modified()
+{
+    MeshObject::modified();
+    this->grid->Modified();
+}
+
+void
+BlockObject::update()
+{
+    MeshObject::update();
+}
+
+vtkCellData *
+BlockObject::getCellData() const
+{
+    auto mb_ds = dynamic_cast<vtkMultiBlockDataSet *>(this->data_object);
+    if (mb_ds) {
+        auto n_blocks = mb_ds->GetNumberOfBlocks();
+        if (n_blocks == 1) {
+            auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(mb_ds->GetBlock(0));
+            return unstr_grid->GetCellData();
+        }
+    }
+    return nullptr;
+}
+
+vtkUnstructuredGrid *
+BlockObject::getUnstructuredGrid() const
+{
+    return this->grid;
 }
 
 void

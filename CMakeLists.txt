@@ -34,6 +34,7 @@ find_package(VTK
         CommonCore
         FiltersExtraction
         FiltersHybrid
+        FiltersVerdict
         GUISupportQt
         InteractionStyle
         RenderingAnnotation
