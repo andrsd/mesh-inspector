@@ -185,10 +185,7 @@ MainWindow::MainWindow(QWidget * parent) :
     highlighted_block(nullptr),
     namgr(new QNetworkAccessManager())
 {
-    connect(this->namgr,
-            SIGNAL(finished(QNetworkReply *)),
-            this,
-            SLOT(onHttpReply(QNetworkReply *)));
+    connect(this->namgr, &QNetworkAccessManager::finished, this, &MainWindow::onHttpReply);
 
     this->interactor_style_2d = new OInteractorStyle2D(this);
     this->interactor_style_3d = new OInteractorStyle3D(this);
@@ -217,8 +214,8 @@ MainWindow::MainWindow(QWidget * parent) :
     clear();
     show();
 
-    connect(&this->update_timer, SIGNAL(timeout()), this, SLOT(onUpdateWindow()));
-    QTimer::singleShot(1, this, SLOT(updateViewModeLocation()));
+    connect(&this->update_timer, &QTimer::timeout, this, &MainWindow::onUpdateWindow);
+    QTimer::singleShot(1, this, &MainWindow::updateViewModeLocation);
 }
 
 MainWindow::~MainWindow()
@@ -278,7 +275,7 @@ MainWindow::setupWidgets()
     this->selected_mesh_ent_info->setVisible(false);
 
     this->deselect_sc = new QShortcut(QKeySequence(Qt::Key_Space), this);
-    connect(this->deselect_sc, SIGNAL(activated()), this, SLOT(onDeselect()));
+    connect(this->deselect_sc, &QShortcut::activated, this, &MainWindow::onDeselect);
 
     setupExplodeWidgets();
 }
@@ -319,27 +316,21 @@ MainWindow::setupViewModeWidget(QMainWindow * wnd)
     this->ori_marker_action->setCheckable(true);
     this->ori_marker_action->setChecked(true);
 
-    connect(this->shaded_action, SIGNAL(triggered(bool)), this, SLOT(onShadedTriggered(bool)));
+    connect(this->shaded_action, &QAction::triggered, this, &MainWindow::onShadedTriggered);
     connect(this->shaded_w_edges_action,
-            SIGNAL(triggered(bool)),
+            &QAction::triggered,
             this,
-            SLOT(onShadedWithEdgesTriggered(bool)));
+            &MainWindow::onShadedWithEdgesTriggered);
     connect(this->hidden_edges_removed_action,
-            SIGNAL(triggered(bool)),
+            &QAction::triggered,
             this,
-            SLOT(onHiddenEdgesRemovedTriggered(bool)));
-    connect(this->transluent_action,
-            SIGNAL(triggered(bool)),
-            this,
-            SLOT(onTransluentTriggered(bool)));
-    connect(this->perspective_action,
-            SIGNAL(toggled(bool)),
-            this,
-            SLOT(onPerspectiveToggled(bool)));
+            &MainWindow::onHiddenEdgesRemovedTriggered);
+    connect(this->transluent_action, &QAction::triggered, this, &MainWindow::onTransluentTriggered);
+    connect(this->perspective_action, &QAction::toggled, this, &MainWindow::onPerspectiveToggled);
     connect(this->ori_marker_action,
-            SIGNAL(toggled(bool)),
+            &QAction::toggled,
             this,
-            SLOT(onOrientationMarkerVisibilityChanged(bool)));
+            &MainWindow::onOrientationMarkerVisibilityChanged);
 
     this->view_mode = new QPushButton(wnd);
     this->view_mode->setFixedSize(60, 32);
@@ -360,14 +351,17 @@ MainWindow::setupFileChangedNotificationWidget()
 {
     this->file_changed_notification = new FileChangedNotificationWidget(this);
     this->file_changed_notification->setVisible(false);
-    connect(this->file_changed_notification, SIGNAL(reloaded()), this, SLOT(onReloadFile()));
+    connect(this->file_changed_notification,
+            &FileChangedNotificationWidget::reloaded,
+            this,
+            &MainWindow::onReloadFile);
 }
 
 void
 MainWindow::setupExplodeWidgets()
 {
     this->explode = new ExplodeWidget(this);
-    connect(this->explode, SIGNAL(valueChanged(double)), this, SLOT(onExplodeValueChanged(double)));
+    connect(this->explode, &ExplodeWidget::valueChanged, this, &MainWindow::onExplodeValueChanged);
     this->explode->setVisible(false);
 }
 
@@ -376,9 +370,10 @@ MainWindow::setupMenuBar()
 {
     setMenuBar(this->menu_bar);
     QMenu * file_menu = this->menu_bar->addMenu("File");
-    this->new_action = file_menu->addAction("New", this, SLOT(onNewFile()), QKeySequence("Ctrl+N"));
+    this->new_action =
+        file_menu->addAction("New", this, &MainWindow::onNewFile, QKeySequence("Ctrl+N"));
     this->open_action =
-        file_menu->addAction("Open", this, SLOT(onOpenFile()), QKeySequence("Ctrl+O"));
+        file_menu->addAction("Open", this, &MainWindow::onOpenFile, QKeySequence("Ctrl+O"));
     this->recent_menu = file_menu->addMenu("Open Recent");
     buildRecentFilesMenu();
     file_menu->addSeparator();
@@ -386,18 +381,19 @@ MainWindow::setupMenuBar()
     setupExportMenu(export_menu);
     file_menu->addSeparator();
     this->close_action =
-        file_menu->addAction("Close", this, SLOT(onClose()), QKeySequence("Ctrl+W"));
+        file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
 
     // The "About" item is fine here, since we assume Mac and that will
     // place the item into different submenu but this will need to be fixed
     // for linux and windows
     file_menu->addSeparator();
-    this->about_box_action = file_menu->addAction("About", this, SLOT(onAbout()));
+    this->about_box_action = file_menu->addAction("About", this, &MainWindow::onAbout);
     this->about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
     this->check_update_action =
-        file_menu->addAction("Check for update...", this, SLOT(onCheckForUpdate()));
+        file_menu->addAction("Check for update...", this, &MainWindow::onCheckForUpdate);
     this->check_update_action->setMenuRole(QAction::ApplicationSpecificRole);
-    this->view_license_action = file_menu->addAction("View license", this, SLOT(onViewLicense()));
+    this->view_license_action =
+        file_menu->addAction("View license", this, &MainWindow::onViewLicense);
     this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
 
     QMenu * view_menu = this->menu_bar->addMenu("View");
@@ -407,24 +403,25 @@ MainWindow::setupMenuBar()
     view_menu->addAction(this->transluent_action);
     view_menu->addSeparator();
     this->view_info_wnd_action =
-        view_menu->addAction("Info window", this, SLOT(onViewInfoWindow()));
+        view_menu->addAction("Info window", this, &MainWindow::onViewInfoWindow);
     this->view_info_wnd_action->setCheckable(true);
     QMenu * color_profile_menu = view_menu->addMenu("Color profile");
     setupColorProfileMenu(color_profile_menu);
 
     QMenu * tools_menu = this->menu_bar->addMenu("Tools");
     setupSelectModeMenu(tools_menu);
-    this->tools_explode_action = tools_menu->addAction("Explode", this, SLOT(onToolsExplode()));
+    this->tools_explode_action =
+        tools_menu->addAction("Explode", this, &MainWindow::onToolsExplode);
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
-        window_menu->addAction("Minimize", this, SLOT(onMinimize()), QKeySequence("Ctrl+M"));
+        window_menu->addAction("Minimize", this, &MainWindow::onMinimize, QKeySequence("Ctrl+M"));
     window_menu->addSeparator();
     this->bring_all_to_front =
-        window_menu->addAction("Bring All to Front", this, SLOT(onBringAllToFront()));
+        window_menu->addAction("Bring All to Front", this, &MainWindow::onBringAllToFront);
     window_menu->addSeparator();
     this->show_main_window =
-        window_menu->addAction("Mesh Inspector", this, SLOT(onShowMainWindow()));
+        window_menu->addAction("Mesh Inspector", this, &MainWindow::onShowMainWindow);
     this->show_main_window->setCheckable(true);
 
     this->windows_action_group = new QActionGroup(this);
@@ -434,8 +431,8 @@ MainWindow::setupMenuBar()
 void
 MainWindow::setupExportMenu(QMenu * menu)
 {
-    this->export_as_png = menu->addAction("PNG...", this, SLOT(onExportAsPng()));
-    this->export_as_jpg = menu->addAction("JPG...", this, SLOT(onExportAsJpg()));
+    this->export_as_png = menu->addAction("PNG...", this, &MainWindow::onExportAsPng);
+    this->export_as_jpg = menu->addAction("JPG...", this, &MainWindow::onExportAsJpg);
 }
 
 void
@@ -455,9 +452,9 @@ MainWindow::setupColorProfileMenu(QMenu * menu)
     }
 
     connect(this->color_profile_action_group,
-            SIGNAL(triggered(QAction *)),
+            &QActionGroup::triggered,
             this,
-            SLOT(onColorProfileTriggered(QAction *)));
+            &MainWindow::onColorProfileTriggered);
 }
 
 void
@@ -484,9 +481,9 @@ MainWindow::setupSelectModeMenu(QMenu * menu)
     }
 
     connect(this->mode_select_action_group,
-            SIGNAL(triggered(QAction *)),
+            &QActionGroup::triggered,
             this,
-            SLOT(onSelectModeTriggered(QAction *)));
+            &MainWindow::onSelectModeTriggered);
 }
 
 void
@@ -518,62 +515,50 @@ MainWindow::updateWindowTitle()
 void
 MainWindow::connectSignals()
 {
-    connect(this,
-            SIGNAL(blockAdded(int, const QString &)),
-            this->info_window,
-            SLOT(onBlockAdded(int, const QString &)));
+    connect(this, &MainWindow::blockAdded, this->info_window, &InfoWindow::onBlockAdded);
     connect(this->info_window,
-            SIGNAL(blockVisibilityChanged(int, bool)),
+            &InfoWindow::blockVisibilityChanged,
             this,
-            SLOT(onBlockVisibilityChanged(int, bool)));
+            &MainWindow::onBlockVisibilityChanged);
     connect(this->info_window,
-            SIGNAL(blockOpacityChanged(int, double)),
+            &InfoWindow::blockOpacityChanged,
             this,
-            SLOT(onBlockOpacityChanged(int, double)));
+            &MainWindow::onBlockOpacityChanged);
     connect(this->info_window,
-            SIGNAL(blockColorChanged(int, QColor)),
+            &InfoWindow::blockColorChanged,
             this,
-            SLOT(onBlockColorChanged(int, QColor)));
+            &MainWindow::onBlockColorChanged);
     connect(this->info_window,
-            SIGNAL(blockSelectionChanged(int)),
+            &InfoWindow::blockSelectionChanged,
             this,
-            SLOT(onBlockSelectionChanged(int)));
+            &MainWindow::onBlockSelectionChanged);
 
-    connect(this,
-            SIGNAL(sideSetAdded(int, const QString &)),
-            this->info_window,
-            SLOT(onSideSetAdded(int, const QString &)));
+    connect(this, &MainWindow::sideSetAdded, this->info_window, &InfoWindow::onSideSetAdded);
     connect(this->info_window,
-            SIGNAL(sideSetVisibilityChanged(int, bool)),
+            &InfoWindow::sideSetVisibilityChanged,
             this,
-            SLOT(onSideSetVisibilityChanged(int, bool)));
+            &MainWindow::onSideSetVisibilityChanged);
     connect(this->info_window,
-            SIGNAL(sideSetSelectionChanged(int)),
+            &InfoWindow::sideSetSelectionChanged,
             this,
-            SLOT(onSideSetSelectionChanged(int)));
+            &MainWindow::onSideSetSelectionChanged);
 
-    connect(this,
-            SIGNAL(nodeSetAdded(int, const QString &)),
-            this->info_window,
-            SLOT(onNodeSetAdded(int, const QString &)));
+    connect(this, &MainWindow::nodeSetAdded, this->info_window, &InfoWindow::onNodeSetAdded);
     connect(this->info_window,
-            SIGNAL(nodeSetVisibilityChanged(int, bool)),
+            &InfoWindow::nodeSetVisibilityChanged,
             this,
-            SLOT(onNodeSetVisibilityChanged(int, bool)));
+            &MainWindow::onNodeSetVisibilityChanged);
     connect(this->info_window,
-            SIGNAL(nodeSetSelectionChanged(int)),
+            &InfoWindow::nodeSetSelectionChanged,
             this,
-            SLOT(onNodeSetSelectionChanged(int)));
+            &MainWindow::onNodeSetSelectionChanged);
 
     connect(this->info_window,
-            SIGNAL(dimensionsStateChanged(bool)),
+            &InfoWindow::dimensionsStateChanged,
             this,
-            SLOT(onCubeAxisVisibilityChanged(bool)));
+            &MainWindow::onCubeAxisVisibilityChanged);
 
-    connect(this->file_watcher,
-            SIGNAL(fileChanged(const QString &)),
-            this,
-            SLOT(onFileChanged(const QString &)));
+    connect(this->file_watcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::onFileChanged);
 }
 
 void
@@ -639,7 +624,7 @@ MainWindow::loadFile(const QString & file_name)
 
     delete this->load_thread;
     this->load_thread = new LoadThread(file_name);
-    connect(this->load_thread, SIGNAL(finished()), this, SLOT(onLoadFinished()));
+    connect(this->load_thread, &LoadThread::finished, this, &MainWindow::onLoadFinished);
     this->load_thread->start(QThread::IdlePriority);
 }
 
@@ -1297,7 +1282,7 @@ MainWindow::getFileName(const QString & window_title,
     if (dialog.exec() == QDialog::Accepted)
         return { dialog.selectedFiles()[0] };
 
-    return { };
+    return {};
 }
 
 void
@@ -1310,13 +1295,13 @@ MainWindow::buildRecentFilesMenu()
             QString f = *it;
             QFileInfo fi(f);
             auto * action =
-                this->recent_menu->addAction(fi.fileName(), this, SLOT(onOpenRecentFile()));
+                this->recent_menu->addAction(fi.fileName(), this, &MainWindow::onOpenRecentFile);
             action->setData(f);
         }
         this->recent_menu->addSeparator();
     }
     this->clear_recent_file =
-        this->recent_menu->addAction("Clear Menu", this, SLOT(onClearRecentFiles()));
+        this->recent_menu->addAction("Clear Menu", this, &MainWindow::onClearRecentFiles);
 }
 
 void

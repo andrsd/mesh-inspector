@@ -42,7 +42,7 @@ ExpandableWidget::ExpandableWidget(const QString & text, QWidget * parent) :
     this->layout->addWidget(this->label, 0, 1);
     setLayout(this->layout);
 
-    connect(this->expand_button, SIGNAL(toggled(bool)), this, SLOT(onExpandToggled(bool)));
+    connect(this->expand_button, &QPushButton::toggled, this, &ExpandableWidget::onExpandToggled);
 }
 
 ExpandableWidget::~ExpandableWidget()

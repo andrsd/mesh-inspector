@@ -58,10 +58,7 @@ ColorPicker::setUpWidegts()
 
     this->color_group = new QButtonGroup();
     this->color_group->setExclusive(true);
-    connect(this->color_group,
-            SIGNAL(buttonClicked(QAbstractButton *)),
-            this,
-            SLOT(onColorPicked(QAbstractButton *)));
+    connect(this->color_group, &QButtonGroup::buttonClicked, this, &ColorPicker::onColorPicked);
 
     // do these first so they get IDs starting from 0
     this->grid_layout->setColumnMinimumWidth(3, 5);
@@ -136,25 +133,13 @@ ColorPicker::setUpWidegts()
     setWindowFlag(Qt::WindowMinMaxButtonsHint, false);
 
     connect(this->opacity_slider,
-            SIGNAL(valueChanged(int)),
+            &QSlider::valueChanged,
             this,
-            SLOT(onOpacitySliderChanged(int)));
-    connect(this->opacity,
-            SIGNAL(textChanged(const QString &)),
-            this,
-            SLOT(onOpacityChanged(const QString &)));
-    connect(this->red,
-            SIGNAL(textChanged(const QString &)),
-            this,
-            SLOT(onRedChanged(const QString &)));
-    connect(this->green,
-            SIGNAL(textChanged(const QString &)),
-            this,
-            SLOT(onGreenChanged(const QString &)));
-    connect(this->blue,
-            SIGNAL(textChanged(const QString &)),
-            this,
-            SLOT(onBlueChanged(const QString &)));
+            &ColorPicker::onOpacitySliderChanged);
+    connect(this->opacity, &QLineEdit::textChanged, this, &ColorPicker::onOpacityChanged);
+    connect(this->red, &QLineEdit::textChanged, this, &ColorPicker::onRedChanged);
+    connect(this->green, &QLineEdit::textChanged, this, &ColorPicker::onGreenChanged);
+    connect(this->blue, &QLineEdit::textChanged, this, &ColorPicker::onBlueChanged);
 }
 
 void

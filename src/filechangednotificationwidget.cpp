@@ -24,11 +24,17 @@ FileChangedNotificationWidget::FileChangedNotificationWidget(QWidget * parent) :
 
     this->dismiss_shortcut = new QShortcut(QKeySequence(Qt::Key_Escape), parent);
     this->dismiss_shortcut->setEnabled(false);
-    connect(this->dismiss_shortcut, SIGNAL(activated()), this, SLOT(onDismiss()));
+    connect(this->dismiss_shortcut,
+            &QShortcut::activated,
+            this,
+            &FileChangedNotificationWidget::onDismiss);
 
     this->reload_shortcut = new QShortcut(QKeySequence("Ctrl+R"), parent);
     this->reload_shortcut->setEnabled(false);
-    connect(this->reload_shortcut, SIGNAL(activated()), this, SLOT(onReload()));
+    connect(this->reload_shortcut,
+            &QShortcut::activated,
+            this,
+            &FileChangedNotificationWidget::onReload);
 }
 
 FileChangedNotificationWidget::~FileChangedNotificationWidget()
@@ -63,8 +69,11 @@ FileChangedNotificationWidget::setUpWidgets()
 
     setLayout(this->layout);
 
-    connect(this->reload, SIGNAL(clicked()), this, SLOT(onReload()));
-    connect(this->dismiss, SIGNAL(clicked()), this, SLOT(onDismiss()));
+    connect(this->reload, &ClickableLabel::clicked, this, &FileChangedNotificationWidget::onReload);
+    connect(this->dismiss,
+            &ClickableLabel::clicked,
+            this,
+            &FileChangedNotificationWidget::onDismiss);
 }
 
 void

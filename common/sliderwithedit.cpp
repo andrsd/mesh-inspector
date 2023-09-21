@@ -27,8 +27,8 @@ SliderWithEdit::SliderWithEdit(QWidget * parent) :
     this->layout->addWidget(this->spin);
     setLayout(this->layout);
 
-    connect(this->slider, SIGNAL(valueChanged(int)), this, SLOT(onSliderChanged(int)));
-    connect(this->spin, SIGNAL(valueChanged(int)), this, SLOT(onSpinValueChanged(int)));
+    connect(this->slider, &QSlider::valueChanged, this, &SliderWithEdit::onSliderChanged);
+    connect(this->spin, &QSpinBox::valueChanged, this, &SliderWithEdit::onSpinValueChanged);
 }
 
 SliderWithEdit::~SliderWithEdit()

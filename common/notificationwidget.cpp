@@ -38,7 +38,7 @@ NotificationWidget::setUpWidgets()
     this->layout->addWidget(this->dismiss_label);
     setLayout(this->layout);
 
-    connect(this->dismiss_label, SIGNAL(clicked()), this, SLOT(onDismiss()));
+    connect(this->dismiss_label, &ClickableLabel::clicked, this, &NotificationWidget::onDismiss);
 }
 
 void
@@ -58,7 +58,7 @@ void
 NotificationWidget::show(int ms)
 {
     QWidget::show();
-    QTimer::singleShot(ms, this, SLOT(onNotificationFadeOut()));
+    QTimer::singleShot(ms, this, &NotificationWidget::onNotificationFadeOut);
 }
 
 void
@@ -71,6 +71,6 @@ NotificationWidget::onNotificationFadeOut()
     this->anim->setDuration(250);
     this->anim->setStartValue(1);
     this->anim->setEndValue(0);
-    connect(this->anim, SIGNAL(finished()), this, SLOT(hide()));
+    connect(this->anim, &QPropertyAnimation::finished, this, &NotificationWidget::hide);
     this->anim->start();
 }
