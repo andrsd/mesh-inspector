@@ -38,6 +38,7 @@ class vtkActor;
 class vtkCubeAxesActor;
 class vtkExtractBlock;
 class vtkLookupTable;
+class vtkScalarBarActor;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -113,6 +114,7 @@ protected:
     void setupVtk();
     void setupOrientationMarker();
     void setupCubeAxesActor();
+    void setupColorBar();
     void computeTotalBoundingBox();
 
     int getRenderWindowWidth() const;
@@ -243,6 +245,7 @@ protected:
     Selection * selection;
     Selection * highlight;
     vtkLookupTable * lut;
+    vtkScalarBarActor * color_bar;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;

@@ -48,6 +48,8 @@
 #include "vtkDoubleArray.h"
 #include "vtkCellQuality.h"
 #include "vtkLookupTable.h"
+#include "vtkScalarBarActor.h"
+#include "vtkProperty2D.h"
 #include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
@@ -194,6 +196,7 @@ MainWindow::MainWindow(QWidget * parent) :
     selected_block(nullptr),
     highlighted_block(nullptr),
     lut(nullptr),
+    color_bar(nullptr),
     namgr(new QNetworkAccessManager())
 {
     connect(this->namgr, &QNetworkAccessManager::finished, this, &MainWindow::onHttpReply);
@@ -217,11 +220,12 @@ MainWindow::MainWindow(QWidget * parent) :
 
     connectSignals();
     setupVtk();
+    setupLookupTable();
+    setupColorBar();
     setColorProfile();
 
     setupOrientationMarker();
     setupCubeAxesActor();
-    setupLookupTable();
 
     clear();
     show();
@@ -1303,6 +1307,13 @@ MainWindow::setColorProfile()
 
     this->vtk_renderer->SetBackground(bkgnd);
     this->vtk_renderer->SetBackground2(bkgnd);
+
+    // color bar labels
+    {
+        auto qclr = profile->getColor("color_bar_label");
+        auto prop = this->color_bar->GetLabelTextProperty();
+        prop->SetColor(qclr.redF(), qclr.greenF(), qclr.blueF());
+    }
 }
 
 void
@@ -1311,16 +1322,19 @@ MainWindow::loadColorProfiles()
     // Maybe store these as resources and pull it from there
     std::map<QString, QColor> cp_default_color_map;
     cp_default_color_map["bkgnd"] = QColor(82, 87, 110);
+    cp_default_color_map["color_bar_label"] = QColor(255, 255, 255);
     auto * cp_default = new ColorProfile("Default", cp_default_color_map);
     this->color_profiles.push_back(cp_default);
 
     std::map<QString, QColor> cp_light_color_map;
     cp_light_color_map["bkgnd"] = QColor(255, 255, 255);
+    cp_light_color_map["color_bar_label"] = QColor(0, 0, 0);
     auto * cp_light = new ColorProfile("Light", cp_light_color_map);
     this->color_profiles.push_back(cp_light);
 
     std::map<QString, QColor> cp_dark_color_map;
     cp_dark_color_map["bkgnd"] = QColor(0, 0, 0);
+    cp_dark_color_map["color_bar_label"] = QColor(255, 255, 255);
     auto * cp_dark = new ColorProfile("Dark", cp_dark_color_map);
     this->color_profiles.push_back(cp_dark);
 }
@@ -1506,6 +1520,8 @@ MainWindow::loadIntoVtk()
     this->highlight = new Selection(reader->getVtkOutputPort());
     setHighlightProperties();
     this->vtk_renderer->AddActor(this->highlight->getActor());
+
+    this->vtk_renderer->AddActor2D(this->color_bar);
 
     if (reader->getDimensionality() == 3)
         this->vtk_interactor->SetInteractorStyle(this->interactor_style_3d);
@@ -2050,6 +2066,7 @@ MainWindow::onToolsMeshQuality()
     onMetricChanged(metric_id);
 
     updateMenuBar();
+    this->color_bar->VisibilityOn();
 }
 
 void
@@ -2147,6 +2164,7 @@ MainWindow::onMeshQualityClosed()
     }
 
     updateMenuBar();
+    this->color_bar->VisibilityOff();
 }
 
 void
@@ -2333,4 +2351,49 @@ MainWindow::setupLookupTable()
         this->lut->SetTableValue(i, clr_ptr);
 
     this->lut->Build();
+}
+
+void
+MainWindow::setupColorBar()
+{
+    this->color_bar = vtkScalarBarActor::New();
+    this->color_bar->VisibilityOff();
+    this->color_bar->SetNumberOfLabels(5);
+    this->color_bar->SetLookupTable(this->lut);
+    this->color_bar->SetBarRatio(0.2);
+    this->color_bar->SetHeight(0.5);
+    this->color_bar->SetWidth(0.08);
+    this->color_bar->SetMaximumNumberOfColors(16);
+    this->color_bar->SetPosition(0.9, 0.3);
+    this->color_bar->SetLabelFormat("    %-#6.3g");
+    this->color_bar->UnconstrainedFontSizeOn();
+
+    {
+        auto prop = this->color_bar->GetTitleTextProperty();
+        prop->BoldOff();
+        prop->ItalicOff();
+        prop->ShadowOff();
+        prop->SetColor(0, 0, 0);
+        prop->SetFontFamilyToArial();
+        prop->SetFontSize(18);
+    }
+    {
+        auto prop = this->color_bar->GetLabelTextProperty();
+        prop->BoldOff();
+        prop->ItalicOff();
+        prop->ShadowOff();
+        prop->SetColor(0, 0, 0);
+        prop->SetFontFamilyToArial();
+        prop->SetFontSize(17);
+    }
+    {
+        auto prop = this->color_bar->GetFrameProperty();
+        prop->SetColor(0, 0, 0);
+        prop->SetLineWidth(4);
+    }
+    {
+        auto prop = this->color_bar->GetBackgroundProperty();
+        prop->SetOpacity(0.99);
+        prop->SetColor(1, 1, 1);
+    }
 }
