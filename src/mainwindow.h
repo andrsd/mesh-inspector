@@ -37,6 +37,7 @@ class vtkCompositeDataGeometryFilter;
 class vtkActor;
 class vtkCubeAxesActor;
 class vtkExtractBlock;
+class vtkLookupTable;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -96,7 +97,7 @@ protected:
     void setupFileChangedNotificationWidget();
     void setupExplodeWidgets();
     void setupMeshQualityWidget();
-
+    void setupLookupTable();
     void setupMenuBar();
     void setupExportMenu(QMenu * menu);
     void setupColorProfileMenu(QMenu * menu);
@@ -241,6 +242,7 @@ protected:
     OInteractorStyle3D * interactor_style_3d;
     Selection * selection;
     Selection * highlight;
+    vtkLookupTable * lut;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
