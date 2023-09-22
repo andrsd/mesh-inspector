@@ -33,8 +33,8 @@ MeshQualityWidget::MeshQualityWidget(QWidget * parent) : QWidget(parent)
 
     this->metric = new QComboBox();
     this->metric->setEditable(false);
-    this->metric->addItem("Aspect ratio", MESH_METRIC_ASPECT_RATIO);
     this->metric->addItem("Jacobian", MESH_METRIC_JACOBIAN);
+    this->metric->addItem("Aspect ratio", MESH_METRIC_ASPECT_RATIO);
     this->metric->addItem("Condition", MESH_METRIC_CONDITION);
     this->metric->addItem("Area", MESH_METRIC_AREA);
     this->metric->addItem("Volume", MESH_METRIC_VOLUME);
