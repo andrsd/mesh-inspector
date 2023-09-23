@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Mesh Inspector
+Comment=A simple tool for inspecting mesh files
+Exec=mesh-inspector
+Icon=mesh-inspector
+Categories=Qt;Science;Utility;
