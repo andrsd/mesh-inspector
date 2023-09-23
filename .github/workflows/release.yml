@@ -88,8 +88,110 @@ jobs:
           name: macos-x86_64
           path: "${{ github.workspace }}/build/src/mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip"
 
+  build-linux-app-image:
+    name: build linux AppImage
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: 'desktop'
+          dir: '${{ github.workspace }}'
+          install-deps: 'true'
+
+      - name: Build VTK
+        run: |
+          cd ${{ github.workspace }}
+          wget -q https://www.vtk.org/files/release/9.2/VTK-${VTK_VERSION}.tar.gz
+          tar -xzf VTK-${VTK_VERSION}.tar.gz
+          cd VTK-${VTK_VERSION}
+          echo "::group::configure"
+          mkdir build && cd build
+          cmake \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64 \
+            -DVTK_GROUP_ENABLE_Qt=WANT \
+            ..
+          echo "::endgroup::"
+          echo "::group::make"
+          make -j2 install
+          echo "::endgroup::"
+
+      - name: Inspect
+        run: |
+          find ${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt install \
+            libgl1-mesa-dev \
+            libxcb-cursor0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-xinerama0 \
+            libxkbcommon-x11-0 \
+            libzstd-dev \
+            libfuse-dev
+
+      - name: Install linuxdeploy
+        run: |
+          wget "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
+          wget "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage"
+          chmod +x linuxdeploy*.AppImage
+
+      - name: Configure
+        run: |
+          cmake \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64 \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -S . -B ${{ github.workspace }}/build
+
+      - name: Build
+        run: make -C ${{ github.workspace }}/build
+
+      - name: Install
+        run: make -C ${{ github.workspace }}/build install DESTDIR=${{ github.workspace }}/AppDir
+
+      - name: Build AppImage
+        run: |
+          mkdir -p AppDir/
+          cp LICENSE AppDir/
+          mkdir -p AppDir/usr/lib
+          mkdir -p AppDir/usr/share/icons/hicolor
+          mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+          cp resources/mesh-inspector.svg AppDir/usr/share/icons/hicolor/scalable/apps
+          mkdir AppDir/usr/share/applications/
+          cp resources/mesh-inspector.desktop AppDir/usr/share/applications
+          find AppDir
+          export DEBUG=1
+          export QMAKE=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64/bin/qmake
+          export PATH=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64/libexec:$PATH
+          export LD_LIBRARY_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64/lib:$PWD/AppDir/usr/lib
+          export EXTRA_QT_PLUGINS="svg;network"
+          export OUTPUT=mesh-inspector-${{ github.ref_name }}-x86_64.AppImage
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir -d AppDir/usr/share/applications/mesh-inspector.desktop --plugin qt
+          cp ${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64/lib/libvtk* AppDir/usr/lib/
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir --output appimage
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v3
+        with:
+          name: linux-x86_64.AppImage
+          path: mesh-inspector-${{ github.ref_name }}-x86_64.AppImage
+
   create-release:
-    needs: [build-macos]
+    needs: [build-macos, build-linux-app-image]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -108,3 +210,4 @@ jobs:
           discussion_category_name: announcements
           files: |
             macos-x86_64/mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip
+            linux-x86_64.AppImage/mesh-inspector-${{ github.ref_name }}-x86_64.AppImage
