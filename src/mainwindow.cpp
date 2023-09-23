@@ -427,6 +427,8 @@ MainWindow::setupMenuBar()
         file_menu->addAction("View license", this, &MainWindow::onViewLicense);
     this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
 
+    file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
+
     QMenu * view_menu = this->menu_bar->addMenu("View");
     view_menu->addAction(this->shaded_action);
     view_menu->addAction(this->shaded_w_edges_action);
