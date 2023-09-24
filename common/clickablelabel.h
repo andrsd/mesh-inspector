@@ -1,8 +1,9 @@
 #pragma once
 
+#include "common_export.h"
 #include <QLabel>
 
-class ClickableLabel : public QLabel {
+class COMMON_EXPORT ClickableLabel : public QLabel {
     Q_OBJECT
 
 public:
