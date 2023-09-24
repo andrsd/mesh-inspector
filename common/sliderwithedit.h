@@ -1,12 +1,13 @@
 #pragma once
 
+#include "common_export.h"
 #include <QWidget>
 
 class QHBoxLayout;
 class QSlider;
 class QSpinBox;
 
-class SliderWithEdit : public QWidget {
+class COMMON_EXPORT SliderWithEdit : public QWidget {
 public:
     explicit SliderWithEdit(QWidget * parent = nullptr);
     ~SliderWithEdit() override;

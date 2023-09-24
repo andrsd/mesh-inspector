@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common_export.h"
 #include <QWidget>
 
 class QHBoxLayout;
@@ -7,7 +8,7 @@ class QLabel;
 class ClickableLabel;
 class QPropertyAnimation;
 
-class NotificationWidget : public QWidget {
+class COMMON_EXPORT NotificationWidget : public QWidget {
     Q_OBJECT
 
 public:

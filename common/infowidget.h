@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common_export.h"
 #include <QWidget>
 
 class QString;
@@ -7,7 +8,7 @@ class QGraphicsOpacityEffect;
 class QVBoxLayout;
 class QLabel;
 
-class InfoWidget : public QWidget {
+class COMMON_EXPORT InfoWidget : public QWidget {
 public:
     explicit InfoWidget(QWidget * parent = nullptr);
     ~InfoWidget() override;

@@ -1,12 +1,13 @@
 #pragma once
 
+#include "common_export.h"
 #include <QTreeView>
 #include <QString>
 
 class QPaintEvent;
 class QMouseEvent;
 
-class OTreeView : public QTreeView {
+class COMMON_EXPORT OTreeView : public QTreeView {
 public:
     explicit OTreeView(QWidget * parent = nullptr);
 

@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: build
+    name: "${{ matrix.os }}"
     strategy:
       fail-fast: false
       matrix:
@@ -24,6 +24,8 @@ jobs:
             arch: gcc_64
           - os: macos-11
             arch: macos
+          - os: windows-2019
+            arch: msvc2019_64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
@@ -35,6 +37,11 @@ jobs:
         with:
           path: ${{ github.workspace }}/Qt
           key: ${{ runner.os }}-qt-cache-${{ env.CACHE_NUM }}
+
+      - name: Environment
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          echo "C:\msys64\usr\bin" >> $env:GITHUB_PATH
 
       - name: Install Qt
         if: steps.cache-env.outputs.cache-hit != 'true'
@@ -49,21 +56,19 @@ jobs:
         if: steps.cache-env.outputs.cache-hit != 'true'
         run: |
           cd ${{ github.workspace }}
-          wget -q https://www.vtk.org/files/release/9.2/VTK-${VTK_VERSION}.tar.gz
-          tar -xzf VTK-${VTK_VERSION}.tar.gz
-          cd VTK-${VTK_VERSION}
+          wget -q https://www.vtk.org/files/release/9.2/VTK-${{ env.VTK_VERSION }}.tar.gz
+          tar -xzf VTK-${{ env.VTK_VERSION }}.tar.gz
+          cd VTK-${{ env.VTK_VERSION }}
           echo "::group::configure"
-          mkdir build && cd build
-          cmake \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_SHARED_LIBS=ON \
-            -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
-            -DVTK_GROUP_ENABLE_Qt=WANT \
-            ..
+          mkdir build
+          cd build
+          cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DVTK_GROUP_ENABLE_Qt=WANT ..
           echo "::endgroup::"
-          echo "::group::make"
-          make -j2 install
+          echo "::group::build"
+          cmake --build . --config Release
+          echo "::endgroup::"
+          echo "::group::install"
+          cmake --install . --config Release
           echo "::endgroup::"
 
       - name: Install dependencies (linux)
@@ -73,10 +78,7 @@ jobs:
           sudo apt install libgl1-mesa-dev
 
       - name: Configure
-        run: |
-          cmake \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
-            -S . -B ${{ github.workspace }}/build
+        run: cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -S . -B "${{ github.workspace }}/build"
 
       - name: Build
-        run: make -C ${{ github.workspace }}/build
+        run: cmake --build "${{ github.workspace }}/build" --config Release

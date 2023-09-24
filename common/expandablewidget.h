@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common_export.h"
 #include <QWidget>
 #include <QString>
 
@@ -7,7 +8,7 @@ class QPushButton;
 class QLabel;
 class QGridLayout;
 
-class ExpandableWidget : public QWidget {
+class COMMON_EXPORT ExpandableWidget : public QWidget {
     Q_OBJECT
 
 public:

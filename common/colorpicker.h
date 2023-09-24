@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common_export.h"
 #include <QDialog>
 #include <QColor>
 #include <QVariant>
@@ -15,7 +16,7 @@ class QSlider;
 class QLineEdit;
 class QAbstractButton;
 
-class ColorPicker : public QDialog {
+class COMMON_EXPORT ColorPicker : public QDialog {
     Q_OBJECT;
 
 public:

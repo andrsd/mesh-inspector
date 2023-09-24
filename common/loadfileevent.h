@@ -1,9 +1,10 @@
 #pragma once
 
+#include "common_export.h"
 #include <QEvent>
 #include <QString>
 
-class LoadFileEvent : public QEvent {
+class COMMON_EXPORT LoadFileEvent : public QEvent {
 public:
     explicit LoadFileEvent(const QString & file_name);
 
