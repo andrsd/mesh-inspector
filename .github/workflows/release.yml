@@ -190,8 +190,80 @@ jobs:
           name: linux-x86_64.AppImage
           path: mesh-inspector-${{ github.ref_name }}-x86_64.AppImage
 
+  build-windows:
+    name: build Windows distributable
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2019
+            arch: msvc2019_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Cache environment
+        id: cache-env
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/Qt
+          key: ${{ runner.os }}-qt-cache-${{ env.CACHE_NUM }}
+
+      - name: Environment
+        run: echo "C:\msys64\usr\bin" >> $env:GITHUB_PATH
+
+      - name: Install Qt
+        if: steps.cache-env.outputs.cache-hit != 'true'
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: 'desktop'
+          dir: '${{ github.workspace }}'
+          install-deps: 'true'
+
+      - name: Build VTK
+        if: steps.cache-env.outputs.cache-hit != 'true'
+        run: |
+          cd ${{ github.workspace }}
+          wget -q https://www.vtk.org/files/release/9.2/VTK-${{ env.VTK_VERSION }}.tar.gz
+          tar -xzf VTK-${{ env.VTK_VERSION }}.tar.gz
+          cd VTK-${{ env.VTK_VERSION }}
+          echo "::group::configure"
+          mkdir build
+          cd build
+          cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DVTK_GROUP_ENABLE_Qt=WANT ..
+          echo "::endgroup::"
+          echo "::group::build"
+          cmake --build . --config Release
+          echo "::endgroup::"
+          echo "::group::install"
+          cmake --install . --config Release
+          echo "::endgroup::"
+
+      - name: Configure
+        run: cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -S . -B "${{ github.workspace }}/build"
+
+      - name: Build
+        run: cmake --build "${{ github.workspace }}/build" --config Release
+
+      - name: Install
+        run: cmake --install "${{ github.workspace }}/build" --config Release --prefix dist
+
+      - name: Build distributable
+        run: |
+          ${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}/bin/windeployqt.exe "${{ github.workspace }}/dist/bin"
+          mv "${{ github.workspace }}/dist/bin" "${{ github.workspace }}/dist/mesh-inspector"
+          zip -r mesh-inspector-${{ github.ref_name }}-windows-x86_64.zip "${{ github.workspace }}/dist/mesh-inspector"
+
+      - name: Upload distributable
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-x86_64
+          path: "${{ github.workspace }}/mesh-inspector-${{ github.ref_name }}-windows-x86_64.zip"
+
   create-release:
-    needs: [build-macos, build-linux-app-image]
+    needs: [build-macos, build-linux-app-image, build-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
