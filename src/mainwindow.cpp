@@ -154,7 +154,7 @@ MainWindow::MainWindow(QWidget * parent) :
     vtk_widget(nullptr),
     render_window(nullptr),
     renderer(nullptr),
-    vtk_interactor(nullptr),
+    interactor(nullptr),
     ori_marker(nullptr),
     cube_axes_actor(nullptr),
     interactor_style_2d(nullptr),
@@ -604,7 +604,7 @@ MainWindow::connectSignals()
 void
 MainWindow::setupVtk()
 {
-    this->vtk_interactor = this->render_window->GetInteractor();
+    this->interactor = this->render_window->GetInteractor();
 
     // TODO: set background from preferences/templates
     this->renderer->SetGradientBackground(true);
@@ -707,7 +707,7 @@ MainWindow::setupOrientationMarker()
     this->ori_marker->SetDefaultRenderer(this->renderer);
     this->ori_marker->SetOrientationMarker(axes);
     this->ori_marker->SetViewport(0.8, 0, 1.0, 0.2);
-    this->ori_marker->SetInteractor(this->vtk_interactor);
+    this->ori_marker->SetInteractor(this->interactor);
     this->ori_marker->SetEnabled(true);
     this->ori_marker->SetInteractive(false);
 }
@@ -1528,9 +1528,9 @@ MainWindow::loadIntoVtk()
     this->renderer->AddActor2D(this->color_bar);
 
     if (reader->getDimensionality() == 3)
-        this->vtk_interactor->SetInteractorStyle(this->interactor_style_3d);
+        this->interactor->SetInteractorStyle(this->interactor_style_3d);
     else
-        this->vtk_interactor->SetInteractorStyle(this->interactor_style_2d);
+        this->interactor->SetInteractorStyle(this->interactor_style_2d);
 
     auto * camera = this->renderer->GetActiveCamera();
     auto * focal_point = camera->GetFocalPoint();

@@ -244,7 +244,7 @@ protected:
     QVTKOpenGLNativeWidget * vtk_widget;
     vtkGenericOpenGLRenderWindow * render_window;
     vtkRenderer * renderer;
-    vtkRenderWindowInteractor * vtk_interactor;
+    vtkRenderWindowInteractor * interactor;
     vtkOrientationMarkerWidget * ori_marker;
     vtkCubeAxesActor * cube_axes_actor;
     OInteractorStyle2D * interactor_style_2d;
