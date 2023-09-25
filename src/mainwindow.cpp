@@ -35,7 +35,6 @@
 #include "vtkWindowToImageFilter.h"
 #include "vtkPNGWriter.h"
 #include "vtkJPEGWriter.h"
-#include "vtkMath.h"
 #include "vtkPropPicker.h"
 #include "vtkPointPicker.h"
 #include "vtkCellPicker.h"
@@ -54,7 +53,7 @@
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
-#include "explodewidget.h"
+#include "explodetool.h"
 #include "meshqualitywidget.h"
 #include "reader.h"
 #include "blockobject.h"
@@ -165,9 +164,9 @@ MainWindow::MainWindow(QWidget * parent) :
     info_window(nullptr),
     about_dlg(nullptr),
     license_dlg(nullptr),
-    explode(nullptr),
     mesh_quality(nullptr),
     selected_mesh_ent_info(nullptr),
+    explode_tool(new ExplodeTool(this)),
     new_action(nullptr),
     open_action(nullptr),
     export_as_png(nullptr),
@@ -179,7 +178,6 @@ MainWindow::MainWindow(QWidget * parent) :
     hidden_edges_removed_action(nullptr),
     transluent_action(nullptr),
     view_info_wnd_action(nullptr),
-    tools_explode_action(nullptr),
     tools_mesh_quality_action(nullptr),
     perspective_action(nullptr),
     ori_marker_action(nullptr),
@@ -246,7 +244,7 @@ MainWindow::~MainWindow()
     this->renderer->Delete();
     delete this->info_window;
     delete this->info_dock;
-    delete this->explode;
+    delete this->explode_tool;
     delete this->mesh_quality;
     delete this->selected_mesh_ent_info;
     for (auto & it : this->color_profiles)
@@ -264,6 +262,18 @@ MainWindow::~MainWindow()
     delete this->license_dlg;
     delete this->namgr;
     this->lut->Delete();
+}
+
+const std::map<int, BlockObject *> &
+MainWindow::getBlocks() const
+{
+    return this->blocks;
+}
+
+const vtkVector3d &
+MainWindow::getCenterOfBounds() const
+{
+    return this->center_of_bounds;
 }
 
 void
@@ -296,7 +306,7 @@ MainWindow::setupWidgets()
     this->deselect_sc = new QShortcut(QKeySequence(Qt::Key_Space), this);
     connect(this->deselect_sc, &QShortcut::activated, this, &MainWindow::onDeselect);
 
-    setupExplodeWidgets();
+    this->explode_tool->setupWidgets();
     setupMeshQualityWidget();
 }
 
@@ -378,14 +388,6 @@ MainWindow::setupFileChangedNotificationWidget()
 }
 
 void
-MainWindow::setupExplodeWidgets()
-{
-    this->explode = new ExplodeWidget(this);
-    connect(this->explode, &ExplodeWidget::valueChanged, this, &MainWindow::onExplodeValueChanged);
-    this->explode->setVisible(false);
-}
-
-void
 MainWindow::setupMeshQualityWidget()
 {
     this->mesh_quality = new MeshQualityWidget(this);
@@ -445,7 +447,7 @@ MainWindow::setupMenuBar()
     QMenu * tools_menu = this->menu_bar->addMenu("Tools");
     setupSelectModeMenu(tools_menu);
     this->tools_explode_action =
-        tools_menu->addAction("Explode", this, &MainWindow::onToolsExplode);
+        tools_menu->addAction("Explode", this->explode_tool, &ExplodeTool::onExplode);
     this->tools_mesh_quality_action =
         tools_menu->addAction("Mesh quality", this, &MainWindow::onToolsMeshQuality);
 
@@ -1417,7 +1419,7 @@ MainWindow::resizeEvent(QResizeEvent * event)
 {
     QMainWindow::resizeEvent(event);
     updateViewModeLocation();
-    updateExplodeWidgetLocation();
+    this->explode_tool->updateLocation();
     updateMeshQualityWidgetLocation();
 }
 
@@ -1915,42 +1917,10 @@ MainWindow::onExportAsJpg()
 }
 
 void
-MainWindow::onToolsExplode()
-{
-    this->explode->adjustSize();
-    this->explode->show();
-    updateExplodeWidgetLocation();
-}
-
-void
-MainWindow::onExplodeValueChanged(double value)
-{
-    double dist = value / this->explode->range();
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        auto blk_cob = block->getCenterOfBounds();
-        vtkVector3d dir;
-        vtkMath::Subtract(blk_cob, this->center_of_bounds, dir);
-        dir.Normalize();
-        vtkMath::MultiplyScalar(dir.GetData(), dist);
-        block->setPosition(dir[0], dir[1], dir[2]);
-    }
-}
-
-void
 MainWindow::updateViewModeLocation()
 {
     auto tr = this->view->geometry().topRight();
     this->view_mode->move(tr.x() - 10 - this->view_mode->width(), tr.y() + 10);
-}
-
-void
-MainWindow::updateExplodeWidgetLocation()
-{
-    auto width = this->getRenderWindowWidth();
-    int left = (width - this->explode->width()) / 2;
-    int top = geometry().height() - this->explode->height() - 10;
-    this->explode->move(left, top);
 }
 
 void

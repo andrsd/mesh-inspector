@@ -26,7 +26,7 @@ class InfoWindow;
 class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
-class ExplodeWidget;
+class ExplodeTool;
 class MeshQualityWidget;
 class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
@@ -86,6 +86,10 @@ public:
     explicit MainWindow(QWidget * parent = nullptr);
     ~MainWindow() override;
 
+    int getRenderWindowWidth() const;
+    const std::map<int, BlockObject *> & getBlocks() const;
+    const vtkVector3d & getCenterOfBounds() const;
+
 signals:
     void blockAdded(int id, const QString & name);
     void sideSetAdded(int id, const QString & name);
@@ -96,7 +100,6 @@ protected:
     void setupViewModeWidget(QMainWindow * wnd);
     void setupNotificationWidget();
     void setupFileChangedNotificationWidget();
-    void setupExplodeWidgets();
     void setupMeshQualityWidget();
     void setupLookupTable();
     void setupMenuBar();
@@ -117,7 +120,6 @@ protected:
     void setupColorBar();
     void computeTotalBoundingBox();
 
-    int getRenderWindowWidth() const;
     bool checkFileExists(const QString & file_name);
     void addBlocks();
     void addSideSets();
@@ -208,11 +210,8 @@ public slots:
     void onColorProfileTriggered(QAction * action);
     void onExportAsPng();
     void onExportAsJpg();
-    void onToolsExplode();
     void onToolsMeshQuality();
-    void onExplodeValueChanged(double value);
     void updateViewModeLocation();
-    void updateExplodeWidgetLocation();
     void updateMeshQualityWidgetLocation();
     void onMinimize();
     void onBringAllToFront();
@@ -257,9 +256,9 @@ protected:
     InfoWindow * info_window;
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
-    ExplodeWidget * explode;
     MeshQualityWidget * mesh_quality;
     InfoWidget * selected_mesh_ent_info;
+    ExplodeTool * explode_tool;
 
     QAction * new_action;
     QAction * open_action;

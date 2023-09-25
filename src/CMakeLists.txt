@@ -8,6 +8,7 @@ add_executable(
         blockobject.cpp
         colorprofile.cpp
         exodusiireader.cpp
+        explodetool.cpp
         explodewidget.cpp
         filechangednotificationwidget.cpp
         infowindow.cpp
