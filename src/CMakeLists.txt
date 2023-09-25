@@ -26,6 +26,7 @@ add_executable(
         ointeractorstyle3d.cpp
         reader.cpp
         selection.cpp
+        selecttool.cpp
         sidesetobject.cpp
         stlreader.cpp
         resources.qrc

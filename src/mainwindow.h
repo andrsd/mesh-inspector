@@ -26,6 +26,7 @@ class InfoWindow;
 class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
+class SelectTool;
 class ExportTool;
 class ExplodeTool;
 class MeshQualityTool;
@@ -48,7 +49,6 @@ class ColorProfile;
 class InfoWidget;
 class OInteractorStyle2D;
 class OInteractorStyle3D;
-class Selection;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -77,25 +77,27 @@ protected:
         TRANSLUENT = 3
     };
 
-    enum EModeSelect {
-        MODE_SELECT_NONE = 0,
-        MODE_SELECT_BLOCKS = 1,
-        MODE_SELECT_CELLS = 2,
-        MODE_SELECT_POINTS = 3
-    };
-
 public:
     explicit MainWindow(QWidget * parent = nullptr);
     ~MainWindow() override;
 
     int getRenderWindowWidth() const;
     const std::map<int, BlockObject *> & getBlocks() const;
+    const std::map<int, SideSetObject *> & getSideSets() const;
+    const std::map<int, NodeSetObject *> & getNodeSets() const;
     const vtkVector3d & getCenterOfBounds() const;
     vtkRenderer * getRenderer() const;
     vtkGenericOpenGLRenderWindow * getRenderWindow() const;
     void updateMenuBar();
     void activateRenderMode();
     void showNotification(const QString & text, int ms = 5000);
+    void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
+    QSettings * getSettings();
+    int blockActorToId(vtkActor * actor);
+    BlockObject * getBlock(int block_id);
+    SideSetObject * getSideSet(int sideset_id);
+    NodeSetObject * getNodeSet(int nodeset_id);
+    QWidget * getView();
 
     template <typename T>
     inline qreal
@@ -116,7 +118,6 @@ protected:
     void setupFileChangedNotificationWidget();
     void setupMenuBar();
     void setupColorProfileMenu(QMenu * menu);
-    void setupSelectModeMenu(QMenu * menu);
 
     void updateWindowTitle();
     void connectSignals();
@@ -133,28 +134,12 @@ protected:
     void addBlocks();
     void addSideSets();
     void addNodeSets();
-    BlockObject * getBlock(int block_id);
-    SideSetObject * getSideSet(int sideset_id);
-    NodeSetObject * getNodeSet(int nodeset_id);
     void setSelectedBlockProperties(BlockObject * block, bool highlighted = false);
     void setDeselectedBlockProperties(BlockObject * block, bool highlighted = false);
     void setHighlightedBlockProperties(BlockObject * block, bool highlighted);
-    void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
     void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties(NodeSetObject * nodeset);
-    void setSelectionProperties();
-    void setHighlightProperties();
     void showFileChangedNotification();
-    void showSelectedMeshEntity(const QString & info);
-    void hideSelectedMeshEntity();
-    void deselectBlocks();
-    int blockActorToId(vtkActor * actor);
-    void highlightBlock(const QPoint & pt);
-    void highlightCell(const QPoint & pt);
-    void highlightPoint(const QPoint & pt);
-    void selectBlock(const QPoint & pt);
-    void selectCell(const QPoint & pt);
-    void selectPoint(const QPoint & pt);
     void setColorProfile();
     void loadColorProfiles();
     void buildRecentFilesMenu();
@@ -194,14 +179,9 @@ public slots:
     void onUpdateWindow();
     void onFileChanged(const QString & path);
     void onReloadFile();
-    void onBlockSelectionChanged(int block_id);
-    void onSideSetSelectionChanged(int sideset_id);
-    void onNodeSetSelectionChanged(int nodeset_id);
     void onClicked(const QPoint & pt);
     void onMouseMove(const QPoint & pt);
     void onViewInfoWindow();
-    void onSelectModeTriggered(QAction * action);
-    void onDeselect();
     void onColorProfileTriggered(QAction * action);
     void updateViewModeLocation();
     void onMinimize();
@@ -222,7 +202,6 @@ protected:
     NotificationWidget * notification;
     FileChangedNotificationWidget * file_changed_notification;
     ERenderMode render_mode;
-    EModeSelect select_mode;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     QStringList recent_files;
@@ -237,13 +216,11 @@ protected:
     vtkCubeAxesActor * cube_axes_actor;
     OInteractorStyle2D * interactor_style_2d;
     OInteractorStyle3D * interactor_style_3d;
-    Selection * selection;
-    Selection * highlight;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
-    InfoWidget * selected_mesh_ent_info;
+    SelectTool * select_tool;
     ExportTool * export_tool;
     ExplodeTool * explode_tool;
     MeshQualityTool * mesh_quality_tool;
@@ -270,15 +247,10 @@ protected:
 
     QActionGroup * visual_repr;
     QActionGroup * color_profile_action_group;
-    QActionGroup * mode_select_action_group;
     QActionGroup * windows_action_group;
-
-    QShortcut * deselect_sc;
 
     std::vector<vtkExtractBlock *> extract_blocks;
     std::map<int, BlockObject *> blocks;
-    BlockObject * selected_block;
-    BlockObject * highlighted_block;
     std::map<int, SideSetObject *> side_sets;
     std::map<int, NodeSetObject *> node_sets;
 
@@ -294,9 +266,6 @@ public:
     static QColor SIDESET_CLR;
     static QColor SIDESET_EDGE_CLR;
     static QColor NODESET_CLR;
-    static QColor SELECTION_CLR;
-    static QColor SELECTION_EDGE_CLR;
-    static QColor HIGHLIGHT_CLR;
 
     static float EDGE_WIDTH;
     static float OUTLINE_WIDTH;
