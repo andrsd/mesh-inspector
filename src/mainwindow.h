@@ -243,7 +243,7 @@ protected:
     QPushButton * view_mode;
     QVTKOpenGLNativeWidget * vtk_widget;
     vtkGenericOpenGLRenderWindow * render_window;
-    vtkRenderer * vtk_renderer;
+    vtkRenderer * renderer;
     vtkRenderWindowInteractor * vtk_interactor;
     vtkOrientationMarkerWidget * ori_marker;
     vtkCubeAxesActor * cube_axes_actor;

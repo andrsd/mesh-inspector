@@ -153,7 +153,7 @@ MainWindow::MainWindow(QWidget * parent) :
     view_mode(nullptr),
     vtk_widget(nullptr),
     render_window(nullptr),
-    vtk_renderer(nullptr),
+    renderer(nullptr),
     vtk_interactor(nullptr),
     ori_marker(nullptr),
     cube_axes_actor(nullptr),
@@ -243,7 +243,7 @@ MainWindow::~MainWindow()
     delete this->menu_bar;
     delete this->vtk_widget;
     this->render_window->Delete();
-    this->vtk_renderer->Delete();
+    this->renderer->Delete();
     delete this->info_window;
     delete this->info_dock;
     delete this->explode;
@@ -275,8 +275,8 @@ MainWindow::setupWidgets()
     this->render_window = vtkGenericOpenGLRenderWindow::New();
     this->vtk_widget->setRenderWindow(this->render_window);
 
-    this->vtk_renderer = vtkRenderer::New();
-    this->render_window->AddRenderer(this->vtk_renderer);
+    this->renderer = vtkRenderer::New();
+    this->render_window->AddRenderer(this->renderer);
 
     this->info_window = new InfoWindow();
 
@@ -607,9 +607,9 @@ MainWindow::setupVtk()
     this->vtk_interactor = this->render_window->GetInteractor();
 
     // TODO: set background from preferences/templates
-    this->vtk_renderer->SetGradientBackground(true);
+    this->renderer->SetGradientBackground(true);
     // set anti-aliasing on
-    this->vtk_renderer->SetUseFXAA(true);
+    this->renderer->SetUseFXAA(true);
     this->render_window->SetMultiSamples(1);
 }
 
@@ -617,7 +617,7 @@ void
 MainWindow::clear()
 {
     this->mesh_quality->done();
-    this->vtk_renderer->RemoveAllViewProps();
+    this->renderer->RemoveAllViewProps();
 
     for (auto & it : this->blocks)
         delete it.second;
@@ -704,7 +704,7 @@ MainWindow::setupOrientationMarker()
     }
 
     this->ori_marker = vtkOrientationMarkerWidget::New();
-    this->ori_marker->SetDefaultRenderer(this->vtk_renderer);
+    this->ori_marker->SetDefaultRenderer(this->renderer);
     this->ori_marker->SetOrientationMarker(axes);
     this->ori_marker->SetViewport(0.8, 0, 1.0, 0.2);
     this->ori_marker->SetInteractor(this->vtk_interactor);
@@ -717,7 +717,7 @@ MainWindow::setupCubeAxesActor()
 {
     this->cube_axes_actor = vtkCubeAxesActor::New();
     this->cube_axes_actor->VisibilityOff();
-    this->cube_axes_actor->SetCamera(this->vtk_renderer->GetActiveCamera());
+    this->cube_axes_actor->SetCamera(this->renderer->GetActiveCamera());
     this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);
     this->cube_axes_actor->SetFlyMode(vtkCubeAxesActor::VTK_FLY_OUTER_EDGES);
 }
@@ -734,7 +734,7 @@ MainWindow::computeTotalBoundingBox()
     double bounds[6];
     bbox.GetBounds(bounds);
     this->cube_axes_actor->SetBounds(bounds);
-    this->vtk_renderer->AddViewProp(this->cube_axes_actor);
+    this->renderer->AddViewProp(this->cube_axes_actor);
     this->info_window->setBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
 
     double center[3];
@@ -767,7 +767,7 @@ MainWindow::checkFileExists(const QString & file_name)
 void
 MainWindow::addBlocks()
 {
-    auto * camera = this->vtk_renderer->GetActiveCamera();
+    auto * camera = this->renderer->GetActiveCamera();
     auto * reader = this->load_thread->getReader();
 
     for (auto & binfo : reader->getBlocks()) {
@@ -786,8 +786,8 @@ MainWindow::addBlocks()
         setBlockProperties(block);
         this->blocks[binfo.number] = block;
 
-        this->vtk_renderer->AddViewProp(block->getActor());
-        this->vtk_renderer->AddViewProp(block->getSilhouetteActor());
+        this->renderer->AddViewProp(block->getActor());
+        this->renderer->AddViewProp(block->getSilhouetteActor());
 
         emit blockAdded(binfo.number, QString::fromStdString(binfo.name));
     }
@@ -808,7 +808,7 @@ MainWindow::addSideSets()
         auto sideset = new SideSetObject(eb->GetOutputPort());
         this->side_sets[finfo.number] = sideset;
         setSideSetProperties(sideset);
-        this->vtk_renderer->AddViewProp(sideset->getActor());
+        this->renderer->AddViewProp(sideset->getActor());
 
         emit sideSetAdded(finfo.number, QString::fromStdString(finfo.name));
     }
@@ -829,7 +829,7 @@ MainWindow::addNodeSets()
         auto * nodeset = new NodeSetObject(eb->GetOutputPort());
         this->node_sets[ninfo.number] = nodeset;
         this->setNodeSetProperties(nodeset);
-        this->vtk_renderer->AddViewProp(nodeset->getActor());
+        this->renderer->AddViewProp(nodeset->getActor());
 
         emit nodeSetAdded(ninfo.number, QString::fromStdString(ninfo.name));
     }
@@ -1186,7 +1186,7 @@ MainWindow::highlightBlock(const QPoint & pt)
     }
 
     auto * picker = vtkPropPicker::New();
-    if (picker->PickProp(pt.x(), pt.y(), this->vtk_renderer)) {
+    if (picker->PickProp(pt.x(), pt.y(), this->renderer)) {
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
             auto blk_id = blockActorToId(actor);
@@ -1207,7 +1207,7 @@ void
 MainWindow::highlightCell(const QPoint & pt)
 {
     auto * picker = vtkCellPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
         auto cell_id = picker->GetCellId();
         this->highlight->selectCell(cell_id);
         setHighlightProperties();
@@ -1221,7 +1221,7 @@ void
 MainWindow::highlightPoint(const QPoint & pt)
 {
     auto * picker = vtkPointPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
         auto point_id = picker->GetPointId();
         this->highlight->selectPoint(point_id);
         setHighlightProperties();
@@ -1235,7 +1235,7 @@ void
 MainWindow::selectBlock(const QPoint & pt)
 {
     auto * picker = vtkPropPicker::New();
-    if (picker->PickProp(pt.x(), pt.y(), this->vtk_renderer)) {
+    if (picker->PickProp(pt.x(), pt.y(), this->renderer)) {
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
             auto blk_id = blockActorToId(actor);
@@ -1252,7 +1252,7 @@ void
 MainWindow::selectCell(const QPoint & pt)
 {
     auto * picker = vtkCellPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
         auto cell_id = picker->GetCellId();
         this->selection->selectCell(cell_id);
         setSelectionProperties();
@@ -1271,7 +1271,7 @@ void
 MainWindow::selectPoint(const QPoint & pt)
 {
     auto * picker = vtkPointPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->vtk_renderer)) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
         auto point_id = picker->GetPointId();
         this->selection->selectPoint(point_id);
         setSelectionProperties();
@@ -1309,8 +1309,8 @@ MainWindow::setColorProfile()
     const auto & qclr = profile->getColor("bkgnd");
     double bkgnd[3] = { qclr.redF(), qclr.greenF(), qclr.blueF() };
 
-    this->vtk_renderer->SetBackground(bkgnd);
-    this->vtk_renderer->SetBackground2(bkgnd);
+    this->renderer->SetBackground(bkgnd);
+    this->renderer->SetBackground2(bkgnd);
 
     // color bar labels
     {
@@ -1518,25 +1518,25 @@ MainWindow::loadIntoVtk()
     delete this->selection;
     this->selection = new Selection(reader->getVtkOutputPort());
     setSelectionProperties();
-    this->vtk_renderer->AddActor(this->selection->getActor());
+    this->renderer->AddActor(this->selection->getActor());
 
     delete this->highlight;
     this->highlight = new Selection(reader->getVtkOutputPort());
     setHighlightProperties();
-    this->vtk_renderer->AddActor(this->highlight->getActor());
+    this->renderer->AddActor(this->highlight->getActor());
 
-    this->vtk_renderer->AddActor2D(this->color_bar);
+    this->renderer->AddActor2D(this->color_bar);
 
     if (reader->getDimensionality() == 3)
         this->vtk_interactor->SetInteractorStyle(this->interactor_style_3d);
     else
         this->vtk_interactor->SetInteractorStyle(this->interactor_style_2d);
 
-    auto * camera = this->vtk_renderer->GetActiveCamera();
+    auto * camera = this->renderer->GetActiveCamera();
     auto * focal_point = camera->GetFocalPoint();
     camera->SetPosition(focal_point[0], focal_point[1], 1);
     camera->SetRoll(0);
-    this->vtk_renderer->ResetCamera();
+    this->renderer->ResetCamera();
 }
 
 void
@@ -1721,11 +1721,11 @@ void
 MainWindow::onPerspectiveToggled(bool checked)
 {
     if (checked) {
-        auto * camera = this->vtk_renderer->GetActiveCamera();
+        auto * camera = this->renderer->GetActiveCamera();
         camera->ParallelProjectionOff();
     }
     else {
-        auto * camera = this->vtk_renderer->GetActiveCamera();
+        auto * camera = this->renderer->GetActiveCamera();
         camera->ParallelProjectionOn();
     }
 }
