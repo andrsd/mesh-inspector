@@ -109,7 +109,7 @@ BlockObject::setUpSilhouette(vtkCamera * camera)
 
     auto * property = this->silhouette_actor->GetProperty();
     property->SetColor(0, 0, 0);
-    property->SetLineWidth(3);
+    property->SetLineWidth(1.5);
 }
 
 vtkActor *
