@@ -27,7 +27,7 @@ class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
 class ExplodeTool;
-class MeshQualityWidget;
+class MeshQualityTool;
 class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
@@ -89,6 +89,16 @@ public:
     int getRenderWindowWidth() const;
     const std::map<int, BlockObject *> & getBlocks() const;
     const vtkVector3d & getCenterOfBounds() const;
+    vtkRenderer * getRenderer() const;
+    void updateMenuBar();
+    void activateRenderMode();
+
+    template <typename T>
+    inline qreal
+    HIDPI(T value) const
+    {
+        return devicePixelRatio() * value;
+    }
 
 signals:
     void blockAdded(int id, const QString & name);
@@ -100,13 +110,10 @@ protected:
     void setupViewModeWidget(QMainWindow * wnd);
     void setupNotificationWidget();
     void setupFileChangedNotificationWidget();
-    void setupMeshQualityWidget();
-    void setupLookupTable();
     void setupMenuBar();
     void setupExportMenu(QMenu * menu);
     void setupColorProfileMenu(QMenu * menu);
     void setupSelectModeMenu(QMenu * menu);
-    void updateMenuBar();
 
     void updateWindowTitle();
     void connectSignals();
@@ -117,7 +124,6 @@ protected:
     void setupVtk();
     void setupOrientationMarker();
     void setupCubeAxesActor();
-    void setupColorBar();
     void computeTotalBoundingBox();
 
     bool checkFileExists(const QString & file_name);
@@ -131,7 +137,6 @@ protected:
     void setDeselectedBlockProperties(BlockObject * block, bool highlighted = false);
     void setHighlightedBlockProperties(BlockObject * block, bool highlighted);
     void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
-    void setBlockMeshQualityProperties(BlockObject * block, double range[]);
     void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties(NodeSetObject * nodeset);
     void setSelectionProperties();
@@ -168,15 +173,6 @@ protected:
 
     QVersionNumber getVersionFromReply(QNetworkReply * reply);
 
-    void getCellQualityRange(double range[]);
-
-    template <typename T>
-    inline qreal
-    HIDPI(T value) const
-    {
-        return devicePixelRatio() * value;
-    }
-
 public slots:
     void onClose();
     void onLoadFinished();
@@ -210,9 +206,7 @@ public slots:
     void onColorProfileTriggered(QAction * action);
     void onExportAsPng();
     void onExportAsJpg();
-    void onToolsMeshQuality();
     void updateViewModeLocation();
-    void updateMeshQualityWidgetLocation();
     void onMinimize();
     void onBringAllToFront();
     void onShowMainWindow();
@@ -220,8 +214,6 @@ public slots:
     void onViewLicense();
     void onCheckForUpdate();
     void onHttpReply(QNetworkReply * reply);
-    void onMetricChanged(int metric_id);
-    void onMeshQualityClosed();
 
 protected:
     QSettings * settings;
@@ -250,15 +242,13 @@ protected:
     OInteractorStyle3D * interactor_style_3d;
     Selection * selection;
     Selection * highlight;
-    vtkLookupTable * lut;
-    vtkScalarBarActor * color_bar;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
-    MeshQualityWidget * mesh_quality;
     InfoWidget * selected_mesh_ent_info;
     ExplodeTool * explode_tool;
+    MeshQualityTool * mesh_quality_tool;
 
     QAction * new_action;
     QAction * open_action;
@@ -304,7 +294,7 @@ protected:
 
     QNetworkAccessManager * namgr;
 
-protected:
+public:
     static QColor SIDESET_CLR;
     static QColor SIDESET_EDGE_CLR;
     static QColor NODESET_CLR;
@@ -314,7 +304,4 @@ protected:
 
     static float EDGE_WIDTH;
     static float OUTLINE_WIDTH;
-
-public:
-    static const char * MESH_QUALITY_FIELD_NAME;
 };

@@ -10,6 +10,7 @@
 #include "vtkDoubleArray.h"
 #include "vtkAlgorithmOutput.h"
 #include "mainwindow.h"
+#include "meshqualitytool.h"
 
 BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     MeshObject(alg_output),
@@ -33,7 +34,7 @@ BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
                 cell_quality->SetNumberOfTuples(n_cells);
                 for (vtkIdType i = 0; i < n_cells; i++)
                     cell_quality->SetValue(i, (double) i);
-                cell_quality->SetName(MainWindow::MESH_QUALITY_FIELD_NAME);
+                cell_quality->SetName(MeshQualityTool::MESH_QUALITY_FIELD_NAME);
 
                 auto cell_data = unstr_grid->GetCellData();
                 cell_data->AddArray(cell_quality);
