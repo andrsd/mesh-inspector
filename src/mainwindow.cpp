@@ -151,7 +151,7 @@ MainWindow::MainWindow(QWidget * parent) :
     export_menu(nullptr),
     view_menu(nullptr),
     view_mode(nullptr),
-    vtk_widget(nullptr),
+    view(nullptr),
     render_window(nullptr),
     renderer(nullptr),
     interactor(nullptr),
@@ -241,7 +241,7 @@ MainWindow::~MainWindow()
     delete this->settings;
     delete this->file_watcher;
     delete this->menu_bar;
-    delete this->vtk_widget;
+    delete this->view;
     this->render_window->Delete();
     this->renderer->Delete();
     delete this->info_window;
@@ -269,11 +269,11 @@ MainWindow::~MainWindow()
 void
 MainWindow::setupWidgets()
 {
-    this->vtk_widget = new QVTKOpenGLNativeWidget();
-    setCentralWidget(this->vtk_widget);
+    this->view = new QVTKOpenGLNativeWidget();
+    setCentralWidget(this->view);
 
     this->render_window = vtkGenericOpenGLRenderWindow::New();
-    this->vtk_widget->setRenderWindow(this->render_window);
+    this->view->setRenderWindow(this->render_window);
 
     this->renderer = vtkRenderer::New();
     this->render_window->AddRenderer(this->renderer);
@@ -1143,7 +1143,7 @@ MainWindow::showSelectedMeshEntity(const QString & info)
 {
     this->selected_mesh_ent_info->setText(info);
     this->selected_mesh_ent_info->adjustSize();
-    auto tl = this->vtk_widget->geometry().topLeft();
+    auto tl = this->view->geometry().topLeft();
     this->selected_mesh_ent_info->move(tl.x() + 10, tl.y() + 10);
     this->selected_mesh_ent_info->show();
 }
@@ -1940,7 +1940,7 @@ MainWindow::onExplodeValueChanged(double value)
 void
 MainWindow::updateViewModeLocation()
 {
-    auto tr = this->vtk_widget->geometry().topRight();
+    auto tr = this->view->geometry().topRight();
     this->view_mode->move(tr.x() - 10 - this->view_mode->width(), tr.y() + 10);
 }
 
