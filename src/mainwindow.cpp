@@ -32,9 +32,6 @@
 #include "vtkProperty.h"
 #include "vtkCamera.h"
 #include "vtkCubeAxesActor.h"
-#include "vtkWindowToImageFilter.h"
-#include "vtkPNGWriter.h"
-#include "vtkJPEGWriter.h"
 #include "vtkPropPicker.h"
 #include "vtkPointPicker.h"
 #include "vtkCellPicker.h"
@@ -50,6 +47,7 @@
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
+#include "exporttool.h"
 #include "explodetool.h"
 #include "meshqualitytool.h"
 #include "reader.h"
@@ -160,12 +158,11 @@ MainWindow::MainWindow(QWidget * parent) :
     about_dlg(nullptr),
     license_dlg(nullptr),
     selected_mesh_ent_info(nullptr),
+    export_tool(new ExportTool(this)),
     explode_tool(new ExplodeTool(this)),
     mesh_quality_tool(new MeshQualityTool(this)),
     new_action(nullptr),
     open_action(nullptr),
-    export_as_png(nullptr),
-    export_as_jpg(nullptr),
     close_action(nullptr),
     clear_recent_file(nullptr),
     shaded_action(nullptr),
@@ -271,6 +268,12 @@ vtkRenderer *
 MainWindow::getRenderer() const
 {
     return this->renderer;
+}
+
+vtkGenericOpenGLRenderWindow *
+MainWindow::getRenderWindow() const
+{
+    return this->render_window;
 }
 
 void
@@ -397,7 +400,7 @@ MainWindow::setupMenuBar()
     buildRecentFilesMenu();
     file_menu->addSeparator();
     this->export_menu = file_menu->addMenu("Export as...");
-    setupExportMenu(export_menu);
+    this->export_tool->setupMenu(this->export_menu);
     file_menu->addSeparator();
     this->close_action =
         file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
@@ -449,13 +452,6 @@ MainWindow::setupMenuBar()
 
     this->windows_action_group = new QActionGroup(this);
     this->windows_action_group->addAction(this->show_main_window);
-}
-
-void
-MainWindow::setupExportMenu(QMenu * menu)
-{
-    this->export_as_png = menu->addAction("PNG...", this, &MainWindow::onExportAsPng);
-    this->export_as_jpg = menu->addAction("JPG...", this, &MainWindow::onExportAsJpg);
 }
 
 void
@@ -517,8 +513,7 @@ MainWindow::updateMenuBar()
 
     this->view_info_wnd_action->setChecked(this->info_window->isVisible());
     bool has_file = hasFile();
-    this->export_as_png->setEnabled(has_file);
-    this->export_as_jpg->setEnabled(has_file);
+    this->export_tool->setMenuEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
     this->tools_mesh_quality_action->setEnabled(has_file);
     this->close_action->setEnabled(has_file);
@@ -1301,24 +1296,6 @@ MainWindow::loadColorProfiles()
     this->color_profiles.push_back(cp_dark);
 }
 
-QString
-MainWindow::getFileName(const QString & window_title,
-                        const QString & name_filter,
-                        const QString & default_suffix)
-{
-    QFileDialog dialog;
-    dialog.setWindowTitle(window_title);
-    dialog.setNameFilter(name_filter);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setDefaultSuffix(default_suffix);
-
-    if (dialog.exec() == QDialog::Accepted)
-        return { dialog.selectedFiles()[0] };
-
-    return {};
-}
-
 void
 MainWindow::buildRecentFilesMenu()
 {
@@ -1825,51 +1802,6 @@ MainWindow::onColorProfileTriggered(QAction * action)
     action->setChecked(true);
     this->color_profile_idx = action->data().toInt();
     setColorProfile();
-}
-
-void
-MainWindow::onExportAsPng()
-{
-    auto fname = getFileName("Export to PNG", "PNG files (*.png)", "png");
-    if (!fname.isNull()) {
-        auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->render_window);
-        windowToImageFilter->SetInputBufferTypeToRGBA();
-        windowToImageFilter->ReadFrontBufferOff();
-        windowToImageFilter->Update();
-
-        auto * writer = vtkPNGWriter::New();
-        writer->SetFileName(fname.toStdString().c_str());
-        writer->SetInputConnection(windowToImageFilter->GetOutputPort());
-        writer->Write();
-
-        if (writer->GetErrorCode() == 0) {
-            QFileInfo fi(fname);
-            showNotification(QString("Export to '%1' was successful.").arg(fi.fileName()));
-        }
-    }
-}
-
-void
-MainWindow::onExportAsJpg()
-{
-    auto fname = getFileName("Export to JPG", "JPG files (*.jpg)", "jpg");
-    if (!file_name.isNull()) {
-        auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->render_window);
-        windowToImageFilter->ReadFrontBufferOff();
-        windowToImageFilter->Update();
-
-        auto * writer = vtkJPEGWriter::New();
-        writer->SetFileName(fname.toStdString().c_str());
-        writer->SetInputConnection(windowToImageFilter->GetOutputPort());
-        writer->Write();
-
-        if (writer->GetErrorCode() == 0) {
-            QFileInfo fi(fname);
-            showNotification(QString("Export to '%1' was successful.").arg(fi.fileName()));
-        }
-    }
 }
 
 void

@@ -10,6 +10,7 @@ add_executable(
         exodusiireader.cpp
         explodetool.cpp
         explodewidget.cpp
+        exporttool.cpp
         filechangednotificationwidget.cpp
         infowindow.cpp
         licensedlg.cpp

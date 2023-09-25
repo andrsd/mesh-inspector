@@ -26,11 +26,13 @@ class InfoWindow;
 class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
+class ExportTool;
 class ExplodeTool;
 class MeshQualityTool;
 class FileChangedNotificationWidget;
 class vtkGenericOpenGLRenderWindow;
 class vtkRenderer;
+class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 class vtkOrientationMarkerWidget;
 class vtkCompositeDataGeometryFilter;
@@ -90,8 +92,10 @@ public:
     const std::map<int, BlockObject *> & getBlocks() const;
     const vtkVector3d & getCenterOfBounds() const;
     vtkRenderer * getRenderer() const;
+    vtkGenericOpenGLRenderWindow * getRenderWindow() const;
     void updateMenuBar();
     void activateRenderMode();
+    void showNotification(const QString & text, int ms = 5000);
 
     template <typename T>
     inline qreal
@@ -111,7 +115,6 @@ protected:
     void setupNotificationWidget();
     void setupFileChangedNotificationWidget();
     void setupMenuBar();
-    void setupExportMenu(QMenu * menu);
     void setupColorProfileMenu(QMenu * menu);
     void setupSelectModeMenu(QMenu * menu);
 
@@ -141,7 +144,6 @@ protected:
     void setNodeSetProperties(NodeSetObject * nodeset);
     void setSelectionProperties();
     void setHighlightProperties();
-    void showNotification(const QString & text, int ms = 5000);
     void showFileChangedNotification();
     void showSelectedMeshEntity(const QString & info);
     void hideSelectedMeshEntity();
@@ -155,9 +157,6 @@ protected:
     void selectPoint(const QPoint & pt);
     void setColorProfile();
     void loadColorProfiles();
-    QString getFileName(const QString & window_title,
-                        const QString & name_filter,
-                        const QString & default_suffix);
     void buildRecentFilesMenu();
     void addToRecentFiles(const QString & file_name);
     QString cellTypeToName(int cell_type);
@@ -204,8 +203,6 @@ public slots:
     void onSelectModeTriggered(QAction * action);
     void onDeselect();
     void onColorProfileTriggered(QAction * action);
-    void onExportAsPng();
-    void onExportAsJpg();
     void updateViewModeLocation();
     void onMinimize();
     void onBringAllToFront();
@@ -247,13 +244,12 @@ protected:
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
     InfoWidget * selected_mesh_ent_info;
+    ExportTool * export_tool;
     ExplodeTool * explode_tool;
     MeshQualityTool * mesh_quality_tool;
 
     QAction * new_action;
     QAction * open_action;
-    QAction * export_as_png;
-    QAction * export_as_jpg;
     QAction * close_action;
     QAction * clear_recent_file;
     QAction * shaded_action;
