@@ -80,7 +80,8 @@ QColor MainWindow::SELECTION_CLR = QColor(255, 173, 79);
 QColor MainWindow::SELECTION_EDGE_CLR = QColor(179, 95, 0);
 QColor MainWindow::HIGHLIGHT_CLR = QColor(255, 211, 79);
 
-int MainWindow::SIDESET_EDGE_WIDTH = 2;
+float MainWindow::EDGE_WIDTH = 1;
+float MainWindow::OUTLINE_WIDTH = 1.5;
 
 const char * MainWindow::MESH_QUALITY_FIELD_NAME = "CellQuality";
 
@@ -687,7 +688,7 @@ MainWindow::setupOrientationMarker()
                                                   axes->GetZAxisShaftProperty() });
     for (std::size_t i = 0; i < shaft_property.size(); i++) {
         auto prop = shaft_property[i];
-        prop->SetLineWidth(2);
+        prop->SetLineWidth(HIDPI(1));
         prop->SetColor(clr[i].redF(), clr[i].greenF(), clr[i].blueF());
     }
 
@@ -880,7 +881,7 @@ MainWindow::setSelectedBlockProperties(BlockObject * block, bool highlighted)
         property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                                SIDESET_EDGE_CLR.greenF(),
                                SIDESET_EDGE_CLR.blueF());
-        property->SetLineWidth(2);
+        property->SetLineWidth(HIDPI(EDGE_WIDTH));
     }
     else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
         property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
@@ -914,7 +915,7 @@ MainWindow::setDeselectedBlockProperties(BlockObject * block, bool highlighted)
         property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                                SIDESET_EDGE_CLR.greenF(),
                                SIDESET_EDGE_CLR.blueF());
-        property->SetLineWidth(2);
+        property->SetLineWidth(HIDPI(EDGE_WIDTH));
     }
     else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
         property->SetColor(1., 1., 1.);
@@ -940,19 +941,19 @@ MainWindow::setHighlightedBlockProperties(BlockObject * block, bool highlighted)
 
         if (this->render_mode == SHADED) {
             property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(3);
+            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
         }
         else if (this->render_mode == SHADED_WITH_EDGES) {
             property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(3);
+            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
         }
         else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
             property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(3);
+            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
         }
         else if (this->render_mode == TRANSLUENT) {
             property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(3);
+            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
         }
     }
     else {
@@ -965,12 +966,12 @@ MainWindow::setHighlightedBlockProperties(BlockObject * block, bool highlighted)
         else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
             block->setSilhouetteVisible(true);
             property->SetColor(0, 0, 0);
-            property->SetLineWidth(3);
+            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
         }
         else if (this->render_mode == TRANSLUENT) {
             block->setSilhouetteVisible(true);
             property->SetColor(0, 0, 0);
-            property->SetLineWidth(3);
+            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
         }
     }
 }
@@ -1000,7 +1001,7 @@ MainWindow::setBlockMeshQualityProperties(BlockObject * block, double range[])
     property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                            SIDESET_EDGE_CLR.greenF(),
                            SIDESET_EDGE_CLR.blueF());
-    property->SetLineWidth(2);
+    property->SetLineWidth(HIDPI(EDGE_WIDTH));
 
     auto mapper = block->getMapper();
     mapper->ScalarVisibilityOn();
@@ -1024,7 +1025,7 @@ MainWindow::setSideSetProperties(SideSetObject * sideset)
                                SIDESET_EDGE_CLR.greenF(),
                                SIDESET_EDGE_CLR.blueF());
         if (this->render_mode == SHADED_WITH_EDGES) {
-            property->SetLineWidth(SIDESET_EDGE_WIDTH);
+            property->SetLineWidth(HIDPI(EDGE_WIDTH));
             property->SetEdgeVisibility(true);
         }
     }
@@ -1038,7 +1039,7 @@ MainWindow::setNodeSetProperties(NodeSetObject * nodeset)
     property->SetRenderPointsAsSpheres(true);
     property->SetVertexVisibility(true);
     property->SetEdgeVisibility(false);
-    property->SetPointSize(10);
+    property->SetPointSize(HIDPI(5));
     property->SetColor(NODESET_CLR.redF(), NODESET_CLR.greenF(), NODESET_CLR.blueF());
     property->SetOpacity(1);
     property->SetAmbient(1);
@@ -1055,7 +1056,7 @@ MainWindow::setSelectionProperties()
         property->SetRenderPointsAsSpheres(true);
         property->SetVertexVisibility(true);
         property->SetEdgeVisibility(false);
-        property->SetPointSize(15);
+        property->SetPointSize(HIDPI(7.5));
         property->SetColor(SELECTION_CLR.redF(), SELECTION_CLR.greenF(), SELECTION_CLR.blueF());
         property->SetOpacity(1);
         property->SetAmbient(1);
@@ -1067,7 +1068,7 @@ MainWindow::setSelectionProperties()
         property->SetVertexVisibility(false);
         property->EdgeVisibilityOn();
         property->SetColor(SELECTION_CLR.redF(), SELECTION_CLR.greenF(), SELECTION_CLR.blueF());
-        property->SetLineWidth(7);
+        property->SetLineWidth(HIDPI(3.5));
         property->SetEdgeColor(SELECTION_EDGE_CLR.redF(),
                                SELECTION_EDGE_CLR.greenF(),
                                SELECTION_EDGE_CLR.blueF());
@@ -1087,7 +1088,7 @@ MainWindow::setHighlightProperties()
         property->SetRenderPointsAsSpheres(true);
         property->SetVertexVisibility(true);
         property->SetEdgeVisibility(false);
-        property->SetPointSize(15);
+        property->SetPointSize(HIDPI(7.5));
         property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
         property->SetOpacity(1);
         property->SetAmbient(1);
@@ -1099,7 +1100,7 @@ MainWindow::setHighlightProperties()
         property->SetVertexVisibility(false);
         property->EdgeVisibilityOn();
         property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-        property->SetLineWidth(7);
+        property->SetLineWidth(HIDPI(3.5));
         property->SetEdgeColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
         property->SetOpacity(0.33);
         property->SetAmbient(1);

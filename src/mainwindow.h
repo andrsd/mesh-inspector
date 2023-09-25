@@ -168,6 +168,13 @@ protected:
 
     void getCellQualityRange(double range[]);
 
+    template <typename T>
+    inline qreal
+    HIDPI(T value) const
+    {
+        return devicePixelRatio() * value;
+    }
+
 public slots:
     void onClose();
     void onLoadFinished();
@@ -306,7 +313,8 @@ protected:
     static QColor SELECTION_EDGE_CLR;
     static QColor HIGHLIGHT_CLR;
 
-    static int SIDESET_EDGE_WIDTH;
+    static float EDGE_WIDTH;
+    static float OUTLINE_WIDTH;
 
 public:
     static const char * MESH_QUALITY_FIELD_NAME;
