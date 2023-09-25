@@ -17,7 +17,7 @@ class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 class QPushButton;
-class QVTKOpenGLNativeWidget;
+class View;
 class QDockWidget;
 class QShortcut;
 class QNetworkAccessManager;
@@ -31,24 +31,13 @@ class ExportTool;
 class ExplodeTool;
 class MeshQualityTool;
 class FileChangedNotificationWidget;
-class vtkGenericOpenGLRenderWindow;
-class vtkRenderer;
-class vtkRenderWindow;
-class vtkRenderWindowInteractor;
-class vtkOrientationMarkerWidget;
-class vtkCompositeDataGeometryFilter;
 class vtkActor;
-class vtkCubeAxesActor;
 class vtkExtractBlock;
-class vtkLookupTable;
-class vtkScalarBarActor;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
 class ColorProfile;
 class InfoWidget;
-class OInteractorStyle2D;
-class OInteractorStyle3D;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -70,13 +59,6 @@ protected:
         Reader * reader;
     };
 
-    enum ERenderMode {
-        SHADED = 0,
-        SHADED_WITH_EDGES = 1,
-        HIDDEN_EDGES_REMOVED = 2,
-        TRANSLUENT = 3
-    };
-
 public:
     explicit MainWindow(QWidget * parent = nullptr);
     ~MainWindow() override;
@@ -86,18 +68,16 @@ public:
     const std::map<int, SideSetObject *> & getSideSets() const;
     const std::map<int, NodeSetObject *> & getNodeSets() const;
     const vtkVector3d & getCenterOfBounds() const;
-    vtkRenderer * getRenderer() const;
-    vtkGenericOpenGLRenderWindow * getRenderWindow() const;
     void updateMenuBar();
     void activateRenderMode();
     void showNotification(const QString & text, int ms = 5000);
-    void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
     QSettings * getSettings();
     int blockActorToId(vtkActor * actor);
     BlockObject * getBlock(int block_id);
     SideSetObject * getSideSet(int sideset_id);
     NodeSetObject * getNodeSet(int nodeset_id);
-    QWidget * getView();
+    View * getView();
+    const BlockObject * getSelectedBlock();
 
     template <typename T>
     inline qreal
@@ -125,7 +105,6 @@ protected:
     void loadFile(const QString & file_name);
     bool hasFile();
 
-    void setupVtk();
     void setupOrientationMarker();
     void setupCubeAxesActor();
     void computeTotalBoundingBox();
@@ -134,11 +113,6 @@ protected:
     void addBlocks();
     void addSideSets();
     void addNodeSets();
-    void setSelectedBlockProperties(BlockObject * block, bool highlighted = false);
-    void setDeselectedBlockProperties(BlockObject * block, bool highlighted = false);
-    void setHighlightedBlockProperties(BlockObject * block, bool highlighted);
-    void setSideSetProperties(SideSetObject * sideset);
-    void setNodeSetProperties(NodeSetObject * nodeset);
     void showFileChangedNotification();
     void setColorProfile();
     void loadColorProfiles();
@@ -166,16 +140,10 @@ public slots:
     void onSideSetVisibilityChanged(int sideset_id, bool visible);
     void onNodeSetVisibilityChanged(int nodeset_id, bool visible);
     void onCubeAxisVisibilityChanged(bool visible);
-    void onOrientationMarkerVisibilityChanged(bool visible);
     void onOpenFile();
     void onOpenRecentFile();
     void onClearRecentFiles();
     void onNewFile();
-    void onShadedTriggered(bool checked);
-    void onShadedWithEdgesTriggered(bool checked);
-    void onHiddenEdgesRemovedTriggered(bool checked);
-    void onTransluentTriggered(bool checked);
-    void onPerspectiveToggled(bool checked);
     void onUpdateWindow();
     void onFileChanged(const QString & path);
     void onReloadFile();
@@ -201,21 +169,11 @@ protected:
     QFileSystemWatcher * file_watcher;
     NotificationWidget * notification;
     FileChangedNotificationWidget * file_changed_notification;
-    ERenderMode render_mode;
     QMenuBar * menu_bar;
     QMenu * recent_menu;
     QStringList recent_files;
     QMenu * export_menu;
-    QMenu * view_menu;
-    QPushButton * view_mode;
-    QVTKOpenGLNativeWidget * view;
-    vtkGenericOpenGLRenderWindow * render_window;
-    vtkRenderer * renderer;
-    vtkRenderWindowInteractor * interactor;
-    vtkOrientationMarkerWidget * ori_marker;
-    vtkCubeAxesActor * cube_axes_actor;
-    OInteractorStyle2D * interactor_style_2d;
-    OInteractorStyle3D * interactor_style_3d;
+    View * view;
     QDockWidget * info_dock;
     InfoWindow * info_window;
     AboutDialog * about_dlg;
@@ -229,15 +187,9 @@ protected:
     QAction * open_action;
     QAction * close_action;
     QAction * clear_recent_file;
-    QAction * shaded_action;
-    QAction * shaded_w_edges_action;
-    QAction * hidden_edges_removed_action;
-    QAction * transluent_action;
     QAction * view_info_wnd_action;
     QAction * tools_explode_action;
     QAction * tools_mesh_quality_action;
-    QAction * perspective_action;
-    QAction * ori_marker_action;
     QAction * minimize;
     QAction * bring_all_to_front;
     QAction * show_main_window;
@@ -245,7 +197,6 @@ protected:
     QAction * check_update_action;
     QAction * view_license_action;
 
-    QActionGroup * visual_repr;
     QActionGroup * color_profile_action_group;
     QActionGroup * windows_action_group;
 
@@ -261,12 +212,4 @@ protected:
     std::vector<ColorProfile *> color_profiles;
 
     QNetworkAccessManager * namgr;
-
-public:
-    static QColor SIDESET_CLR;
-    static QColor SIDESET_EDGE_CLR;
-    static QColor NODESET_CLR;
-
-    static float EDGE_WIDTH;
-    static float OUTLINE_WIDTH;
 };

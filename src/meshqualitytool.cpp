@@ -1,6 +1,7 @@
 #include "meshqualitytool.h"
 #include "meshqualitywidget.h"
 #include "mainwindow.h"
+#include "view.h"
 #include "colorprofile.h"
 #include "blockobject.h"
 #include "vtkLookupTable.h"
@@ -52,7 +53,8 @@ MeshQualityTool::setupWidgets()
 void
 MeshQualityTool::loadIntoVtk()
 {
-    auto renderer = this->main_window->getRenderer();
+    auto view = this->main_window->getView();
+    auto renderer = view->getRenderer();
     renderer->AddActor2D(this->color_bar);
 }
 
@@ -414,10 +416,10 @@ MeshQualityTool::setBlockMeshQualityProperties(BlockObject * block, double range
     property->SetDiffuse(0.6);
     property->SetOpacity(1.0);
     property->SetEdgeVisibility(true);
-    property->SetEdgeColor(MainWindow::SIDESET_EDGE_CLR.redF(),
-                           MainWindow::SIDESET_EDGE_CLR.greenF(),
-                           MainWindow::SIDESET_EDGE_CLR.blueF());
-    property->SetLineWidth(this->main_window->HIDPI(MainWindow::EDGE_WIDTH));
+    property->SetEdgeColor(View::SIDESET_EDGE_CLR.redF(),
+                           View::SIDESET_EDGE_CLR.greenF(),
+                           View::SIDESET_EDGE_CLR.blueF());
+    property->SetLineWidth(this->main_window->HIDPI(View::EDGE_WIDTH));
 
     auto mapper = block->getMapper();
     mapper->ScalarVisibilityOn();

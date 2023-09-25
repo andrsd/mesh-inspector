@@ -1,5 +1,6 @@
 #include "exporttool.h"
 #include "mainwindow.h"
+#include "view.h"
 #include <QMenu>
 #include <QFileDialog>
 #include "vtkGenericOpenGLRenderWindow.h"
@@ -51,8 +52,9 @@ ExportTool::onExportAsPng()
 {
     auto fname = getFileName("Export to PNG", "PNG files (*.png)", "png");
     if (!fname.isNull()) {
+        auto view = this->main_window->getView();
         auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->main_window->getRenderWindow());
+        windowToImageFilter->SetInput(view->getRenderWindow());
         windowToImageFilter->SetInputBufferTypeToRGBA();
         windowToImageFilter->ReadFrontBufferOff();
         windowToImageFilter->Update();
@@ -75,8 +77,9 @@ ExportTool::onExportAsJpg()
 {
     auto fname = getFileName("Export to JPG", "JPG files (*.jpg)", "jpg");
     if (!fname.isNull()) {
+        auto view = this->main_window->getView();
         auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->main_window->getRenderWindow());
+        windowToImageFilter->SetInput(view->getRenderWindow());
         windowToImageFilter->ReadFrontBufferOff();
         windowToImageFilter->Update();
 
