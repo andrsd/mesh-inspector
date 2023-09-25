@@ -1142,7 +1142,8 @@ MainWindow::showSelectedMeshEntity(const QString & info)
 {
     this->selected_mesh_ent_info->setText(info);
     this->selected_mesh_ent_info->adjustSize();
-    this->selected_mesh_ent_info->move(10, 10);
+    auto tl = this->vtk_widget->geometry().topLeft();
+    this->selected_mesh_ent_info->move(tl.x() + 10, tl.y() + 10);
     this->selected_mesh_ent_info->show();
 }
 
@@ -1938,8 +1939,8 @@ MainWindow::onExplodeValueChanged(double value)
 void
 MainWindow::updateViewModeLocation()
 {
-    auto width = this->getRenderWindowWidth();
-    this->view_mode->move(width - 5 - this->view_mode->width(), 10);
+    auto tr = this->vtk_widget->geometry().topRight();
+    this->view_mode->move(tr.x() - 10 - this->view_mode->width(), tr.y() + 10);
 }
 
 void
