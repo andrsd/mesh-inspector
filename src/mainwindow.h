@@ -242,7 +242,7 @@ protected:
     QMenu * view_menu;
     QPushButton * view_mode;
     QVTKOpenGLNativeWidget * vtk_widget;
-    vtkGenericOpenGLRenderWindow * vtk_render_window;
+    vtkGenericOpenGLRenderWindow * render_window;
     vtkRenderer * vtk_renderer;
     vtkRenderWindowInteractor * vtk_interactor;
     vtkOrientationMarkerWidget * ori_marker;

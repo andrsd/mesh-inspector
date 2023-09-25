@@ -152,7 +152,7 @@ MainWindow::MainWindow(QWidget * parent) :
     view_menu(nullptr),
     view_mode(nullptr),
     vtk_widget(nullptr),
-    vtk_render_window(nullptr),
+    render_window(nullptr),
     vtk_renderer(nullptr),
     vtk_interactor(nullptr),
     ori_marker(nullptr),
@@ -242,7 +242,7 @@ MainWindow::~MainWindow()
     delete this->file_watcher;
     delete this->menu_bar;
     delete this->vtk_widget;
-    this->vtk_render_window->Delete();
+    this->render_window->Delete();
     this->vtk_renderer->Delete();
     delete this->info_window;
     delete this->info_dock;
@@ -272,11 +272,11 @@ MainWindow::setupWidgets()
     this->vtk_widget = new QVTKOpenGLNativeWidget();
     setCentralWidget(this->vtk_widget);
 
-    this->vtk_render_window = vtkGenericOpenGLRenderWindow::New();
-    this->vtk_widget->setRenderWindow(this->vtk_render_window);
+    this->render_window = vtkGenericOpenGLRenderWindow::New();
+    this->vtk_widget->setRenderWindow(this->render_window);
 
     this->vtk_renderer = vtkRenderer::New();
-    this->vtk_render_window->AddRenderer(this->vtk_renderer);
+    this->render_window->AddRenderer(this->vtk_renderer);
 
     this->info_window = new InfoWindow();
 
@@ -604,13 +604,13 @@ MainWindow::connectSignals()
 void
 MainWindow::setupVtk()
 {
-    this->vtk_interactor = this->vtk_render_window->GetInteractor();
+    this->vtk_interactor = this->render_window->GetInteractor();
 
     // TODO: set background from preferences/templates
     this->vtk_renderer->SetGradientBackground(true);
     // set anti-aliasing on
     this->vtk_renderer->SetUseFXAA(true);
-    this->vtk_render_window->SetMultiSamples(1);
+    this->render_window->SetMultiSamples(1);
 }
 
 void
@@ -1733,7 +1733,7 @@ MainWindow::onPerspectiveToggled(bool checked)
 void
 MainWindow::onUpdateWindow()
 {
-    this->vtk_render_window->Render();
+    this->render_window->Render();
 }
 
 void
@@ -1875,7 +1875,7 @@ MainWindow::onExportAsPng()
     auto fname = getFileName("Export to PNG", "PNG files (*.png)", "png");
     if (!fname.isNull()) {
         auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->vtk_render_window);
+        windowToImageFilter->SetInput(this->render_window);
         windowToImageFilter->SetInputBufferTypeToRGBA();
         windowToImageFilter->ReadFrontBufferOff();
         windowToImageFilter->Update();
@@ -1898,7 +1898,7 @@ MainWindow::onExportAsJpg()
     auto fname = getFileName("Export to JPG", "JPG files (*.jpg)", "jpg");
     if (!file_name.isNull()) {
         auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->vtk_render_window);
+        windowToImageFilter->SetInput(this->render_window);
         windowToImageFilter->ReadFrontBufferOff();
         windowToImageFilter->Update();
 
