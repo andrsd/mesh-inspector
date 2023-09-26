@@ -19,10 +19,6 @@
 #include <QFileDialog>
 #include <QVector3D>
 #include <QShortcut>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QJsonDocument>
 #include "vtkExtractBlock.h"
 #include "vtkCamera.h"
 #include "infowindow.h"
@@ -33,6 +29,7 @@
 #include "exporttool.h"
 #include "explodetool.h"
 #include "meshqualitytool.h"
+#include "checkforupdatetool.h"
 #include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
@@ -120,6 +117,7 @@ MainWindow::MainWindow(QWidget * parent) :
     export_tool(new ExportTool(this)),
     explode_tool(new ExplodeTool(this)),
     mesh_quality_tool(new MeshQualityTool(this)),
+    update_tool(new CheckForUpdateTool(this)),
     new_action(nullptr),
     open_action(nullptr),
     close_action(nullptr),
@@ -131,14 +129,10 @@ MainWindow::MainWindow(QWidget * parent) :
     bring_all_to_front(nullptr),
     show_main_window(nullptr),
     about_box_action(nullptr),
-    check_update_action(nullptr),
     view_license_action(nullptr),
     color_profile_action_group(nullptr),
-    windows_action_group(nullptr),
-    namgr(new QNetworkAccessManager())
+    windows_action_group(nullptr)
 {
-    connect(this->namgr, &QNetworkAccessManager::finished, this, &MainWindow::onHttpReply);
-
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
     if (!this->restoreGeometry(geom.toByteArray()))
@@ -176,6 +170,7 @@ MainWindow::~MainWindow()
     delete this->info_dock;
     delete this->explode_tool;
     delete this->mesh_quality_tool;
+    delete this->update_tool;
     for (auto & it : this->color_profiles)
         delete it;
     delete this->load_thread;
@@ -185,7 +180,6 @@ MainWindow::~MainWindow()
     delete this->color_profile_action_group;
     delete this->about_dlg;
     delete this->license_dlg;
-    delete this->namgr;
 }
 
 const std::map<int, BlockObject *> &
@@ -301,9 +295,7 @@ MainWindow::setupMenuBar()
     file_menu->addSeparator();
     this->about_box_action = file_menu->addAction("About", this, &MainWindow::onAbout);
     this->about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
-    this->check_update_action =
-        file_menu->addAction("Check for update...", this, &MainWindow::onCheckForUpdate);
-    this->check_update_action->setMenuRole(QAction::ApplicationSpecificRole);
+    this->update_tool->setupMenu(file_menu);
     this->view_license_action =
         file_menu->addAction("View license", this, &MainWindow::onViewLicense);
     this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
@@ -323,8 +315,9 @@ MainWindow::setupMenuBar()
     this->select_tool->setupMenu(tools_menu);
     this->tools_explode_action =
         tools_menu->addAction("Explode", this->explode_tool, &ExplodeTool::onExplode);
-    this->tools_mesh_quality_action =
-        tools_menu->addAction("Mesh quality", this->mesh_quality_tool, &MeshQualityTool::onMeshQuality);
+    this->tools_mesh_quality_action = tools_menu->addAction("Mesh quality",
+                                                            this->mesh_quality_tool,
+                                                            &MeshQualityTool::onMeshQuality);
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
@@ -1039,51 +1032,6 @@ MainWindow::onViewLicense()
     if (this->license_dlg == nullptr)
         this->license_dlg = new LicenseDialog(this);
     this->license_dlg->show();
-}
-
-void
-MainWindow::onCheckForUpdate()
-{
-    QNetworkRequest request;
-    request.setUrl(QUrl("https://api.github.com/repos/andrsd/mesh-inspector/releases/latest"));
-    request.setRawHeader(QByteArray("Accept"), QByteArray("application/vnd.github+json"));
-    request.setRawHeader(QByteArray("Authorization"),
-                         QByteArray("Bearer "
-                                    "github_pat_11AAAU5AA0uy230CCje7ng_"
-                                    "8pj7WNyfPIj8TZZRv7ZSF4RmpULmyRtN0Y9glzoh0bePPT6765WCoolMPhf"));
-    this->namgr->get(request);
-}
-
-void
-MainWindow::onHttpReply(QNetworkReply * reply)
-{
-    if (reply->error() == QNetworkReply::NoError) {
-        QVersionNumber latest = getVersionFromReply(reply);
-        QVersionNumber current(MESH_INSPECTOR_MAJOR_VERSION, MESH_INSPECTOR_MINOR_VERSION);
-
-        if (QVersionNumber::compare(latest, current) == 0)
-            showNotification("You are running the latest version.");
-        else
-            showNotification(QString("A newer version (%1.%2) is available.")
-                                 .arg(latest.majorVersion())
-                                 .arg(latest.minorVersion()));
-    }
-    else
-        showNotification("Check for a new version failed.");
-}
-
-QVersionNumber
-MainWindow::getVersionFromReply(QNetworkReply * reply)
-{
-    QByteArray val = reply->readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(val);
-    auto tag_name = doc["tag_name"].toString();
-    QRegularExpression re("v(\\d+)\\.(\\d+)");
-    QRegularExpressionMatch match = re.match(tag_name);
-    if (match.hasMatch())
-        return QVersionNumber(match.captured(1).toInt(), match.captured(2).toInt());
-    else
-        return QVersionNumber(-1);
 }
 
 void

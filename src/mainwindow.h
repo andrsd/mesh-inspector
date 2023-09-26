@@ -4,7 +4,6 @@
 #include <QThread>
 #include <QTimer>
 #include <QColor>
-#include <QVersionNumber>
 #include "vtkVector.h"
 #include <vector>
 
@@ -20,8 +19,6 @@ class QPushButton;
 class View;
 class QDockWidget;
 class QShortcut;
-class QNetworkAccessManager;
-class QNetworkReply;
 class InfoWindow;
 class AboutDialog;
 class LicenseDialog;
@@ -30,6 +27,7 @@ class SelectTool;
 class ExportTool;
 class ExplodeTool;
 class MeshQualityTool;
+class CheckForUpdateTool;
 class FileChangedNotificationWidget;
 class vtkActor;
 class vtkExtractBlock;
@@ -129,8 +127,6 @@ protected:
     void dropEvent(QDropEvent * event) override;
     void closeEvent(QCloseEvent * event) override;
 
-    QVersionNumber getVersionFromReply(QNetworkReply * reply);
-
 public slots:
     void onClose();
     void onLoadFinished();
@@ -157,8 +153,6 @@ public slots:
     void onShowMainWindow();
     void onAbout();
     void onViewLicense();
-    void onCheckForUpdate();
-    void onHttpReply(QNetworkReply * reply);
 
 protected:
     QSettings * settings;
@@ -182,6 +176,7 @@ protected:
     ExportTool * export_tool;
     ExplodeTool * explode_tool;
     MeshQualityTool * mesh_quality_tool;
+    CheckForUpdateTool * update_tool;
 
     QAction * new_action;
     QAction * open_action;
@@ -194,7 +189,6 @@ protected:
     QAction * bring_all_to_front;
     QAction * show_main_window;
     QAction * about_box_action;
-    QAction * check_update_action;
     QAction * view_license_action;
 
     QActionGroup * color_profile_action_group;
@@ -210,6 +204,4 @@ protected:
 
     std::size_t color_profile_idx;
     std::vector<ColorProfile *> color_profiles;
-
-    QNetworkAccessManager * namgr;
 };

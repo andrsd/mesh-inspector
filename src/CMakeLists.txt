@@ -6,6 +6,7 @@ add_executable(
     ${PROJECT_NAME}
         aboutdlg.cpp
         blockobject.cpp
+        checkforupdatetool.cpp
         colorprofile.cpp
         exodusiireader.cpp
         explodetool.cpp
