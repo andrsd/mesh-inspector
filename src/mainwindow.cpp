@@ -316,10 +316,7 @@ MainWindow::connectSignals()
             &InfoView::blockOpacityChanged,
             this,
             &MainWindow::onBlockOpacityChanged);
-    connect(this->info_view,
-            &InfoView::blockColorChanged,
-            this,
-            &MainWindow::onBlockColorChanged);
+    connect(this->info_view, &InfoView::blockColorChanged, this, &MainWindow::onBlockColorChanged);
     connect(this->info_view,
             &InfoView::blockSelectionChanged,
             this->select_tool,
@@ -367,11 +364,8 @@ MainWindow::loadFile(const QString & file_name)
         this->select_tool->onDeselect();
         this->clear();
 
-        this->progress = new QProgressDialog(QString("Loading %1...").arg(fi.fileName()),
-                                             QString(),
-                                             0,
-                                             0,
-                                             this);
+        this->progress =
+            new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
         this->progress->setWindowModality(Qt::WindowModal);
         this->progress->show();
 

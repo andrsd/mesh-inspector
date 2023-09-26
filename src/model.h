@@ -23,6 +23,7 @@ class FileChangedNotificationWidget;
 
 class Model : public QObject {
     Q_OBJECT;
+
 public:
     explicit Model(MainWindow * main_window);
     ~Model() override;
@@ -71,8 +72,8 @@ protected:
     Reader * createReader(const QString & file_name);
 
     MainWindow * main_window;
-    View * & view;
-    InfoView * & info_view;
+    View *& view;
+    InfoView *& info_view;
 
     std::vector<vtkExtractBlock *> extract_blocks;
     std::map<int, BlockObject *> blocks;

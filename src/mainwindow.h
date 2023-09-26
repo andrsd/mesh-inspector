@@ -40,9 +40,9 @@ public:
     void updateMenuBar();
     void showNotification(const QString & text, int ms = 5000);
     QSettings * getSettings();
-    View * & getView();
-    InfoView * & getInfoView();
-    Model * & getModel();
+    View *& getView();
+    InfoView *& getInfoView();
+    Model *& getModel();
     const BlockObject * getSelectedBlock();
 
     template <typename T>

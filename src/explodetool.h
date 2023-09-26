@@ -24,6 +24,6 @@ public slots:
 
 protected:
     MainWindow * main_window;
-    Model * & model;
+    Model *& model;
     ExplodeWidget * explode;
 };

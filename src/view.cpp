@@ -633,7 +633,6 @@ View::setCubeAxisVisibility(bool visible)
         this->cube_axes_actor->VisibilityOn();
     else
         this->cube_axes_actor->VisibilityOff();
-
 }
 
 vtkRenderer *

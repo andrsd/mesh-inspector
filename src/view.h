@@ -77,7 +77,7 @@ protected:
     void setupCubeAxesActor();
 
     MainWindow * main_window;
-    Model * & model;
+    Model *& model;
     QMenu * view_menu;
     QPushButton * view_mode;
     QAction * shaded_action;

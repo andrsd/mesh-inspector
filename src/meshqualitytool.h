@@ -36,8 +36,8 @@ protected:
     void setBlockMeshQualityProperties(BlockObject * block, double range[]);
 
     MainWindow * main_window;
-    Model * & model;
-    View * & view;
+    Model *& model;
+    View *& view;
     MeshQualityWidget * mesh_quality;
     vtkLookupTable * lut;
     vtkScalarBarActor * color_bar;

@@ -57,8 +57,8 @@ protected:
     void setHighlightProperties();
 
     MainWindow * main_window;
-    Model * & model;
-    View * & view;
+    Model *& model;
+    View *& view;
     InfoWidget * selected_mesh_ent_info;
     QShortcut * deselect_sc;
     QActionGroup * mode_select_action_group;

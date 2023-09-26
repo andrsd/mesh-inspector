@@ -78,7 +78,7 @@ protected:
     void onSideSetSelectionChanged(QStandardItem * item);
     void onNodeSetSelectionChanged(QStandardItem * item);
 
-    Model * & model;
+    Model *& model;
     QWidget * widget;
     QVBoxLayout * layout;
     MeshModel * mesh_model;
