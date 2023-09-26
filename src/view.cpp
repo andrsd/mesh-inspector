@@ -582,8 +582,9 @@ View::render()
 void
 View::updateLocation()
 {
+    auto width = this->main_window->getRenderWindowWidth();
     auto tr = this->geometry().topRight();
-    this->view_mode->move(tr.x() - 10 - this->view_mode->width(), tr.y() + 10);
+    this->view_mode->move(width - 10 - this->view_mode->width(), tr.y() + 10);
 }
 
 void
