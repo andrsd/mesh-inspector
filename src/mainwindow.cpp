@@ -14,14 +14,12 @@
 #include <QMimeData>
 #include <QPushButton>
 #include <QFileInfo>
-#include <QDockWidget>
 #include <QApplication>
 #include <QFileDialog>
 #include <QVector3D>
 #include <QShortcut>
 #include "vtkExtractBlock.h"
 #include "vtkCamera.h"
-#include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
@@ -37,6 +35,7 @@
 #include "selection.h"
 #include "model.h"
 #include "view.h"
+#include "infoview.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 #include "common/infowidget.h"
@@ -53,8 +52,7 @@ MainWindow::MainWindow(QWidget * parent) :
     recent_menu(nullptr),
     export_menu(nullptr),
     view(nullptr),
-    info_dock(nullptr),
-    info_window(nullptr),
+    info_view(nullptr),
     about_dlg(nullptr),
     license_dlg(nullptr),
     select_tool(new SelectTool(this)),
@@ -111,8 +109,7 @@ MainWindow::~MainWindow()
     delete this->settings;
     delete this->menu_bar;
     delete this->view;
-    delete this->info_window;
-    delete this->info_dock;
+    delete this->info_view;
     delete this->explode_tool;
     delete this->mesh_quality_tool;
     delete this->update_tool;
@@ -138,6 +135,12 @@ MainWindow::getView()
     return this->view;
 }
 
+InfoView *&
+MainWindow::getInfoView()
+{
+    return this->info_view;
+}
+
 Model *&
 MainWindow::getModel()
 {
@@ -156,14 +159,8 @@ MainWindow::setupWidgets()
     this->view = new View(this);
     setCentralWidget(this->view);
 
-    this->info_window = new InfoWindow();
-
-    this->info_dock = new QDockWidget("Information", this);
-    this->info_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    this->info_dock->setFloating(false);
-    this->info_dock->setFeatures(QDockWidget::DockWidgetMovable);
-    this->info_dock->setWidget(this->info_window);
-    addDockWidget(Qt::RightDockWidgetArea, this->info_dock);
+    this->info_view = new InfoView(this);
+    addDockWidget(Qt::RightDockWidgetArea, this->info_view);
 
     this->view->setupWidgets();
     setupFileChangedNotificationWidget();
@@ -282,7 +279,7 @@ MainWindow::updateMenuBar()
     auto * active_window = QApplication::activeWindow();
     this->show_main_window->setChecked(active_window == this);
 
-    this->view_info_wnd_action->setChecked(this->info_window->isVisible());
+    this->view_info_wnd_action->setChecked(this->info_view->isVisible());
     bool has_file = this->model->hasFile();
     this->export_tool->setMenuEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
@@ -310,46 +307,46 @@ MainWindow::connectSignals()
 {
     connect(this->model, &Model::loadFinished, this, &MainWindow::onLoadFinished);
     connect(this->model, &Model::fileChanged, this, &MainWindow::onFileChanged);
-    connect(this->model, &Model::blockAdded, this->info_window, &InfoWindow::onBlockAdded);
-    connect(this->info_window,
-            &InfoWindow::blockVisibilityChanged,
+    connect(this->model, &Model::blockAdded, this->info_view, &InfoView::onBlockAdded);
+    connect(this->info_view,
+            &InfoView::blockVisibilityChanged,
             this,
             &MainWindow::onBlockVisibilityChanged);
-    connect(this->info_window,
-            &InfoWindow::blockOpacityChanged,
+    connect(this->info_view,
+            &InfoView::blockOpacityChanged,
             this,
             &MainWindow::onBlockOpacityChanged);
-    connect(this->info_window,
-            &InfoWindow::blockColorChanged,
+    connect(this->info_view,
+            &InfoView::blockColorChanged,
             this,
             &MainWindow::onBlockColorChanged);
-    connect(this->info_window,
-            &InfoWindow::blockSelectionChanged,
+    connect(this->info_view,
+            &InfoView::blockSelectionChanged,
             this->select_tool,
             &SelectTool::onBlockSelectionChanged);
 
-    connect(this->model, &Model::sideSetAdded, this->info_window, &InfoWindow::onSideSetAdded);
-    connect(this->info_window,
-            &InfoWindow::sideSetVisibilityChanged,
+    connect(this->model, &Model::sideSetAdded, this->info_view, &InfoView::onSideSetAdded);
+    connect(this->info_view,
+            &InfoView::sideSetVisibilityChanged,
             this,
             &MainWindow::onSideSetVisibilityChanged);
-    connect(this->info_window,
-            &InfoWindow::sideSetSelectionChanged,
+    connect(this->info_view,
+            &InfoView::sideSetSelectionChanged,
             this->select_tool,
             &SelectTool::onSideSetSelectionChanged);
 
-    connect(this->model, &Model::nodeSetAdded, this->info_window, &InfoWindow::onNodeSetAdded);
-    connect(this->info_window,
-            &InfoWindow::nodeSetVisibilityChanged,
+    connect(this->model, &Model::nodeSetAdded, this->info_view, &InfoView::onNodeSetAdded);
+    connect(this->info_view,
+            &InfoView::nodeSetVisibilityChanged,
             this,
             &MainWindow::onNodeSetVisibilityChanged);
-    connect(this->info_window,
-            &InfoWindow::nodeSetSelectionChanged,
+    connect(this->info_view,
+            &InfoView::nodeSetSelectionChanged,
             this->select_tool,
             &SelectTool::onNodeSetSelectionChanged);
 
-    connect(this->info_window,
-            &InfoWindow::dimensionsStateChanged,
+    connect(this->info_view,
+            &InfoView::dimensionsStateChanged,
             this,
             &MainWindow::onCubeAxisVisibilityChanged);
 }
@@ -386,27 +383,12 @@ MainWindow::loadFile(const QString & file_name)
     }
 }
 
-void
-MainWindow::updateInfoWindow()
-{
-    this->info_window->clear();
-    this->info_window->init();
-
-    auto bbox = this->model->getTotalBoundingBox();
-    double bounds[6];
-    bbox.GetBounds(bounds);
-    this->info_window->setBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-
-    this->info_window->setSummary(this->model->getTotalNumberOfElements(),
-                                  this->model->getTotalNumberOfNodes());
-}
-
 int
 MainWindow::getRenderWindowWidth() const
 {
     int info_width = 0;
-    if (this->info_dock->isVisible())
-        info_width = this->info_dock->geometry().width();
+    if (this->info_view->isVisible())
+        info_width = this->info_view->geometry().width();
     return this->geometry().width() - info_width;
 }
 
@@ -576,7 +558,6 @@ void
 MainWindow::onClose()
 {
     clear();
-    this->info_window->clear();
     hide();
     this->update_timer.stop();
     updateMenuBar();
@@ -609,8 +590,6 @@ MainWindow::onLoadFinished()
 void
 MainWindow::update()
 {
-    updateInfoWindow();
-
     auto file_name = this->model->getFileName();
     updateWindowTitle();
     addToRecentFiles(file_name);
@@ -691,7 +670,6 @@ MainWindow::onNewFile()
 {
     this->select_tool->onDeselect();
     this->clear();
-    this->info_window->clear();
     this->updateWindowTitle();
     showNormal();
 }
@@ -730,10 +708,10 @@ MainWindow::onMouseMove(const QPoint & pt)
 void
 MainWindow::onViewInfoWindow()
 {
-    if (this->info_dock->isVisible())
-        this->info_dock->hide();
+    if (this->info_view->isVisible())
+        this->info_view->hide();
     else
-        this->info_dock->show();
+        this->info_view->show();
     this->updateMenuBar();
     updateViewModeLocation();
 }

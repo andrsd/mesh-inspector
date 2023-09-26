@@ -14,9 +14,8 @@ class QDragEnterEvent;
 class QPushButton;
 class Model;
 class View;
-class QDockWidget;
+class InfoView;
 class QShortcut;
-class InfoWindow;
 class AboutDialog;
 class LicenseDialog;
 class NotificationWidget;
@@ -30,7 +29,6 @@ class BlockObject;
 class SideSetObject;
 class NodeSetObject;
 class ColorProfile;
-class InfoWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -43,6 +41,7 @@ public:
     void showNotification(const QString & text, int ms = 5000);
     QSettings * getSettings();
     View * & getView();
+    InfoView * & getInfoView();
     Model * & getModel();
     const BlockObject * getSelectedBlock();
 
@@ -116,8 +115,7 @@ protected:
     QStringList recent_files;
     QMenu * export_menu;
     View * view;
-    QDockWidget * info_dock;
-    InfoWindow * info_window;
+    InfoView * info_view;
     AboutDialog * about_dlg;
     LicenseDialog * license_dlg;
     SelectTool * select_tool;

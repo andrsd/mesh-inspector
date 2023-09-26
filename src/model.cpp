@@ -1,6 +1,7 @@
 #include "model.h"
 #include "mainwindow.h"
 #include "view.h"
+#include "infoview.h"
 #include "vtkExtractBlock.h"
 #include "vtkBoundingBox.h"
 #include "vtkAlgorithmOutput.h"
@@ -39,6 +40,7 @@ Model::Model(MainWindow * main_win) :
     QObject(),
     main_window(main_win),
     view(main_window->getView()),
+    info_view(main_window->getInfoView()),
     center_of_bounds(0., 0., 0.),
     load_thread(nullptr),
     reader(nullptr),
@@ -80,6 +82,8 @@ Model::getCenterOfBounds() const
 void
 Model::clear()
 {
+    this->bbox.Reset();
+
     for (auto & it : this->blocks)
         delete it.second;
     this->blocks.clear();
@@ -102,6 +106,7 @@ Model::clear()
         this->file_watcher->removePath(file);
 
     this->view->clear();
+    this->info_view->clear();
 }
 
 vtkBoundingBox
@@ -113,14 +118,13 @@ Model::getTotalBoundingBox()
 void
 Model::computeTotalBoundingBox()
 {
-    vtkBoundingBox bbox;
     for (auto & it : this->blocks) {
         auto block = it.second;
-        bbox.AddBounds(block->getBounds());
+        this->bbox.AddBounds(block->getBounds());
     }
 
     double center[3];
-    bbox.GetCenter(center);
+    this->bbox.GetCenter(center);
     this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
 }
 
@@ -240,9 +244,10 @@ Model::loadFile(const QString & file_name)
 void
 Model::onLoadFinished()
 {
-    emit loadFinished();
     if (this->hasValidFile()) {
         this->file_watcher->addPath(this->file_name);
+        this->info_view->clear();
+        this->info_view->init();
         addBlocks();
         addSideSets();
         addNodeSets();
@@ -250,7 +255,9 @@ Model::onLoadFinished()
         this->view->updateBoundingBox();
         this->view->setInteractorStyle(getDimension());
         this->view->resetCamera();
+        this->info_view->update();
     }
+    emit loadFinished();
     delete this->load_thread;
     this->load_thread = nullptr;
 }

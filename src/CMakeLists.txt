@@ -13,7 +13,7 @@ add_executable(
         explodewidget.cpp
         exporttool.cpp
         filechangednotificationwidget.cpp
-        infowindow.cpp
+        infoview.cpp
         licensedlg.cpp
         main.cpp
         mainwindow.cpp

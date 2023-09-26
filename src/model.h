@@ -17,6 +17,7 @@ class QString;
 class LoadThread;
 class Reader;
 class View;
+class InfoView;
 class QFileSystemWatcher;
 class FileChangedNotificationWidget;
 
@@ -71,6 +72,7 @@ protected:
 
     MainWindow * main_window;
     View * & view;
+    InfoView * & info_view;
 
     std::vector<vtkExtractBlock *> extract_blocks;
     std::map<int, BlockObject *> blocks;
