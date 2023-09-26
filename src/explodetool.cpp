@@ -1,11 +1,17 @@
 #include "explodetool.h"
 #include "explodewidget.h"
 #include "mainwindow.h"
+#include "model.h"
 #include <QMenu>
 #include "vtkMath.h"
 #include "blockobject.h"
 
-ExplodeTool::ExplodeTool(MainWindow * main_wnd) : main_window(main_wnd), explode(nullptr) {}
+ExplodeTool::ExplodeTool(MainWindow * main_wnd) :
+    main_window(main_wnd),
+    model(main_wnd->getModel()),
+    explode(nullptr)
+{
+}
 
 ExplodeTool::~ExplodeTool()
 {
@@ -44,11 +50,11 @@ void
 ExplodeTool::onValueChanged(double value)
 {
     double dist = value / this->explode->range();
-    for (auto & it : this->main_window->getBlocks()) {
+    for (auto & it : this->model->getBlocks()) {
         auto * block = it.second;
         auto blk_cob = block->getCenterOfBounds();
         vtkVector3d dir;
-        vtkMath::Subtract(blk_cob, this->main_window->getCenterOfBounds(), dir);
+        vtkMath::Subtract(blk_cob, this->model->getCenterOfBounds(), dir);
         dir.Normalize();
         vtkMath::MultiplyScalar(dir.GetData(), dist);
         block->setPosition(dir[0], dir[1], dir[2]);

@@ -1,5 +1,6 @@
 #include "selecttool.h"
 #include "mainwindow.h"
+#include "model.h"
 #include "view.h"
 #include <QShortcut>
 #include <QLocale>
@@ -55,6 +56,8 @@ cellTypeToName(int cell_type)
 
 SelectTool::SelectTool(MainWindow * main_wnd) :
     main_window(main_wnd),
+    model(main_wnd->getModel()),
+    view(main_wnd->getView()),
     selected_mesh_ent_info(nullptr),
     deselect_sc(nullptr),
     mode_select_action_group(nullptr),
@@ -120,12 +123,14 @@ SelectTool::setupMenu(QMenu * menu)
 }
 
 void
-SelectTool::loadIntoVtk(vtkAlgorithmOutput * output_port)
+SelectTool::update()
 {
+    auto output_port = this->model->getVtkOutputPort();
+
     delete this->selection;
     this->selection = new Selection(output_port);
     setSelectionProperties();
-    auto renderer = this->main_window->getView()->getRenderer();
+    auto renderer = this->view->getRenderer();
     renderer->AddActor(this->selection->getActor());
 
     delete this->highlight;
@@ -148,7 +153,7 @@ SelectTool::showSelectedMeshEntity(const QString & info)
 {
     this->selected_mesh_ent_info->setText(info);
     this->selected_mesh_ent_info->adjustSize();
-    auto tl = this->main_window->getView()->geometry().topLeft();
+    auto tl = this->view->geometry().topLeft();
     this->selected_mesh_ent_info->move(tl.x() + 10, tl.y() + 10);
     this->selected_mesh_ent_info->show();
 }
@@ -163,7 +168,7 @@ void
 SelectTool::deselectBlocks()
 {
     if (this->selected_block != nullptr) {
-        this->main_window->getView()->setBlockProperties(this->selected_block, false);
+        this->view->setBlockProperties(this->selected_block, false);
         this->selected_block = nullptr;
     }
 }
@@ -172,7 +177,7 @@ void
 SelectTool::onBlockSelectionChanged(int block_id)
 {
     deselectBlocks();
-    auto blocks = this->main_window->getBlocks();
+    auto blocks = this->model->getBlocks();
     const auto & it = blocks.find(block_id);
     if (it != blocks.end()) {
         BlockObject * block = it->second;
@@ -191,7 +196,7 @@ SelectTool::onBlockSelectionChanged(int block_id)
 void
 SelectTool::onSideSetSelectionChanged(int sideset_id)
 {
-    auto side_sets = this->main_window->getSideSets();
+    auto side_sets = this->model->getSideSets();
     const auto & it = side_sets.find(sideset_id);
     if (it != side_sets.end()) {
         auto * sideset = it->second;
@@ -210,7 +215,7 @@ SelectTool::onSideSetSelectionChanged(int sideset_id)
 void
 SelectTool::onNodeSetSelectionChanged(int nodeset_id)
 {
-    auto node_sets = this->main_window->getNodeSets();
+    auto node_sets = this->model->getNodeSets();
     const auto & it = node_sets.find(nodeset_id);
     if (it != node_sets.end()) {
         auto * nodeset = it->second;
@@ -253,17 +258,16 @@ SelectTool::clear()
 void
 SelectTool::selectBlock(const QPoint & pt)
 {
-    auto view = this->main_window->getView();
     auto * picker = vtkPropPicker::New();
-    if (picker->PickProp(pt.x(), pt.y(), view->getRenderer())) {
+    if (picker->PickProp(pt.x(), pt.y(), this->view->getRenderer())) {
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
-            auto blk_id = this->main_window->blockActorToId(actor);
-            auto * block = this->main_window->getBlock(blk_id);
+            auto blk_id = this->model->blockActorToId(actor);
+            auto * block = this->model->getBlock(blk_id);
             onBlockSelectionChanged(blk_id);
             this->selected_block = block;
             auto highlighted = this->selected_block == this->highlighted_block;
-            view->setBlockProperties(block, true, highlighted);
+            this->view->setBlockProperties(block, true, highlighted);
         }
     }
     picker->Delete();
@@ -272,9 +276,8 @@ SelectTool::selectBlock(const QPoint & pt)
 void
 SelectTool::selectCell(const QPoint & pt)
 {
-    auto view = this->main_window->getView();
     auto * picker = vtkCellPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, view->getRenderer())) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto cell_id = picker->GetCellId();
         this->selection->selectCell(cell_id);
         setSelectionProperties();
@@ -292,9 +295,8 @@ SelectTool::selectCell(const QPoint & pt)
 void
 SelectTool::selectPoint(const QPoint & pt)
 {
-    auto view = this->main_window->getView();
     auto * picker = vtkPointPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, view->getRenderer())) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto point_id = picker->GetPointId();
         this->selection->selectPoint(point_id);
         setSelectionProperties();
@@ -355,22 +357,21 @@ SelectTool::setSelectionProperties()
 void
 SelectTool::highlightBlock(const QPoint & pt)
 {
-    auto view = this->main_window->getView();
     if (this->highlighted_block) {
         auto selected = this->highlighted_block == this->selected_block;
-        view->setBlockProperties(this->highlighted_block, selected, false);
+        this->view->setBlockProperties(this->highlighted_block, selected, false);
     }
 
     auto * picker = vtkPropPicker::New();
-    if (picker->PickProp(pt.x(), pt.y(), view->getRenderer())) {
+    if (picker->PickProp(pt.x(), pt.y(), this->view->getRenderer())) {
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
-            auto blk_id = this->main_window->blockActorToId(actor);
-            auto * block = this->main_window->getBlock(blk_id);
+            auto blk_id = this->model->blockActorToId(actor);
+            auto * block = this->model->getBlock(blk_id);
             if (block) {
                 this->highlighted_block = block;
                 auto selected = this->highlighted_block == this->selected_block;
-                view->setBlockProperties(block, selected, true);
+                this->view->setBlockProperties(block, selected, true);
             }
         }
     }
@@ -383,9 +384,8 @@ SelectTool::highlightBlock(const QPoint & pt)
 void
 SelectTool::highlightCell(const QPoint & pt)
 {
-    auto view = this->main_window->getView();
     auto * picker = vtkCellPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, view->getRenderer())) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto cell_id = picker->GetCellId();
         this->highlight->selectCell(cell_id);
         setHighlightProperties();
@@ -398,9 +398,8 @@ SelectTool::highlightCell(const QPoint & pt)
 void
 SelectTool::highlightPoint(const QPoint & pt)
 {
-    auto view = this->main_window->getView();
     auto * picker = vtkPointPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, view->getRenderer())) {
+    if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto point_id = picker->GetPointId();
         this->highlight->selectPoint(point_id);
         setHighlightProperties();

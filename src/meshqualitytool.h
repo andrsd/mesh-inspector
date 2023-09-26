@@ -3,6 +3,8 @@
 #include <QObject>
 
 class MainWindow;
+class Model;
+class View;
 class MeshQualityWidget;
 class vtkLookupTable;
 class vtkScalarBarActor;
@@ -20,7 +22,7 @@ public:
     bool isVisible() const;
     void done();
     void setColorProfile(ColorProfile * profile);
-    void loadIntoVtk();
+    void update();
 
 public slots:
     void onMeshQuality();
@@ -34,6 +36,8 @@ protected:
     void setBlockMeshQualityProperties(BlockObject * block, double range[]);
 
     MainWindow * main_window;
+    Model * & model;
+    View * & view;
     MeshQualityWidget * mesh_quality;
     vtkLookupTable * lut;
     vtkScalarBarActor * color_bar;

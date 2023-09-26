@@ -3,6 +3,7 @@
 #include <QObject>
 
 class MainWindow;
+class Model;
 class ExplodeWidget;
 class QAction;
 class QMenu;
@@ -23,5 +24,6 @@ public slots:
 
 protected:
     MainWindow * main_window;
+    Model * & model;
     ExplodeWidget * explode;
 };

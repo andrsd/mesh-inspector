@@ -1,5 +1,6 @@
 #include "view.h"
 #include "mainwindow.h"
+#include "model.h"
 #include <QMenu>
 #include <QPushButton>
 #include <QAction>
@@ -30,6 +31,7 @@ float View::OUTLINE_WIDTH = 1.5;
 
 View::View(MainWindow * main_wnd) :
     main_window(main_wnd),
+    model(main_wnd->getModel()),
     view_menu(nullptr),
     view_mode(nullptr),
     shaded_action(nullptr),
@@ -193,14 +195,14 @@ void
 View::onShadedTriggered(bool checked)
 {
     this->render_mode = SHADED;
-    auto blocks = this->main_window->getBlocks();
+    auto blocks = this->model->getBlocks();
     for (auto & it : blocks) {
         auto * block = it.second;
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(false);
     }
-    auto side_sets = this->main_window->getSideSets();
+    auto side_sets = this->model->getSideSets();
     for (auto & it : side_sets) {
         auto * sideset = it.second;
         setSideSetProperties(sideset);
@@ -211,14 +213,14 @@ void
 View::onShadedWithEdgesTriggered(bool checked)
 {
     this->render_mode = SHADED_WITH_EDGES;
-    auto blocks = this->main_window->getBlocks();
+    auto blocks = this->model->getBlocks();
     for (auto & it : blocks) {
         auto * block = it.second;
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(false);
     }
-    auto side_sets = this->main_window->getSideSets();
+    auto side_sets = this->model->getSideSets();
     for (auto & it : side_sets) {
         auto * sideset = it.second;
         setSideSetProperties(sideset);
@@ -229,14 +231,14 @@ void
 View::onHiddenEdgesRemovedTriggered(bool checked)
 {
     this->render_mode = HIDDEN_EDGES_REMOVED;
-    auto blocks = this->main_window->getBlocks();
+    auto blocks = this->model->getBlocks();
     for (auto & it : blocks) {
         auto * block = it.second;
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(block->visible());
     }
-    auto side_sets = this->main_window->getSideSets();
+    auto side_sets = this->model->getSideSets();
     for (auto & it : side_sets) {
         auto * sideset = it.second;
         setSideSetProperties(sideset);
@@ -247,14 +249,14 @@ void
 View::onTransluentTriggered(bool checked)
 {
     this->render_mode = TRANSLUENT;
-    auto blocks = this->main_window->getBlocks();
+    auto blocks = this->model->getBlocks();
     for (auto & it : blocks) {
         auto * block = it.second;
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(block->visible());
     }
-    auto side_sets = this->main_window->getSideSets();
+    auto side_sets = this->model->getSideSets();
     for (auto & it : side_sets) {
         auto * sideset = it.second;
         setSideSetProperties(sideset);
@@ -518,7 +520,7 @@ View::resetCamera()
 void
 View::setBlockVisibility(int block_id, bool visible)
 {
-    BlockObject * block = this->main_window->getBlock(block_id);
+    BlockObject * block = this->model->getBlock(block_id);
     if (block) {
         block->setVisible(visible);
         if (this->render_mode == HIDDEN_EDGES_REMOVED || this->render_mode == TRANSLUENT)
@@ -531,7 +533,7 @@ View::setBlockVisibility(int block_id, bool visible)
 void
 View::setBlockOpacity(int block_id, double opacity)
 {
-    BlockObject * block = this->main_window->getBlock(block_id);
+    BlockObject * block = this->model->getBlock(block_id);
     if (block) {
         block->setOpacity(opacity);
         if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
@@ -544,7 +546,7 @@ View::setBlockOpacity(int block_id, double opacity)
 void
 View::setBlockColor(int block_id, QColor color)
 {
-    BlockObject * block = this->main_window->getBlock(block_id);
+    BlockObject * block = this->model->getBlock(block_id);
     if (block) {
         block->setColor(color);
         auto * property = block->getProperty();
@@ -558,7 +560,7 @@ View::setBlockColor(int block_id, QColor color)
 void
 View::setSideSetVisibility(int sideset_id, bool visible)
 {
-    auto * sideset = this->main_window->getSideSet(sideset_id);
+    auto * sideset = this->model->getSideSet(sideset_id);
     if (sideset)
         sideset->setVisible(visible);
 }
@@ -566,7 +568,7 @@ View::setSideSetVisibility(int sideset_id, bool visible)
 void
 View::setNodeSetVisibility(int nodeset_id, bool visible)
 {
-    auto * nodeset = this->main_window->getNodeSet(nodeset_id);
+    auto * nodeset = this->model->getNodeSet(nodeset_id);
     if (nodeset)
         nodeset->setVisible(visible);
 }
@@ -614,8 +616,11 @@ View::setupCubeAxesActor()
 }
 
 void
-View::setTotalBoundingBox(double bounds[])
+View::updateBoundingBox()
 {
+    auto bbox = this->model->getTotalBoundingBox();
+    double bounds[6];
+    bbox.GetBounds(bounds);
     this->cube_axes_actor->SetBounds(bounds);
     this->renderer->AddViewProp(this->cube_axes_actor);
 }

@@ -30,15 +30,12 @@
 #include "explodetool.h"
 #include "meshqualitytool.h"
 #include "checkforupdatetool.h"
-#include "reader.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
 #include "nodesetobject.h"
-#include "exodusiireader.h"
-#include "vtkreader.h"
-#include "stlreader.h"
 #include "colorprofile.h"
 #include "selection.h"
+#include "model.h"
 #include "view.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
@@ -46,62 +43,9 @@
 
 static const int MAX_RECENT_FILES = 10;
 
-// Main window - Load thread
-
-MainWindow::LoadThread::LoadThread(const QString & file_name) :
-    QThread(),
-    file_name(file_name),
-    reader(nullptr)
-{
-    if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
-        this->reader = new ExodusIIReader(file_name.toStdString());
-    else if (file_name.endsWith(".vtk"))
-        this->reader = new VTKReader(file_name.toStdString());
-    else if (file_name.endsWith(".stl"))
-        this->reader = new STLReader(file_name.toStdString());
-    else
-        this->reader = nullptr;
-}
-
-MainWindow::LoadThread::~LoadThread()
-{
-    delete this->reader;
-}
-
-Reader *
-MainWindow::LoadThread::getReader()
-{
-    return this->reader;
-}
-
-bool
-MainWindow::LoadThread::hasValidFile()
-{
-    return this->reader != nullptr;
-}
-
-const QString &
-MainWindow::LoadThread::getFileName()
-{
-    return this->file_name;
-}
-
-void
-MainWindow::LoadThread::run()
-{
-    if (this->reader != nullptr)
-        this->reader->load();
-}
-
-// Main window
-
 MainWindow::MainWindow(QWidget * parent) :
     QMainWindow(parent),
     settings(new QSettings("David Andrs", "MeshInspector")),
-    load_thread(nullptr),
-    progress(nullptr),
-    file_name(),
-    file_watcher(new QFileSystemWatcher()),
     notification(nullptr),
     file_changed_notification(nullptr),
     color_profile_idx(0),
@@ -131,7 +75,8 @@ MainWindow::MainWindow(QWidget * parent) :
     about_box_action(nullptr),
     view_license_action(nullptr),
     color_profile_action_group(nullptr),
-    windows_action_group(nullptr)
+    windows_action_group(nullptr),
+    model(new Model(this))
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -163,7 +108,6 @@ MainWindow::~MainWindow()
 {
     clear();
     delete this->settings;
-    delete this->file_watcher;
     delete this->menu_bar;
     delete this->view;
     delete this->info_window;
@@ -173,7 +117,6 @@ MainWindow::~MainWindow()
     delete this->update_tool;
     for (auto & it : this->color_profiles)
         delete it;
-    delete this->load_thread;
     delete this->notification;
     delete this->file_changed_notification;
     delete this->windows_action_group;
@@ -182,40 +125,22 @@ MainWindow::~MainWindow()
     delete this->license_dlg;
 }
 
-const std::map<int, BlockObject *> &
-MainWindow::getBlocks() const
-{
-    return this->blocks;
-}
-
-const std::map<int, SideSetObject *> &
-MainWindow::getSideSets() const
-{
-    return this->side_sets;
-}
-
-const std::map<int, NodeSetObject *> &
-MainWindow::getNodeSets() const
-{
-    return this->node_sets;
-}
-
-const vtkVector3d &
-MainWindow::getCenterOfBounds() const
-{
-    return this->center_of_bounds;
-}
-
 QSettings *
 MainWindow::getSettings()
 {
     return this->settings;
 }
 
-View *
+View *&
 MainWindow::getView()
 {
     return this->view;
+}
+
+Model *&
+MainWindow::getModel()
+{
+    return this->model;
 }
 
 const BlockObject *
@@ -243,14 +168,8 @@ MainWindow::setupWidgets()
     setupFileChangedNotificationWidget();
     setupNotificationWidget();
     this->select_tool->setupWidgets();
-
     this->explode_tool->setupWidgets();
     this->mesh_quality_tool->setupWidgets();
-}
-
-void
-MainWindow::setupViewModeWidget(QMainWindow * wnd)
-{
 }
 
 void
@@ -363,7 +282,7 @@ MainWindow::updateMenuBar()
     this->show_main_window->setChecked(active_window == this);
 
     this->view_info_wnd_action->setChecked(this->info_window->isVisible());
-    bool has_file = hasFile();
+    bool has_file = this->model->hasFile();
     this->export_tool->setMenuEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
     this->tools_mesh_quality_action->setEnabled(has_file);
@@ -376,8 +295,8 @@ MainWindow::updateMenuBar()
 void
 MainWindow::updateWindowTitle()
 {
-    if (hasFile()) {
-        QFileInfo fi(this->file_name);
+    if (this->model->hasFile()) {
+        auto fi = this->model->getFileInfo();
         QString title = QString("%1 \u2014 %2").arg(MESH_INSPECTOR_APP_NAME).arg(fi.fileName());
         setWindowTitle(title);
     }
@@ -388,7 +307,9 @@ MainWindow::updateWindowTitle()
 void
 MainWindow::connectSignals()
 {
-    connect(this, &MainWindow::blockAdded, this->info_window, &InfoWindow::onBlockAdded);
+    connect(this->model, &Model::loadFinished, this, &MainWindow::onLoadFinished);
+    connect(this->model, &Model::fileChanged, this, &MainWindow::onFileChanged);
+    connect(this->model, &Model::blockAdded, this->info_window, &InfoWindow::onBlockAdded);
     connect(this->info_window,
             &InfoWindow::blockVisibilityChanged,
             this,
@@ -406,7 +327,7 @@ MainWindow::connectSignals()
             this->select_tool,
             &SelectTool::onBlockSelectionChanged);
 
-    connect(this, &MainWindow::sideSetAdded, this->info_window, &InfoWindow::onSideSetAdded);
+    connect(this->model, &Model::sideSetAdded, this->info_window, &InfoWindow::onSideSetAdded);
     connect(this->info_window,
             &InfoWindow::sideSetVisibilityChanged,
             this,
@@ -416,7 +337,7 @@ MainWindow::connectSignals()
             this->select_tool,
             &SelectTool::onSideSetSelectionChanged);
 
-    connect(this, &MainWindow::nodeSetAdded, this->info_window, &InfoWindow::onNodeSetAdded);
+    connect(this->model, &Model::nodeSetAdded, this->info_window, &InfoWindow::onNodeSetAdded);
     connect(this->info_window,
             &InfoWindow::nodeSetVisibilityChanged,
             this,
@@ -430,8 +351,6 @@ MainWindow::connectSignals()
             &InfoWindow::dimensionsStateChanged,
             this,
             &MainWindow::onCubeAxisVisibilityChanged);
-
-    connect(this->file_watcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::onFileChanged);
 }
 
 void
@@ -439,27 +358,7 @@ MainWindow::clear()
 {
     this->mesh_quality_tool->done();
     this->view->clear();
-
-    for (auto & it : this->blocks)
-        delete it.second;
-    this->blocks.clear();
-
-    for (auto & it : this->side_sets)
-        delete it.second;
-    this->side_sets.clear();
-
-    for (auto & it : this->node_sets)
-        delete it.second;
-    this->node_sets.clear();
-
-    for (auto & eb : this->extract_blocks)
-        eb->Delete();
-    this->extract_blocks.clear();
-
-    auto watched_files = this->file_watcher->files();
-    for (auto & file : watched_files)
-        this->file_watcher->removePath(file);
-
+    this->model->clear();
     this->select_tool->clear();
 }
 
@@ -470,42 +369,22 @@ MainWindow::loadFile(const QString & file_name)
     this->clear();
     if (!this->checkFileExists(file_name))
         return;
-
-    QFileInfo fi(file_name);
-    this->progress =
-        new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
-    this->progress->setWindowModality(Qt::WindowModal);
-    this->progress->show();
-
-    delete this->load_thread;
-    this->load_thread = new LoadThread(file_name);
-    connect(this->load_thread, &LoadThread::finished, this, &MainWindow::onLoadFinished);
-    this->load_thread->start(QThread::IdlePriority);
-}
-
-bool
-MainWindow::hasFile()
-{
-    return !this->file_name.isEmpty();
+    this->model->loadFile(file_name);
 }
 
 void
-MainWindow::computeTotalBoundingBox()
+MainWindow::updateInfoWindow()
 {
-    vtkBoundingBox bbox;
-    for (auto & it : this->blocks) {
-        auto block = it.second;
-        bbox.AddBounds(block->getBounds());
-    }
+    this->info_window->clear();
+    this->info_window->init();
 
+    auto bbox = this->model->getTotalBoundingBox();
     double bounds[6];
     bbox.GetBounds(bounds);
-    this->view->setTotalBoundingBox(bounds);
     this->info_window->setBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
 
-    double center[3];
-    bbox.GetCenter(center);
-    this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
+    this->info_window->setSummary(this->model->getTotalNumberOfElements(),
+                                  this->model->getTotalNumberOfNodes());
 }
 
 int
@@ -528,99 +407,6 @@ MainWindow::checkFileExists(const QString & file_name)
         showNotification(QString("Unable to open '%1': File does not exist.").arg(base_file));
         return false;
     }
-}
-
-void
-MainWindow::addBlocks()
-{
-    auto * camera = this->view->getActiveCamera();
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & binfo : reader->getBlocks()) {
-        BlockObject * block = nullptr;
-        if (binfo.multiblock_index != -1) {
-            vtkExtractBlock * eb = vtkExtractBlock::New();
-            eb->SetInputConnection(reader->getVtkOutputPort());
-            eb->AddIndex(binfo.multiblock_index);
-            eb->Update();
-            this->extract_blocks.push_back(eb);
-
-            block = new BlockObject(eb->GetOutputPort(), camera);
-        }
-        else
-            block = new BlockObject(reader->getVtkOutputPort(), camera);
-        this->blocks[binfo.number] = block;
-        this->view->addBlock(block);
-        emit blockAdded(binfo.number, QString::fromStdString(binfo.name));
-    }
-}
-
-void
-MainWindow::addSideSets()
-{
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & finfo : reader->getSideSets()) {
-        auto * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
-        eb->AddIndex(finfo.multiblock_index);
-        eb->Update();
-        this->extract_blocks.push_back(eb);
-
-        auto sideset = new SideSetObject(eb->GetOutputPort());
-        this->side_sets[finfo.number] = sideset;
-        this->view->addSideSet(sideset);
-        emit sideSetAdded(finfo.number, QString::fromStdString(finfo.name));
-    }
-}
-
-void
-MainWindow::addNodeSets()
-{
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & ninfo : reader->getNodeSets()) {
-        auto * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
-        eb->AddIndex(ninfo.multiblock_index);
-        eb->Update();
-        this->extract_blocks.push_back(eb);
-
-        auto * nodeset = new NodeSetObject(eb->GetOutputPort());
-        this->node_sets[ninfo.number] = nodeset;
-        this->view->addNodeSet(nodeset);
-        emit nodeSetAdded(ninfo.number, QString::fromStdString(ninfo.name));
-    }
-}
-
-BlockObject *
-MainWindow::getBlock(int block_id)
-{
-    const auto & it = this->blocks.find(block_id);
-    if (it != this->blocks.end())
-        return it->second;
-    else
-        return nullptr;
-}
-
-SideSetObject *
-MainWindow::getSideSet(int sideset_id)
-{
-    const auto & it = this->side_sets.find(sideset_id);
-    if (it != this->side_sets.end())
-        return it->second;
-    else
-        return nullptr;
-}
-
-NodeSetObject *
-MainWindow::getNodeSet(int nodeset_id)
-{
-    const auto & it = this->node_sets.find(nodeset_id);
-    if (it != this->node_sets.end())
-        return it->second;
-    else
-        return nullptr;
 }
 
 void
@@ -651,19 +437,6 @@ MainWindow::showFileChangedNotification()
                                                  this->file_changed_notification->width(),
                                                  this->file_changed_notification->height());
     this->file_changed_notification->show();
-}
-
-int
-MainWindow::blockActorToId(vtkActor * actor)
-{
-    // TODO: when we start to have 1000s of actors, this should be done via a
-    // map from 'actor' to 'block_id'
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        if (block->getActor() == actor)
-            return it.first;
-    }
-    return -1;
 }
 
 void
@@ -803,64 +576,39 @@ MainWindow::onClose()
 {
     clear();
     this->info_window->clear();
-    this->file_name = QString();
     hide();
     this->update_timer.stop();
     updateMenuBar();
 }
 
 void
-MainWindow::hideLoadProgressBar()
-{
-    this->progress->hide();
-    delete this->progress;
-    this->progress = nullptr;
-}
-
-void
 MainWindow::onLoadFinished()
 {
-    if (this->load_thread->hasValidFile()) {
-        loadIntoVtk();
+    if (this->model->hasValidFile()) {
+        update();
         showNormal();
         this->update_timer.start(250);
     }
     else {
-        QFileInfo fi(this->load_thread->getFileName());
+        auto fi = this->model->getFileInfo();
         showNotification(QString("Unsupported file '%1'.").arg(fi.fileName()));
     }
-    hideLoadProgressBar();
     this->updateMenuBar();
 }
 
 void
-MainWindow::loadIntoVtk()
+MainWindow::update()
 {
-    Reader * reader = this->load_thread->getReader();
+    updateInfoWindow();
 
-    this->info_window->clear();
-    this->info_window->init();
-    addBlocks();
-    addSideSets();
-    addNodeSets();
-
-    computeTotalBoundingBox();
-
-    this->info_window->setSummary(reader->getTotalNumberOfElements(),
-                                  reader->getTotalNumberOfNodes());
-
-    this->file_name = QString(reader->getFileName().c_str());
+    auto file_name = this->model->getFileName();
     updateWindowTitle();
-    addToRecentFiles(this->file_name);
+    addToRecentFiles(file_name);
     buildRecentFilesMenu();
-    this->file_watcher->addPath(this->file_name);
-    this->file_changed_notification->setFileName(this->file_name);
+    this->file_changed_notification->setFileName(file_name);
 
-    this->select_tool->loadIntoVtk(reader->getVtkOutputPort());
-    this->mesh_quality_tool->loadIntoVtk();
-
-    this->view->setInteractorStyle(reader->getDimensionality());
-    this->view->resetCamera();
+    this->select_tool->update();
+    this->mesh_quality_tool->update();
 }
 
 void
@@ -934,7 +682,6 @@ MainWindow::onNewFile()
     this->select_tool->onDeselect();
     this->clear();
     this->info_window->clear();
-    this->file_name = QString();
     this->updateWindowTitle();
     showNormal();
 }
@@ -948,15 +695,13 @@ MainWindow::onUpdateWindow()
 void
 MainWindow::onFileChanged(const QString & path)
 {
-    if (!this->file_watcher->files().contains(path))
-        this->file_watcher->addPath(path);
     showFileChangedNotification();
 }
 
 void
 MainWindow::onReloadFile()
 {
-    loadFile(this->file_name);
+    loadFile(this->model->getFileName());
 }
 
 void
@@ -968,7 +713,7 @@ MainWindow::onClicked(const QPoint & pt)
 void
 MainWindow::onMouseMove(const QPoint & pt)
 {
-    if (hasFile())
+    if (this->model->hasFile())
         this->select_tool->onMouseMove(pt);
 }
 

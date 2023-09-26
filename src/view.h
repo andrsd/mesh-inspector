@@ -3,6 +3,7 @@
 #include "QVTKOpenGLNativeWidget.h"
 
 class MainWindow;
+class Model;
 class QMenu;
 class QPushButton;
 class QAction;
@@ -53,7 +54,7 @@ public:
     void render();
     void updateLocation();
     void activateRenderMode();
-    void setTotalBoundingBox(double bounds[]);
+    void updateBoundingBox();
     void setCubeAxisVisibility(bool visible);
     vtkRenderer * getRenderer() const;
     vtkGenericOpenGLRenderWindow * getRenderWindow() const;
@@ -76,6 +77,7 @@ protected:
     void setupCubeAxesActor();
 
     MainWindow * main_window;
+    Model * & model;
     QMenu * view_menu;
     QPushButton * view_mode;
     QAction * shaded_action;

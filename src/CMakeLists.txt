@@ -21,6 +21,7 @@ add_executable(
         meshobject.cpp
         meshqualitytool.cpp
         meshqualitywidget.cpp
+        model.cpp
         nodesetobject.cpp
         ointeractorinterface.cpp
         ointeractorstyle2d.cpp

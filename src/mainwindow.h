@@ -1,21 +1,18 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QThread>
 #include <QTimer>
 #include <QColor>
-#include "vtkVector.h"
-#include <vector>
 
 class Reader;
 class QSettings;
 class QProgressDialog;
-class QFileSystemWatcher;
 class QMenu;
 class QActionGroup;
 class QResizeEvent;
 class QDragEnterEvent;
 class QPushButton;
+class Model;
 class View;
 class QDockWidget;
 class QShortcut;
@@ -29,8 +26,6 @@ class ExplodeTool;
 class MeshQualityTool;
 class CheckForUpdateTool;
 class FileChangedNotificationWidget;
-class vtkActor;
-class vtkExtractBlock;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -39,42 +34,17 @@ class InfoWidget;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
-
-protected:
-    class LoadThread : public QThread {
-    public:
-        explicit LoadThread(const QString & file_name);
-        ~LoadThread() override;
-
-        virtual Reader * getReader();
-        bool hasValidFile();
-        const QString & getFileName();
-
-    protected:
-        void run() override;
-
-        QString file_name;
-        Reader * reader;
-    };
-
 public:
     explicit MainWindow(QWidget * parent = nullptr);
     ~MainWindow() override;
 
     int getRenderWindowWidth() const;
-    const std::map<int, BlockObject *> & getBlocks() const;
-    const std::map<int, SideSetObject *> & getSideSets() const;
-    const std::map<int, NodeSetObject *> & getNodeSets() const;
-    const vtkVector3d & getCenterOfBounds() const;
     void updateMenuBar();
     void activateRenderMode();
     void showNotification(const QString & text, int ms = 5000);
     QSettings * getSettings();
-    int blockActorToId(vtkActor * actor);
-    BlockObject * getBlock(int block_id);
-    SideSetObject * getSideSet(int sideset_id);
-    NodeSetObject * getNodeSet(int nodeset_id);
-    View * getView();
+    View * & getView();
+    Model * & getModel();
     const BlockObject * getSelectedBlock();
 
     template <typename T>
@@ -84,14 +54,8 @@ public:
         return devicePixelRatio() * value;
     }
 
-signals:
-    void blockAdded(int id, const QString & name);
-    void sideSetAdded(int id, const QString & name);
-    void nodeSetAdded(int id, const QString & name);
-
 protected:
     void setupWidgets();
-    void setupViewModeWidget(QMainWindow * wnd);
     void setupNotificationWidget();
     void setupFileChangedNotificationWidget();
     void setupMenuBar();
@@ -101,24 +65,14 @@ protected:
     void connectSignals();
     void clear();
     void loadFile(const QString & file_name);
-    bool hasFile();
-
-    void setupOrientationMarker();
-    void setupCubeAxesActor();
-    void computeTotalBoundingBox();
-
+    void updateInfoWindow();
     bool checkFileExists(const QString & file_name);
-    void addBlocks();
-    void addSideSets();
-    void addNodeSets();
     void showFileChangedNotification();
     void setColorProfile();
     void loadColorProfiles();
     void buildRecentFilesMenu();
     void addToRecentFiles(const QString & file_name);
-    QString cellTypeToName(int cell_type);
-    void hideLoadProgressBar();
-    void loadIntoVtk();
+    void update();
 
     bool event(QEvent * event) override;
     void customEvent(QEvent * event) override;
@@ -156,11 +110,7 @@ public slots:
 
 protected:
     QSettings * settings;
-    LoadThread * load_thread;
-    QProgressDialog * progress;
-    QString file_name;
     QTimer update_timer;
-    QFileSystemWatcher * file_watcher;
     NotificationWidget * notification;
     FileChangedNotificationWidget * file_changed_notification;
     QMenuBar * menu_bar;
@@ -194,13 +144,7 @@ protected:
     QActionGroup * color_profile_action_group;
     QActionGroup * windows_action_group;
 
-    std::vector<vtkExtractBlock *> extract_blocks;
-    std::map<int, BlockObject *> blocks;
-    std::map<int, SideSetObject *> side_sets;
-    std::map<int, NodeSetObject *> node_sets;
-
-    /// center of bounding box of the whole mesh
-    vtkVector3d center_of_bounds;
+    Model * model;
 
     std::size_t color_profile_idx;
     std::vector<ColorProfile *> color_profiles;

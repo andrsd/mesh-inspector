@@ -1,6 +1,7 @@
 #include "meshqualitytool.h"
 #include "meshqualitywidget.h"
 #include "mainwindow.h"
+#include "model.h"
 #include "view.h"
 #include "colorprofile.h"
 #include "blockobject.h"
@@ -19,6 +20,8 @@ const char * MeshQualityTool::MESH_QUALITY_FIELD_NAME = "CellQuality";
 
 MeshQualityTool::MeshQualityTool(MainWindow * main_wnd) :
     main_window(main_wnd),
+    model(main_wnd->getModel()),
+    view(main_wnd->getView()),
     mesh_quality(nullptr),
     lut(nullptr),
     color_bar(nullptr)
@@ -51,10 +54,9 @@ MeshQualityTool::setupWidgets()
 }
 
 void
-MeshQualityTool::loadIntoVtk()
+MeshQualityTool::update()
 {
-    auto view = this->main_window->getView();
-    auto renderer = view->getRenderer();
+    auto renderer = this->view->getRenderer();
     renderer->AddActor2D(this->color_bar);
 }
 
@@ -104,7 +106,7 @@ MeshQualityTool::updateLocation()
 void
 MeshQualityTool::onMetricChanged(int metric_id)
 {
-    for (auto & it : this->main_window->getBlocks()) {
+    for (auto & it : this->model->getBlocks()) {
         auto * block = it.second;
 
         auto grid = block->getUnstructuredGrid();
@@ -137,7 +139,7 @@ MeshQualityTool::onMetricChanged(int metric_id)
     double range[2];
     getCellQualityRange(range);
 
-    for (auto & it : this->main_window->getBlocks()) {
+    for (auto & it : this->model->getBlocks()) {
         auto * block = it.second;
         setBlockMeshQualityProperties(block, range);
         block->modified();
@@ -150,7 +152,7 @@ MeshQualityTool::getCellQualityRange(double range[])
 {
     range[0] = std::numeric_limits<double>::max();
     range[1] = -std::numeric_limits<double>::max();
-    for (auto & it : this->main_window->getBlocks()) {
+    for (auto & it : this->model->getBlocks()) {
         auto * block = it.second;
         auto cell_data = block->getCellData();
 
@@ -164,7 +166,7 @@ MeshQualityTool::getCellQualityRange(double range[])
 void
 MeshQualityTool::onClose()
 {
-    for (auto & it : this->main_window->getBlocks()) {
+    for (auto & it : this->model->getBlocks()) {
         BlockObject * block = it.second;
         auto * mapper = block->getMapper();
         mapper->ScalarVisibilityOff();

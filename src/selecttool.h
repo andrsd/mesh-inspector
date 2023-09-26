@@ -3,6 +3,8 @@
 #include <QObject>
 
 class MainWindow;
+class Model;
+class View;
 class InfoWidget;
 class QShortcut;
 class QMenu;
@@ -11,7 +13,6 @@ class QActionGroup;
 class QSettings;
 class BlockObject;
 class Selection;
-class vtkAlgorithmOutput;
 
 class SelectTool : public QObject {
 protected:
@@ -28,7 +29,7 @@ public:
 
     void setupWidgets();
     void setupMenu(QMenu * menu);
-    void loadIntoVtk(vtkAlgorithmOutput * output_port);
+    void update();
     void clear();
     void saveSettings(QSettings * settings);
     void onClicked(const QPoint & pt);
@@ -56,6 +57,8 @@ protected:
     void setHighlightProperties();
 
     MainWindow * main_window;
+    Model * & model;
+    View * & view;
     InfoWidget * selected_mesh_ent_info;
     QShortcut * deselect_sc;
     QActionGroup * mode_select_action_group;
