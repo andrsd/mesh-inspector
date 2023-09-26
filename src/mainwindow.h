@@ -40,7 +40,6 @@ public:
 
     int getRenderWindowWidth() const;
     void updateMenuBar();
-    void activateRenderMode();
     void showNotification(const QString & text, int ms = 5000);
     QSettings * getSettings();
     View * & getView();

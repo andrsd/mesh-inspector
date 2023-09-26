@@ -778,9 +778,3 @@ MainWindow::onViewLicense()
         this->license_dlg = new LicenseDialog(this);
     this->license_dlg->show();
 }
-
-void
-MainWindow::activateRenderMode()
-{
-    this->view->activateRenderMode();
-}

@@ -173,7 +173,7 @@ MeshQualityTool::onClose()
         block->update();
     }
 
-    this->main_window->activateRenderMode();
+    this->view->activateRenderMode();
     this->main_window->updateMenuBar();
     this->color_bar->VisibilityOff();
 }
