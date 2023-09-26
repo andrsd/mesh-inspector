@@ -35,6 +35,7 @@ add_executable(
         view.cpp
         vtkreader.cpp
         ${APP_ICON_MACOSX}
+        ../resources/render-mode.svg
 )
 
 target_include_directories(
@@ -67,7 +68,12 @@ set_target_properties(
         MACOSX_BUNDLE TRUE
 )
 
-set_source_files_properties(icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+set_source_files_properties(
+    icon.icns
+    ../resources/render-mode.svg
+    PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+)
 
 add_custom_target(make-icon-iconset-dir ALL
     COMMAND
