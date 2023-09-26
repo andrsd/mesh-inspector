@@ -140,6 +140,8 @@ Model::clear()
     auto watched_files = this->file_watcher->files();
     for (auto & file : watched_files)
         this->file_watcher->removePath(file);
+
+    this->view->clear();
 }
 
 vtkBoundingBox

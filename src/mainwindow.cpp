@@ -357,7 +357,6 @@ void
 MainWindow::clear()
 {
     this->mesh_quality_tool->done();
-    this->view->clear();
     this->model->clear();
     this->select_tool->clear();
 }
