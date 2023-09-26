@@ -9,7 +9,6 @@
 #include "nodesetobject.h"
 #include <QThread>
 #include <QFileInfo>
-#include <QProgressDialog>
 #include <QFileSystemWatcher>
 #include "reader.h"
 #include "exodusiireader.h"
@@ -18,69 +17,31 @@
 
 class LoadThread : public QThread {
 public:
-    explicit LoadThread(const QString & file_name);
-    ~LoadThread() override;
-
-    virtual Reader * getReader();
-    bool hasValidFile();
-    const QString & getFileName();
+    explicit LoadThread(Reader * reader);
 
 protected:
     void run() override;
 
-    QString file_name;
     Reader * reader;
 };
 
-LoadThread::LoadThread(const QString & file_name) : QThread(), file_name(file_name), reader(nullptr)
-{
-    if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
-        this->reader = new ExodusIIReader(file_name.toStdString());
-    else if (file_name.endsWith(".vtk"))
-        this->reader = new VTKReader(file_name.toStdString());
-    else if (file_name.endsWith(".stl"))
-        this->reader = new STLReader(file_name.toStdString());
-    else
-        this->reader = nullptr;
-}
-
-LoadThread::~LoadThread()
-{
-    delete this->reader;
-}
-
-Reader *
-LoadThread::getReader()
-{
-    return this->reader;
-}
-
-bool
-LoadThread::hasValidFile()
-{
-    return this->reader != nullptr;
-}
-
-const QString &
-LoadThread::getFileName()
-{
-    return this->file_name;
-}
+LoadThread::LoadThread(Reader * reader) : QThread(), reader(reader) {}
 
 void
 LoadThread::run()
 {
-    if (this->reader != nullptr)
-        this->reader->load();
+    this->reader->load();
 }
+
+//
 
 Model::Model(MainWindow * main_win) :
     QObject(),
     main_window(main_win),
     view(main_window->getView()),
     center_of_bounds(0., 0., 0.),
-    progress(nullptr),
     load_thread(nullptr),
+    reader(nullptr),
     file_name(),
     file_watcher(new QFileSystemWatcher())
 {
@@ -89,7 +50,6 @@ Model::Model(MainWindow * main_win) :
 
 Model::~Model()
 {
-    delete this->load_thread;
     delete this->file_watcher;
 }
 
@@ -147,7 +107,6 @@ Model::clear()
 vtkBoundingBox
 Model::getTotalBoundingBox()
 {
-
     return this->bbox;
 }
 
@@ -169,13 +128,12 @@ void
 Model::addBlocks()
 {
     auto * camera = this->view->getActiveCamera();
-    auto * reader = this->load_thread->getReader();
 
-    for (auto & binfo : reader->getBlocks()) {
+    for (auto & binfo : this->reader->getBlocks()) {
         BlockObject * block = nullptr;
         if (binfo.multiblock_index != -1) {
             vtkExtractBlock * eb = vtkExtractBlock::New();
-            eb->SetInputConnection(reader->getVtkOutputPort());
+            eb->SetInputConnection(this->reader->getVtkOutputPort());
             eb->AddIndex(binfo.multiblock_index);
             eb->Update();
             this->extract_blocks.push_back(eb);
@@ -183,7 +141,7 @@ Model::addBlocks()
             block = new BlockObject(eb->GetOutputPort(), camera);
         }
         else
-            block = new BlockObject(reader->getVtkOutputPort(), camera);
+            block = new BlockObject(this->reader->getVtkOutputPort(), camera);
         this->blocks[binfo.number] = block;
         this->view->addBlock(block);
         emit blockAdded(binfo.number, QString::fromStdString(binfo.name));
@@ -193,11 +151,9 @@ Model::addBlocks()
 void
 Model::addSideSets()
 {
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & finfo : reader->getSideSets()) {
+    for (auto & finfo : this->reader->getSideSets()) {
         auto * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
+        eb->SetInputConnection(this->reader->getVtkOutputPort());
         eb->AddIndex(finfo.multiblock_index);
         eb->Update();
         this->extract_blocks.push_back(eb);
@@ -212,11 +168,9 @@ Model::addSideSets()
 void
 Model::addNodeSets()
 {
-    auto * reader = this->load_thread->getReader();
-
     for (auto & ninfo : reader->getNodeSets()) {
         auto * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
+        eb->SetInputConnection(this->reader->getVtkOutputPort());
         eb->AddIndex(ninfo.multiblock_index);
         eb->Update();
         this->extract_blocks.push_back(eb);
@@ -274,25 +228,20 @@ Model::blockActorToId(vtkActor * actor)
 void
 Model::loadFile(const QString & file_name)
 {
-    QFileInfo fi(file_name);
-    this->progress =
-        new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this->main_window);
-    this->progress->setWindowModality(Qt::WindowModal);
-    this->progress->show();
-
-    delete this->load_thread;
-    this->load_thread = new LoadThread(file_name);
-    connect(this->load_thread, &LoadThread::finished, this, &Model::onLoadFinished);
-    this->load_thread->start(QThread::IdlePriority);
+    this->reader = createReader(file_name);
+    if (this->reader) {
+        this->file_name = file_name;
+        this->load_thread = new LoadThread(this->reader);
+        connect(this->load_thread, &LoadThread::finished, this, &Model::onLoadFinished);
+        this->load_thread->start(QThread::IdlePriority);
+    }
 }
 
 void
 Model::onLoadFinished()
 {
-    hideLoadProgressBar();
-    if (this->load_thread->hasValidFile()) {
-        Reader * reader = this->load_thread->getReader();
-        this->file_name = QString(reader->getFileName().c_str());
+    emit loadFinished();
+    if (this->hasValidFile()) {
         this->file_watcher->addPath(this->file_name);
         addBlocks();
         addSideSets();
@@ -302,15 +251,8 @@ Model::onLoadFinished()
         this->view->setInteractorStyle(getDimension());
         this->view->resetCamera();
     }
-    emit loadFinished();
-}
-
-void
-Model::hideLoadProgressBar()
-{
-    this->progress->hide();
-    delete this->progress;
-    this->progress = nullptr;
+    delete this->load_thread;
+    this->load_thread = nullptr;
 }
 
 bool
@@ -322,7 +264,7 @@ Model::hasFile() const
 bool
 Model::hasValidFile() const
 {
-    return this->load_thread->hasValidFile();
+    return this->reader != nullptr;
 }
 
 const QString &
@@ -340,29 +282,25 @@ Model::getFileInfo()
 vtkAlgorithmOutput *
 Model::getVtkOutputPort()
 {
-    Reader * reader = this->load_thread->getReader();
-    return reader->getVtkOutputPort();
+    return this->reader->getVtkOutputPort();
 }
 
 std::size_t
 Model::getTotalNumberOfElements() const
 {
-    Reader * reader = this->load_thread->getReader();
-    return reader->getTotalNumberOfElements();
+    return this->reader->getTotalNumberOfElements();
 }
 
 std::size_t
 Model::getTotalNumberOfNodes() const
 {
-    Reader * reader = this->load_thread->getReader();
-    return reader->getTotalNumberOfNodes();
+    return this->reader->getTotalNumberOfNodes();
 }
 
 int
 Model::getDimension() const
 {
-    Reader * reader = this->load_thread->getReader();
-    return reader->getDimensionality();
+    return this->reader->getDimensionality();
 }
 
 void
@@ -371,4 +309,17 @@ Model::onFileChanged(const QString & path)
     if (!this->file_watcher->files().contains(path))
         this->file_watcher->addPath(path);
     emit fileChanged(path);
+}
+
+Reader *
+Model::createReader(const QString & file_name)
+{
+    if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
+        return new ExodusIIReader(file_name.toStdString());
+    else if (file_name.endsWith(".vtk"))
+        return new VTKReader(file_name.toStdString());
+    else if (file_name.endsWith(".stl"))
+        return new STLReader(file_name.toStdString());
+    else
+        return nullptr;
 }

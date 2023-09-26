@@ -59,19 +59,18 @@ protected:
     void setupFileChangedNotificationWidget();
     void setupMenuBar();
     void setupColorProfileMenu(QMenu * menu);
-
     void updateWindowTitle();
     void connectSignals();
     void clear();
     void loadFile(const QString & file_name);
     void updateInfoWindow();
-    bool checkFileExists(const QString & file_name);
     void showFileChangedNotification();
     void setColorProfile();
     void loadColorProfiles();
     void buildRecentFilesMenu();
     void addToRecentFiles(const QString & file_name);
     void update();
+    void hideLoadProgressBar();
 
     bool event(QEvent * event) override;
     void customEvent(QEvent * event) override;
@@ -147,4 +146,6 @@ protected:
 
     std::size_t color_profile_idx;
     std::vector<ColorProfile *> color_profiles;
+
+    QProgressDialog * progress;
 };

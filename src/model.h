@@ -15,8 +15,8 @@ class SideSetObject;
 class NodeSetObject;
 class QString;
 class LoadThread;
+class Reader;
 class View;
-class QProgressDialog;
 class QFileSystemWatcher;
 class FileChangedNotificationWidget;
 
@@ -66,8 +66,8 @@ protected:
     void addBlocks();
     void addSideSets();
     void addNodeSets();
-    void hideLoadProgressBar();
     void computeTotalBoundingBox();
+    Reader * createReader(const QString & file_name);
 
     MainWindow * main_window;
     View * & view;
@@ -82,8 +82,8 @@ protected:
     /// center of bounding box of the whole mesh
     vtkVector3d center_of_bounds;
 
-    QProgressDialog * progress;
     LoadThread * load_thread;
+    Reader * reader;
     QString file_name;
     QFileSystemWatcher * file_watcher;
 };

@@ -76,7 +76,8 @@ MainWindow::MainWindow(QWidget * parent) :
     view_license_action(nullptr),
     color_profile_action_group(nullptr),
     windows_action_group(nullptr),
-    model(new Model(this))
+    model(new Model(this)),
+    progress(nullptr)
 {
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
@@ -364,11 +365,25 @@ MainWindow::clear()
 void
 MainWindow::loadFile(const QString & file_name)
 {
-    this->select_tool->onDeselect();
-    this->clear();
-    if (!this->checkFileExists(file_name))
-        return;
-    this->model->loadFile(file_name);
+    QFileInfo fi(file_name);
+    if (fi.exists()) {
+        this->select_tool->onDeselect();
+        this->clear();
+
+        this->progress = new QProgressDialog(QString("Loading %1...").arg(fi.fileName()),
+                                             QString(),
+                                             0,
+                                             0,
+                                             this);
+        this->progress->setWindowModality(Qt::WindowModal);
+        this->progress->show();
+
+        this->model->loadFile(file_name);
+    }
+    else {
+        auto base_file = fi.fileName();
+        showNotification(QString("Unable to open '%1': File does not exist.").arg(base_file));
+    }
 }
 
 void
@@ -393,19 +408,6 @@ MainWindow::getRenderWindowWidth() const
     if (this->info_dock->isVisible())
         info_width = this->info_dock->geometry().width();
     return this->geometry().width() - info_width;
-}
-
-bool
-MainWindow::checkFileExists(const QString & file_name)
-{
-    QFileInfo fi(file_name);
-    if (fi.exists())
-        return true;
-    else {
-        auto base_file = fi.fileName();
-        showNotification(QString("Unable to open '%1': File does not exist.").arg(base_file));
-        return false;
-    }
 }
 
 void
@@ -581,8 +583,17 @@ MainWindow::onClose()
 }
 
 void
+MainWindow::hideLoadProgressBar()
+{
+    this->progress->hide();
+    delete this->progress;
+    this->progress = nullptr;
+}
+
+void
 MainWindow::onLoadFinished()
 {
+    hideLoadProgressBar();
     if (this->model->hasValidFile()) {
         update();
         showNormal();
@@ -655,7 +666,7 @@ MainWindow::onOpenFile()
                                                      "ExodusII files (*.e *.exo);;"
                                                      "VTK Unstructured Grid files (*.vtk)");
     if (!file_name.isNull())
-        this->loadFile(file_name);
+        loadFile(file_name);
 }
 
 void
