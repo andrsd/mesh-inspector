@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QScrollArea>
-#include <QList>
-#include <QColor>
+#include <QDockWidget>
 
+class MainWindow;
+class Model;
 class QWidget;
 class QVBoxLayout;
 class QLabel;
@@ -17,14 +17,16 @@ class QStandardItem;
 class QItemSelection;
 class ColorPicker;
 
-class InfoWindow : public QScrollArea {
+class InfoView : public QDockWidget {
     Q_OBJECT
 
 public:
-    explicit InfoWindow(QWidget * parent = nullptr);
+    explicit InfoView(MainWindow * main_wnd);
+    ~InfoView() override;
 
     void clear();
     void init();
+    void update();
     void setSummary(int total_elems, int total_nodes);
     void setBounds(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
 
@@ -76,6 +78,7 @@ protected:
     void onSideSetSelectionChanged(QStandardItem * item);
     void onNodeSetSelectionChanged(QStandardItem * item);
 
+    Model *& model;
     QWidget * widget;
     QVBoxLayout * layout;
     MeshModel * mesh_model;

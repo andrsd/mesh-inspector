@@ -6,26 +6,33 @@ add_executable(
     ${PROJECT_NAME}
         aboutdlg.cpp
         blockobject.cpp
+        checkforupdatetool.cpp
         colorprofile.cpp
         exodusiireader.cpp
+        explodetool.cpp
         explodewidget.cpp
+        exporttool.cpp
         filechangednotificationwidget.cpp
-        infowindow.cpp
+        infoview.cpp
         licensedlg.cpp
         main.cpp
         mainwindow.cpp
         meshmodel.cpp
         meshobject.cpp
+        meshqualitytool.cpp
         meshqualitywidget.cpp
+        model.cpp
         nodesetobject.cpp
         ointeractorinterface.cpp
         ointeractorstyle2d.cpp
         ointeractorstyle3d.cpp
         reader.cpp
         selection.cpp
+        selecttool.cpp
         sidesetobject.cpp
         stlreader.cpp
         resources.qrc
+        view.cpp
         vtkreader.cpp
         ${APP_ICON_MACOSX}
 )

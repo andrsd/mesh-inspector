@@ -14,197 +14,69 @@
 #include <QMimeData>
 #include <QPushButton>
 #include <QFileInfo>
-#include <QDockWidget>
 #include <QApplication>
 #include <QFileDialog>
 #include <QVector3D>
 #include <QShortcut>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QNetworkRequest>
-#include <QJsonDocument>
-#include "QVTKOpenGLNativeWidget.h"
-#include "vtkGenericOpenGLRenderWindow.h"
-#include "vtkRenderer.h"
-#include "vtkAxesActor.h"
-#include "vtkOrientationMarkerWidget.h"
 #include "vtkExtractBlock.h"
-#include "vtkProperty.h"
 #include "vtkCamera.h"
-#include "vtkCubeAxesActor.h"
-#include "vtkWindowToImageFilter.h"
-#include "vtkPNGWriter.h"
-#include "vtkJPEGWriter.h"
-#include "vtkMath.h"
-#include "vtkPropPicker.h"
-#include "vtkPointPicker.h"
-#include "vtkCellPicker.h"
-#include "vtkUnstructuredGrid.h"
-#include "vtkCompositeDataGeometryFilter.h"
-#include "vtkCaptionActor2D.h"
-#include "vtkTextProperty.h"
-#include "vtkMapper.h"
-#include "vtkCellData.h"
-#include "vtkDoubleArray.h"
-#include "vtkCellQuality.h"
-#include "vtkLookupTable.h"
-#include "vtkScalarBarActor.h"
-#include "vtkProperty2D.h"
-#include "infowindow.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
-#include "explodewidget.h"
-#include "meshqualitywidget.h"
-#include "reader.h"
+#include "selecttool.h"
+#include "exporttool.h"
+#include "explodetool.h"
+#include "meshqualitytool.h"
+#include "checkforupdatetool.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
 #include "nodesetobject.h"
-#include "exodusiireader.h"
-#include "vtkreader.h"
-#include "stlreader.h"
 #include "colorprofile.h"
-#include "ointeractorstyle2d.h"
-#include "ointeractorstyle3d.h"
 #include "selection.h"
+#include "model.h"
+#include "view.h"
+#include "infoview.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
 #include "common/infowidget.h"
 
 static const int MAX_RECENT_FILES = 10;
 
-QColor MainWindow::SIDESET_CLR = QColor(255, 173, 79);
-QColor MainWindow::SIDESET_EDGE_CLR = QColor(26, 26, 102);
-QColor MainWindow::NODESET_CLR = QColor(168, 91, 2);
-QColor MainWindow::SELECTION_CLR = QColor(255, 173, 79);
-QColor MainWindow::SELECTION_EDGE_CLR = QColor(179, 95, 0);
-QColor MainWindow::HIGHLIGHT_CLR = QColor(255, 211, 79);
-
-float MainWindow::EDGE_WIDTH = 1;
-float MainWindow::OUTLINE_WIDTH = 1.5;
-
-const char * MainWindow::MESH_QUALITY_FIELD_NAME = "CellQuality";
-
-// Main window - Load thread
-
-MainWindow::LoadThread::LoadThread(const QString & file_name) :
-    QThread(),
-    file_name(file_name),
-    reader(nullptr)
-{
-    if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
-        this->reader = new ExodusIIReader(file_name.toStdString());
-    else if (file_name.endsWith(".vtk"))
-        this->reader = new VTKReader(file_name.toStdString());
-    else if (file_name.endsWith(".stl"))
-        this->reader = new STLReader(file_name.toStdString());
-    else
-        this->reader = nullptr;
-}
-
-MainWindow::LoadThread::~LoadThread()
-{
-    delete this->reader;
-}
-
-Reader *
-MainWindow::LoadThread::getReader()
-{
-    return this->reader;
-}
-
-bool
-MainWindow::LoadThread::hasValidFile()
-{
-    return this->reader != nullptr;
-}
-
-const QString &
-MainWindow::LoadThread::getFileName()
-{
-    return this->file_name;
-}
-
-void
-MainWindow::LoadThread::run()
-{
-    if (this->reader != nullptr)
-        this->reader->load();
-}
-
-// Main window
-
 MainWindow::MainWindow(QWidget * parent) :
     QMainWindow(parent),
     settings(new QSettings("David Andrs", "MeshInspector")),
-    load_thread(nullptr),
-    progress(nullptr),
-    file_name(),
-    file_watcher(new QFileSystemWatcher()),
     notification(nullptr),
     file_changed_notification(nullptr),
-    render_mode(SHADED_WITH_EDGES),
-    select_mode(MODE_SELECT_NONE),
     color_profile_idx(0),
     menu_bar(new QMenuBar(nullptr)),
     recent_menu(nullptr),
     export_menu(nullptr),
-    view_menu(nullptr),
-    view_mode(nullptr),
     view(nullptr),
-    render_window(nullptr),
-    renderer(nullptr),
-    interactor(nullptr),
-    ori_marker(nullptr),
-    cube_axes_actor(nullptr),
-    interactor_style_2d(nullptr),
-    interactor_style_3d(nullptr),
-    selection(nullptr),
-    highlight(nullptr),
-    info_dock(nullptr),
-    info_window(nullptr),
+    info_view(nullptr),
     about_dlg(nullptr),
     license_dlg(nullptr),
-    explode(nullptr),
-    mesh_quality(nullptr),
-    selected_mesh_ent_info(nullptr),
+    select_tool(new SelectTool(this)),
+    export_tool(new ExportTool(this)),
+    explode_tool(new ExplodeTool(this)),
+    mesh_quality_tool(new MeshQualityTool(this)),
+    update_tool(new CheckForUpdateTool(this)),
     new_action(nullptr),
     open_action(nullptr),
-    export_as_png(nullptr),
-    export_as_jpg(nullptr),
     close_action(nullptr),
     clear_recent_file(nullptr),
-    shaded_action(nullptr),
-    shaded_w_edges_action(nullptr),
-    hidden_edges_removed_action(nullptr),
-    transluent_action(nullptr),
     view_info_wnd_action(nullptr),
     tools_explode_action(nullptr),
     tools_mesh_quality_action(nullptr),
-    perspective_action(nullptr),
-    ori_marker_action(nullptr),
     minimize(nullptr),
     bring_all_to_front(nullptr),
     show_main_window(nullptr),
     about_box_action(nullptr),
-    check_update_action(nullptr),
     view_license_action(nullptr),
-    visual_repr(nullptr),
     color_profile_action_group(nullptr),
-    mode_select_action_group(nullptr),
     windows_action_group(nullptr),
-    deselect_sc(nullptr),
-    selected_block(nullptr),
-    highlighted_block(nullptr),
-    lut(nullptr),
-    color_bar(nullptr),
-    namgr(new QNetworkAccessManager())
+    model(new Model(this)),
+    progress(nullptr)
 {
-    connect(this->namgr, &QNetworkAccessManager::finished, this, &MainWindow::onHttpReply);
-
-    this->interactor_style_2d = new OInteractorStyle2D(this);
-    this->interactor_style_3d = new OInteractorStyle3D(this);
-
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
     if (!this->restoreGeometry(geom.toByteArray()))
@@ -220,13 +92,9 @@ MainWindow::MainWindow(QWidget * parent) :
     setAcceptDrops(true);
 
     connectSignals();
-    setupVtk();
-    setupLookupTable();
-    setupColorBar();
+    this->view->setupVtk();
+    this->mesh_quality_tool->setupVtk();
     setColorProfile();
-
-    setupOrientationMarker();
-    setupCubeAxesActor();
 
     clear();
     show();
@@ -239,124 +107,67 @@ MainWindow::~MainWindow()
 {
     clear();
     delete this->settings;
-    delete this->file_watcher;
     delete this->menu_bar;
     delete this->view;
-    this->render_window->Delete();
-    this->renderer->Delete();
-    delete this->info_window;
-    delete this->info_dock;
-    delete this->explode;
-    delete this->mesh_quality;
-    delete this->selected_mesh_ent_info;
+    delete this->info_view;
+    delete this->explode_tool;
+    delete this->mesh_quality_tool;
+    delete this->update_tool;
     for (auto & it : this->color_profiles)
         delete it;
-    delete this->load_thread;
-    delete this->view_menu;
-    delete this->deselect_sc;
-    delete this->view_mode;
     delete this->notification;
     delete this->file_changed_notification;
     delete this->windows_action_group;
     delete this->color_profile_action_group;
-    delete this->mode_select_action_group;
     delete this->about_dlg;
     delete this->license_dlg;
-    delete this->namgr;
-    this->lut->Delete();
+}
+
+QSettings *
+MainWindow::getSettings()
+{
+    return this->settings;
+}
+
+View *&
+MainWindow::getView()
+{
+    return this->view;
+}
+
+InfoView *&
+MainWindow::getInfoView()
+{
+    return this->info_view;
+}
+
+Model *&
+MainWindow::getModel()
+{
+    return this->model;
+}
+
+const BlockObject *
+MainWindow::getSelectedBlock()
+{
+    return this->select_tool->getSelectedBlock();
 }
 
 void
 MainWindow::setupWidgets()
 {
-    this->view = new QVTKOpenGLNativeWidget();
+    this->view = new View(this);
     setCentralWidget(this->view);
 
-    this->render_window = vtkGenericOpenGLRenderWindow::New();
-    this->view->setRenderWindow(this->render_window);
+    this->info_view = new InfoView(this);
+    addDockWidget(Qt::RightDockWidgetArea, this->info_view);
 
-    this->renderer = vtkRenderer::New();
-    this->render_window->AddRenderer(this->renderer);
-
-    this->info_window = new InfoWindow();
-
-    this->info_dock = new QDockWidget("Information", this);
-    this->info_dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    this->info_dock->setFloating(false);
-    this->info_dock->setFeatures(QDockWidget::DockWidgetMovable);
-    this->info_dock->setWidget(this->info_window);
-    addDockWidget(Qt::RightDockWidgetArea, this->info_dock);
-
-    setupViewModeWidget(this);
+    this->view->setupWidgets();
     setupFileChangedNotificationWidget();
     setupNotificationWidget();
-    this->selected_mesh_ent_info = new InfoWidget(this);
-    this->selected_mesh_ent_info->setVisible(false);
-
-    this->deselect_sc = new QShortcut(QKeySequence(Qt::Key_Space), this);
-    connect(this->deselect_sc, &QShortcut::activated, this, &MainWindow::onDeselect);
-
-    setupExplodeWidgets();
-    setupMeshQualityWidget();
-}
-
-void
-MainWindow::setupViewModeWidget(QMainWindow * wnd)
-{
-    this->view_menu = new QMenu();
-    this->shaded_action = this->view_menu->addAction("Shaded");
-    this->shaded_action->setCheckable(true);
-    this->shaded_action->setShortcut(QKeySequence("Ctrl+1"));
-    this->shaded_w_edges_action = this->view_menu->addAction("Shaded with edges");
-    this->shaded_w_edges_action->setCheckable(true);
-    this->shaded_w_edges_action->setShortcut(QKeySequence("Ctrl+2"));
-    this->hidden_edges_removed_action = this->view_menu->addAction("Hidden edges removed");
-    this->hidden_edges_removed_action->setCheckable(true);
-    this->hidden_edges_removed_action->setShortcut(QKeySequence("Ctrl+3"));
-    this->transluent_action = this->view_menu->addAction("Transluent");
-    this->transluent_action->setCheckable(true);
-    this->transluent_action->setShortcut(QKeySequence("Ctrl+4"));
-    this->shaded_w_edges_action->setChecked(true);
-    this->render_mode = SHADED_WITH_EDGES;
-
-    this->visual_repr = new QActionGroup(this->view_menu);
-    this->visual_repr->addAction(this->shaded_action);
-    this->visual_repr->addAction(this->shaded_w_edges_action);
-    this->visual_repr->addAction(this->hidden_edges_removed_action);
-    this->visual_repr->addAction(this->transluent_action);
-    this->visual_repr->setExclusive(true);
-
-    this->view_menu->addSeparator();
-    this->perspective_action = this->view_menu->addAction("Perspective");
-    this->perspective_action->setCheckable(true);
-    this->perspective_action->setChecked(true);
-
-    this->view_menu->addSeparator();
-    this->ori_marker_action = this->view_menu->addAction("Orientation marker");
-    this->ori_marker_action->setCheckable(true);
-    this->ori_marker_action->setChecked(true);
-
-    connect(this->shaded_action, &QAction::triggered, this, &MainWindow::onShadedTriggered);
-    connect(this->shaded_w_edges_action,
-            &QAction::triggered,
-            this,
-            &MainWindow::onShadedWithEdgesTriggered);
-    connect(this->hidden_edges_removed_action,
-            &QAction::triggered,
-            this,
-            &MainWindow::onHiddenEdgesRemovedTriggered);
-    connect(this->transluent_action, &QAction::triggered, this, &MainWindow::onTransluentTriggered);
-    connect(this->perspective_action, &QAction::toggled, this, &MainWindow::onPerspectiveToggled);
-    connect(this->ori_marker_action,
-            &QAction::toggled,
-            this,
-            &MainWindow::onOrientationMarkerVisibilityChanged);
-
-    this->view_mode = new QPushButton(wnd);
-    this->view_mode->setFixedSize(60, 32);
-    this->view_mode->setIcon(QPixmap(":/resources/render-mode.svg"));
-    this->view_mode->setMenu(this->view_menu);
-    this->view_mode->show();
+    this->select_tool->setupWidgets();
+    this->explode_tool->setupWidgets();
+    this->mesh_quality_tool->setupWidgets();
 }
 
 void
@@ -378,26 +189,6 @@ MainWindow::setupFileChangedNotificationWidget()
 }
 
 void
-MainWindow::setupExplodeWidgets()
-{
-    this->explode = new ExplodeWidget(this);
-    connect(this->explode, &ExplodeWidget::valueChanged, this, &MainWindow::onExplodeValueChanged);
-    this->explode->setVisible(false);
-}
-
-void
-MainWindow::setupMeshQualityWidget()
-{
-    this->mesh_quality = new MeshQualityWidget(this);
-    connect(this->mesh_quality,
-            &MeshQualityWidget::metricChanged,
-            this,
-            &MainWindow::onMetricChanged);
-    connect(this->mesh_quality, &MeshQualityWidget::closed, this, &MainWindow::onMeshQualityClosed);
-    this->mesh_quality->setVisible(false);
-}
-
-void
 MainWindow::setupMenuBar()
 {
     setMenuBar(this->menu_bar);
@@ -410,7 +201,7 @@ MainWindow::setupMenuBar()
     buildRecentFilesMenu();
     file_menu->addSeparator();
     this->export_menu = file_menu->addMenu("Export as...");
-    setupExportMenu(export_menu);
+    this->export_tool->setupMenu(this->export_menu);
     file_menu->addSeparator();
     this->close_action =
         file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
@@ -421,9 +212,7 @@ MainWindow::setupMenuBar()
     file_menu->addSeparator();
     this->about_box_action = file_menu->addAction("About", this, &MainWindow::onAbout);
     this->about_box_action->setMenuRole(QAction::ApplicationSpecificRole);
-    this->check_update_action =
-        file_menu->addAction("Check for update...", this, &MainWindow::onCheckForUpdate);
-    this->check_update_action->setMenuRole(QAction::ApplicationSpecificRole);
+    this->update_tool->setupMenu(file_menu);
     this->view_license_action =
         file_menu->addAction("View license", this, &MainWindow::onViewLicense);
     this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
@@ -431,10 +220,7 @@ MainWindow::setupMenuBar()
     file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
 
     QMenu * view_menu = this->menu_bar->addMenu("View");
-    view_menu->addAction(this->shaded_action);
-    view_menu->addAction(this->shaded_w_edges_action);
-    view_menu->addAction(this->hidden_edges_removed_action);
-    view_menu->addAction(this->transluent_action);
+    this->view->setMenu(view_menu);
     view_menu->addSeparator();
     this->view_info_wnd_action =
         view_menu->addAction("Info window", this, &MainWindow::onViewInfoWindow);
@@ -443,11 +229,12 @@ MainWindow::setupMenuBar()
     setupColorProfileMenu(color_profile_menu);
 
     QMenu * tools_menu = this->menu_bar->addMenu("Tools");
-    setupSelectModeMenu(tools_menu);
+    this->select_tool->setupMenu(tools_menu);
     this->tools_explode_action =
-        tools_menu->addAction("Explode", this, &MainWindow::onToolsExplode);
-    this->tools_mesh_quality_action =
-        tools_menu->addAction("Mesh quality", this, &MainWindow::onToolsMeshQuality);
+        tools_menu->addAction("Explode", this->explode_tool, &ExplodeTool::onExplode);
+    this->tools_mesh_quality_action = tools_menu->addAction("Mesh quality",
+                                                            this->mesh_quality_tool,
+                                                            &MeshQualityTool::onMeshQuality);
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
@@ -462,13 +249,6 @@ MainWindow::setupMenuBar()
 
     this->windows_action_group = new QActionGroup(this);
     this->windows_action_group->addAction(this->show_main_window);
-}
-
-void
-MainWindow::setupExportMenu(QMenu * menu)
-{
-    this->export_as_png = menu->addAction("PNG...", this, &MainWindow::onExportAsPng);
-    this->export_as_jpg = menu->addAction("JPG...", this, &MainWindow::onExportAsJpg);
 }
 
 void
@@ -494,57 +274,27 @@ MainWindow::setupColorProfileMenu(QMenu * menu)
 }
 
 void
-MainWindow::setupSelectModeMenu(QMenu * menu)
-{
-    QMenu * select_menu = menu->addMenu("Select mode");
-    this->mode_select_action_group = new QActionGroup(this);
-    this->select_mode = static_cast<EModeSelect>(
-        this->settings->value("tools/select_mode", MODE_SELECT_NONE).toInt());
-
-    QList<QString> names(
-        { QString("None"), QString("Blocks"), QString("Cells"), QString("Points") });
-    QList<EModeSelect> modes(
-        { MODE_SELECT_NONE, MODE_SELECT_BLOCKS, MODE_SELECT_CELLS, MODE_SELECT_POINTS });
-    for (int i = 0; i < names.size(); i++) {
-        auto name = names[i];
-        auto mode = modes[i];
-        auto * action = select_menu->addAction(name);
-        action->setCheckable(true);
-        action->setData(mode);
-        this->mode_select_action_group->addAction(action);
-        if (mode == this->select_mode)
-            action->setChecked(true);
-    }
-
-    connect(this->mode_select_action_group,
-            &QActionGroup::triggered,
-            this,
-            &MainWindow::onSelectModeTriggered);
-}
-
-void
 MainWindow::updateMenuBar()
 {
     auto * active_window = QApplication::activeWindow();
     this->show_main_window->setChecked(active_window == this);
 
-    this->view_info_wnd_action->setChecked(this->info_window->isVisible());
-    bool has_file = hasFile();
-    this->export_as_png->setEnabled(has_file);
-    this->export_as_jpg->setEnabled(has_file);
+    this->view_info_wnd_action->setChecked(this->info_view->isVisible());
+    bool has_file = this->model->hasFile();
+    this->export_tool->setMenuEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
     this->tools_mesh_quality_action->setEnabled(has_file);
     this->close_action->setEnabled(has_file);
 
-    bool showing_mesh_qality = this->mesh_quality->isVisible();
-    this->visual_repr->setEnabled(!showing_mesh_qality);
+    bool showing_mesh_quality = this->mesh_quality_tool->isVisible();
+    this->view->updateMenuBar(!showing_mesh_quality);
 }
 
 void
 MainWindow::updateWindowTitle()
 {
-    if (hasFile()) {
-        QFileInfo fi(this->file_name);
+    if (this->model->hasFile()) {
+        auto fi = this->model->getFileInfo();
         QString title = QString("%1 \u2014 %2").arg(MESH_INSPECTOR_APP_NAME).arg(fi.fileName());
         setWindowTitle(title);
     }
@@ -555,557 +305,85 @@ MainWindow::updateWindowTitle()
 void
 MainWindow::connectSignals()
 {
-    connect(this, &MainWindow::blockAdded, this->info_window, &InfoWindow::onBlockAdded);
-    connect(this->info_window,
-            &InfoWindow::blockVisibilityChanged,
+    connect(this->model, &Model::loadFinished, this, &MainWindow::onLoadFinished);
+    connect(this->model, &Model::fileChanged, this, &MainWindow::onFileChanged);
+    connect(this->model, &Model::blockAdded, this->info_view, &InfoView::onBlockAdded);
+    connect(this->info_view,
+            &InfoView::blockVisibilityChanged,
             this,
             &MainWindow::onBlockVisibilityChanged);
-    connect(this->info_window,
-            &InfoWindow::blockOpacityChanged,
+    connect(this->info_view,
+            &InfoView::blockOpacityChanged,
             this,
             &MainWindow::onBlockOpacityChanged);
-    connect(this->info_window,
-            &InfoWindow::blockColorChanged,
-            this,
-            &MainWindow::onBlockColorChanged);
-    connect(this->info_window,
-            &InfoWindow::blockSelectionChanged,
-            this,
-            &MainWindow::onBlockSelectionChanged);
+    connect(this->info_view, &InfoView::blockColorChanged, this, &MainWindow::onBlockColorChanged);
+    connect(this->info_view,
+            &InfoView::blockSelectionChanged,
+            this->select_tool,
+            &SelectTool::onBlockSelectionChanged);
 
-    connect(this, &MainWindow::sideSetAdded, this->info_window, &InfoWindow::onSideSetAdded);
-    connect(this->info_window,
-            &InfoWindow::sideSetVisibilityChanged,
+    connect(this->model, &Model::sideSetAdded, this->info_view, &InfoView::onSideSetAdded);
+    connect(this->info_view,
+            &InfoView::sideSetVisibilityChanged,
             this,
             &MainWindow::onSideSetVisibilityChanged);
-    connect(this->info_window,
-            &InfoWindow::sideSetSelectionChanged,
-            this,
-            &MainWindow::onSideSetSelectionChanged);
+    connect(this->info_view,
+            &InfoView::sideSetSelectionChanged,
+            this->select_tool,
+            &SelectTool::onSideSetSelectionChanged);
 
-    connect(this, &MainWindow::nodeSetAdded, this->info_window, &InfoWindow::onNodeSetAdded);
-    connect(this->info_window,
-            &InfoWindow::nodeSetVisibilityChanged,
+    connect(this->model, &Model::nodeSetAdded, this->info_view, &InfoView::onNodeSetAdded);
+    connect(this->info_view,
+            &InfoView::nodeSetVisibilityChanged,
             this,
             &MainWindow::onNodeSetVisibilityChanged);
-    connect(this->info_window,
-            &InfoWindow::nodeSetSelectionChanged,
-            this,
-            &MainWindow::onNodeSetSelectionChanged);
+    connect(this->info_view,
+            &InfoView::nodeSetSelectionChanged,
+            this->select_tool,
+            &SelectTool::onNodeSetSelectionChanged);
 
-    connect(this->info_window,
-            &InfoWindow::dimensionsStateChanged,
+    connect(this->info_view,
+            &InfoView::dimensionsStateChanged,
             this,
             &MainWindow::onCubeAxisVisibilityChanged);
-
-    connect(this->file_watcher, &QFileSystemWatcher::fileChanged, this, &MainWindow::onFileChanged);
-}
-
-void
-MainWindow::setupVtk()
-{
-    this->interactor = this->render_window->GetInteractor();
-
-    // TODO: set background from preferences/templates
-    this->renderer->SetGradientBackground(true);
-    // set anti-aliasing on
-    this->renderer->SetUseFXAA(true);
-    this->render_window->SetMultiSamples(1);
 }
 
 void
 MainWindow::clear()
 {
-    this->mesh_quality->done();
-    this->renderer->RemoveAllViewProps();
-
-    for (auto & it : this->blocks)
-        delete it.second;
-    this->blocks.clear();
-
-    for (auto & it : this->side_sets)
-        delete it.second;
-    this->side_sets.clear();
-
-    for (auto & it : this->node_sets)
-        delete it.second;
-    this->node_sets.clear();
-
-    for (auto & eb : this->extract_blocks)
-        eb->Delete();
-    this->extract_blocks.clear();
-
-    auto watched_files = this->file_watcher->files();
-    for (auto & file : watched_files)
-        this->file_watcher->removePath(file);
-
-    if (this->selection) {
-        delete this->selection;
-        this->selection = nullptr;
-    }
-    if (this->highlight) {
-        delete this->highlight;
-        this->highlight = nullptr;
-    }
+    this->mesh_quality_tool->done();
+    this->model->clear();
+    this->select_tool->clear();
 }
 
 void
 MainWindow::loadFile(const QString & file_name)
 {
-    onDeselect();
-    this->clear();
-    if (!this->checkFileExists(file_name))
-        return;
-
     QFileInfo fi(file_name);
-    this->progress =
-        new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
-    this->progress->setWindowModality(Qt::WindowModal);
-    this->progress->show();
+    if (fi.exists()) {
+        this->select_tool->onDeselect();
+        this->clear();
 
-    delete this->load_thread;
-    this->load_thread = new LoadThread(file_name);
-    connect(this->load_thread, &LoadThread::finished, this, &MainWindow::onLoadFinished);
-    this->load_thread->start(QThread::IdlePriority);
-}
+        this->progress =
+            new QProgressDialog(QString("Loading %1...").arg(fi.fileName()), QString(), 0, 0, this);
+        this->progress->setWindowModality(Qt::WindowModal);
+        this->progress->show();
 
-bool
-MainWindow::hasFile()
-{
-    return !this->file_name.isEmpty();
-}
-
-void
-MainWindow::setupOrientationMarker()
-{
-    std::array<QColor, 3> clr({ QColor(188, 39, 26), QColor(65, 147, 41), QColor(0, 0, 200) });
-
-    vtkAxesActor * axes = vtkAxesActor::New();
-    axes->SetNormalizedTipLength(0, 0, 0);
-
-    std::array<vtkProperty *, 3> shaft_property({ axes->GetXAxisShaftProperty(),
-                                                  axes->GetYAxisShaftProperty(),
-                                                  axes->GetZAxisShaftProperty() });
-    for (std::size_t i = 0; i < shaft_property.size(); i++) {
-        auto prop = shaft_property[i];
-        prop->SetLineWidth(HIDPI(1));
-        prop->SetColor(clr[i].redF(), clr[i].greenF(), clr[i].blueF());
+        this->model->loadFile(file_name);
     }
-
-    std::array<vtkCaptionActor2D *, 3> caption_actors({ axes->GetXAxisCaptionActor2D(),
-                                                        axes->GetYAxisCaptionActor2D(),
-                                                        axes->GetZAxisCaptionActor2D() });
-    for (std::size_t i = 0; i < caption_actors.size(); i++) {
-        auto text_prop = caption_actors[i]->GetCaptionTextProperty();
-        text_prop->SetColor(clr[i].redF(), clr[i].greenF(), clr[i].blueF());
-        text_prop->BoldOn();
-        text_prop->ItalicOff();
-        text_prop->ShadowOff();
+    else {
+        auto base_file = fi.fileName();
+        showNotification(QString("Unable to open '%1': File does not exist.").arg(base_file));
     }
-
-    this->ori_marker = vtkOrientationMarkerWidget::New();
-    this->ori_marker->SetDefaultRenderer(this->renderer);
-    this->ori_marker->SetOrientationMarker(axes);
-    this->ori_marker->SetViewport(0.8, 0, 1.0, 0.2);
-    this->ori_marker->SetInteractor(this->interactor);
-    this->ori_marker->SetEnabled(true);
-    this->ori_marker->SetInteractive(false);
-}
-
-void
-MainWindow::setupCubeAxesActor()
-{
-    this->cube_axes_actor = vtkCubeAxesActor::New();
-    this->cube_axes_actor->VisibilityOff();
-    this->cube_axes_actor->SetCamera(this->renderer->GetActiveCamera());
-    this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);
-    this->cube_axes_actor->SetFlyMode(vtkCubeAxesActor::VTK_FLY_OUTER_EDGES);
-}
-
-void
-MainWindow::computeTotalBoundingBox()
-{
-    vtkBoundingBox bbox;
-    for (auto & it : this->blocks) {
-        auto block = it.second;
-        bbox.AddBounds(block->getBounds());
-    }
-
-    double bounds[6];
-    bbox.GetBounds(bounds);
-    this->cube_axes_actor->SetBounds(bounds);
-    this->renderer->AddViewProp(this->cube_axes_actor);
-    this->info_window->setBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-
-    double center[3];
-    bbox.GetCenter(center);
-    this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
 }
 
 int
 MainWindow::getRenderWindowWidth() const
 {
     int info_width = 0;
-    if (this->info_dock->isVisible())
-        info_width = this->info_dock->geometry().width();
+    if (this->info_view->isVisible())
+        info_width = this->info_view->geometry().width();
     return this->geometry().width() - info_width;
-}
-
-bool
-MainWindow::checkFileExists(const QString & file_name)
-{
-    QFileInfo fi(file_name);
-    if (fi.exists())
-        return true;
-    else {
-        auto base_file = fi.fileName();
-        showNotification(QString("Unable to open '%1': File does not exist.").arg(base_file));
-        return false;
-    }
-}
-
-void
-MainWindow::addBlocks()
-{
-    auto * camera = this->renderer->GetActiveCamera();
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & binfo : reader->getBlocks()) {
-        BlockObject * block = nullptr;
-        if (binfo.multiblock_index != -1) {
-            vtkExtractBlock * eb = vtkExtractBlock::New();
-            eb->SetInputConnection(reader->getVtkOutputPort());
-            eb->AddIndex(binfo.multiblock_index);
-            eb->Update();
-            this->extract_blocks.push_back(eb);
-
-            block = new BlockObject(eb->GetOutputPort(), camera);
-        }
-        else
-            block = new BlockObject(reader->getVtkOutputPort(), camera);
-        setBlockProperties(block);
-        this->blocks[binfo.number] = block;
-
-        this->renderer->AddViewProp(block->getActor());
-        this->renderer->AddViewProp(block->getSilhouetteActor());
-
-        emit blockAdded(binfo.number, QString::fromStdString(binfo.name));
-    }
-}
-
-void
-MainWindow::addSideSets()
-{
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & finfo : reader->getSideSets()) {
-        auto * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
-        eb->AddIndex(finfo.multiblock_index);
-        eb->Update();
-        this->extract_blocks.push_back(eb);
-
-        auto sideset = new SideSetObject(eb->GetOutputPort());
-        this->side_sets[finfo.number] = sideset;
-        setSideSetProperties(sideset);
-        this->renderer->AddViewProp(sideset->getActor());
-
-        emit sideSetAdded(finfo.number, QString::fromStdString(finfo.name));
-    }
-}
-
-void
-MainWindow::addNodeSets()
-{
-    auto * reader = this->load_thread->getReader();
-
-    for (auto & ninfo : reader->getNodeSets()) {
-        auto * eb = vtkExtractBlock::New();
-        eb->SetInputConnection(reader->getVtkOutputPort());
-        eb->AddIndex(ninfo.multiblock_index);
-        eb->Update();
-        this->extract_blocks.push_back(eb);
-
-        auto * nodeset = new NodeSetObject(eb->GetOutputPort());
-        this->node_sets[ninfo.number] = nodeset;
-        this->setNodeSetProperties(nodeset);
-        this->renderer->AddViewProp(nodeset->getActor());
-
-        emit nodeSetAdded(ninfo.number, QString::fromStdString(ninfo.name));
-    }
-}
-
-BlockObject *
-MainWindow::getBlock(int block_id)
-{
-    const auto & it = this->blocks.find(block_id);
-    if (it != this->blocks.end())
-        return it->second;
-    else
-        return nullptr;
-}
-
-SideSetObject *
-MainWindow::getSideSet(int sideset_id)
-{
-    const auto & it = this->side_sets.find(sideset_id);
-    if (it != this->side_sets.end())
-        return it->second;
-    else
-        return nullptr;
-}
-
-NodeSetObject *
-MainWindow::getNodeSet(int nodeset_id)
-{
-    const auto & it = this->node_sets.find(nodeset_id);
-    if (it != this->node_sets.end())
-        return it->second;
-    else
-        return nullptr;
-}
-
-void
-MainWindow::setSelectedBlockProperties(BlockObject * block, bool highlighted)
-{
-    auto * property = block->getProperty();
-    if (this->render_mode == SHADED) {
-        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
-        property->SetOpacity(1.0);
-        property->SetEdgeVisibility(false);
-    }
-    else if (this->render_mode == SHADED_WITH_EDGES) {
-        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
-        property->SetOpacity(1.0);
-        property->SetEdgeVisibility(true);
-        property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
-                               SIDESET_EDGE_CLR.greenF(),
-                               SIDESET_EDGE_CLR.blueF());
-        property->SetLineWidth(HIDPI(EDGE_WIDTH));
-    }
-    else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
-        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
-        property->SetOpacity(1.0);
-        property->SetEdgeVisibility(false);
-    }
-    else if (this->render_mode == TRANSLUENT) {
-        property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
-        property->SetOpacity(0.33);
-        property->SetEdgeVisibility(false);
-    }
-
-    setHighlightedBlockProperties(block, highlighted);
-}
-
-void
-MainWindow::setDeselectedBlockProperties(BlockObject * block, bool highlighted)
-{
-    auto * property = block->getProperty();
-    if (this->render_mode == SHADED) {
-        auto & clr = block->getColor();
-        property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
-        property->SetOpacity(block->getOpacity());
-        property->SetEdgeVisibility(false);
-    }
-    else if (this->render_mode == SHADED_WITH_EDGES) {
-        auto & clr = block->getColor();
-        property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
-        property->SetOpacity(block->getOpacity());
-        property->SetEdgeVisibility(true);
-        property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
-                               SIDESET_EDGE_CLR.greenF(),
-                               SIDESET_EDGE_CLR.blueF());
-        property->SetLineWidth(HIDPI(EDGE_WIDTH));
-    }
-    else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
-        property->SetColor(1., 1., 1.);
-        property->SetOpacity(1.0);
-        property->SetEdgeVisibility(false);
-    }
-    else if (this->render_mode == TRANSLUENT) {
-        auto & clr = block->getColor();
-        property->SetColor(clr.redF(), clr.greenF(), clr.blueF());
-        property->SetOpacity(0.33);
-        property->SetEdgeVisibility(false);
-    }
-
-    setHighlightedBlockProperties(block, highlighted);
-}
-
-void
-MainWindow::setHighlightedBlockProperties(BlockObject * block, bool highlighted)
-{
-    auto * property = block->getSilhouetteProperty();
-    if (highlighted) {
-        block->setSilhouetteVisible(true);
-
-        if (this->render_mode == SHADED) {
-            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
-        }
-        else if (this->render_mode == SHADED_WITH_EDGES) {
-            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
-        }
-        else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
-            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
-        }
-        else if (this->render_mode == TRANSLUENT) {
-            property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
-        }
-    }
-    else {
-        if (this->render_mode == SHADED) {
-            block->setSilhouetteVisible(false);
-        }
-        else if (this->render_mode == SHADED_WITH_EDGES) {
-            block->setSilhouetteVisible(false);
-        }
-        else if (this->render_mode == HIDDEN_EDGES_REMOVED) {
-            block->setSilhouetteVisible(true);
-            property->SetColor(0, 0, 0);
-            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
-        }
-        else if (this->render_mode == TRANSLUENT) {
-            block->setSilhouetteVisible(true);
-            property->SetColor(0, 0, 0);
-            property->SetLineWidth(HIDPI(OUTLINE_WIDTH));
-        }
-    }
-}
-
-void
-MainWindow::setBlockProperties(BlockObject * block, bool selected, bool highlighted)
-{
-    auto * property = block->getProperty();
-    property->SetRepresentationToSurface();
-    property->SetAmbient(0.4);
-    property->SetDiffuse(0.6);
-    if (selected)
-        this->setSelectedBlockProperties(block, highlighted);
-    else
-        this->setDeselectedBlockProperties(block, highlighted);
-}
-
-void
-MainWindow::setBlockMeshQualityProperties(BlockObject * block, double range[])
-{
-    auto * property = block->getProperty();
-    property->SetRepresentationToSurface();
-    property->SetAmbient(0.4);
-    property->SetDiffuse(0.6);
-    property->SetOpacity(1.0);
-    property->SetEdgeVisibility(true);
-    property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
-                           SIDESET_EDGE_CLR.greenF(),
-                           SIDESET_EDGE_CLR.blueF());
-    property->SetLineWidth(HIDPI(EDGE_WIDTH));
-
-    auto mapper = block->getMapper();
-    mapper->ScalarVisibilityOn();
-    mapper->SelectColorArray(MESH_QUALITY_FIELD_NAME);
-    mapper->SetScalarModeToUseCellFieldData();
-    mapper->InterpolateScalarsBeforeMappingOn();
-    mapper->SetColorModeToMapScalars();
-    mapper->SetScalarRange(range);
-    mapper->SetLookupTable(this->lut);
-}
-
-void
-MainWindow::setSideSetProperties(SideSetObject * sideset)
-{
-    auto * property = sideset->getProperty();
-    property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
-    property->SetEdgeVisibility(false);
-    property->LightingOff();
-    if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
-        property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
-                               SIDESET_EDGE_CLR.greenF(),
-                               SIDESET_EDGE_CLR.blueF());
-        if (this->render_mode == SHADED_WITH_EDGES) {
-            property->SetLineWidth(HIDPI(EDGE_WIDTH));
-            property->SetEdgeVisibility(true);
-        }
-    }
-}
-
-void
-MainWindow::setNodeSetProperties(NodeSetObject * nodeset)
-{
-    auto * property = nodeset->getProperty();
-    property->SetRepresentationToPoints();
-    property->SetRenderPointsAsSpheres(true);
-    property->SetVertexVisibility(true);
-    property->SetEdgeVisibility(false);
-    property->SetPointSize(HIDPI(5));
-    property->SetColor(NODESET_CLR.redF(), NODESET_CLR.greenF(), NODESET_CLR.blueF());
-    property->SetOpacity(1);
-    property->SetAmbient(1);
-    property->SetDiffuse(0);
-}
-
-void
-MainWindow::setSelectionProperties()
-{
-    auto * actor = this->selection->getActor();
-    auto * property = actor->GetProperty();
-    if (this->select_mode == MODE_SELECT_POINTS) {
-        property->SetRepresentationToPoints();
-        property->SetRenderPointsAsSpheres(true);
-        property->SetVertexVisibility(true);
-        property->SetEdgeVisibility(false);
-        property->SetPointSize(HIDPI(7.5));
-        property->SetColor(SELECTION_CLR.redF(), SELECTION_CLR.greenF(), SELECTION_CLR.blueF());
-        property->SetOpacity(1);
-        property->SetAmbient(1);
-        property->SetDiffuse(0);
-    }
-    else if (this->select_mode == MODE_SELECT_CELLS) {
-        property->SetRepresentationToSurface();
-        property->SetRenderPointsAsSpheres(false);
-        property->SetVertexVisibility(false);
-        property->EdgeVisibilityOn();
-        property->SetColor(SELECTION_CLR.redF(), SELECTION_CLR.greenF(), SELECTION_CLR.blueF());
-        property->SetLineWidth(HIDPI(3.5));
-        property->SetEdgeColor(SELECTION_EDGE_CLR.redF(),
-                               SELECTION_EDGE_CLR.greenF(),
-                               SELECTION_EDGE_CLR.blueF());
-        property->SetOpacity(0.5);
-        property->SetAmbient(1);
-        property->SetDiffuse(0);
-    }
-}
-
-void
-MainWindow::setHighlightProperties()
-{
-    auto * actor = this->highlight->getActor();
-    auto * property = actor->GetProperty();
-    if (this->select_mode == MODE_SELECT_POINTS) {
-        property->SetRepresentationToPoints();
-        property->SetRenderPointsAsSpheres(true);
-        property->SetVertexVisibility(true);
-        property->SetEdgeVisibility(false);
-        property->SetPointSize(HIDPI(7.5));
-        property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-        property->SetOpacity(1);
-        property->SetAmbient(1);
-        property->SetDiffuse(0);
-    }
-    else if (this->select_mode == MODE_SELECT_CELLS) {
-        property->SetRepresentationToSurface();
-        property->SetRenderPointsAsSpheres(false);
-        property->SetVertexVisibility(false);
-        property->EdgeVisibilityOn();
-        property->SetColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-        property->SetLineWidth(HIDPI(3.5));
-        property->SetEdgeColor(HIGHLIGHT_CLR.redF(), HIGHLIGHT_CLR.greenF(), HIGHLIGHT_CLR.blueF());
-        property->SetOpacity(0.33);
-        property->SetAmbient(1);
-        property->SetDiffuse(0);
-    }
 }
 
 void
@@ -1139,165 +417,6 @@ MainWindow::showFileChangedNotification()
 }
 
 void
-MainWindow::showSelectedMeshEntity(const QString & info)
-{
-    this->selected_mesh_ent_info->setText(info);
-    this->selected_mesh_ent_info->adjustSize();
-    auto tl = this->view->geometry().topLeft();
-    this->selected_mesh_ent_info->move(tl.x() + 10, tl.y() + 10);
-    this->selected_mesh_ent_info->show();
-}
-
-void
-MainWindow::hideSelectedMeshEntity()
-{
-    this->selected_mesh_ent_info->hide();
-}
-
-void
-MainWindow::deselectBlocks()
-{
-    if (this->selected_block != nullptr) {
-        setBlockProperties(this->selected_block, false);
-        this->selected_block = nullptr;
-    }
-}
-
-int
-MainWindow::blockActorToId(vtkActor * actor)
-{
-    // TODO: when we start to have 1000s of actors, this should be done via a
-    // map from 'actor' to 'block_id'
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        if (block->getActor() == actor)
-            return it.first;
-    }
-    return -1;
-}
-
-void
-MainWindow::highlightBlock(const QPoint & pt)
-{
-    if (this->highlighted_block) {
-        setBlockProperties(this->highlighted_block,
-                           this->highlighted_block == this->selected_block,
-                           false);
-    }
-
-    auto * picker = vtkPropPicker::New();
-    if (picker->PickProp(pt.x(), pt.y(), this->renderer)) {
-        auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
-        if (actor) {
-            auto blk_id = blockActorToId(actor);
-            auto * block = getBlock(blk_id);
-            if (block) {
-                this->highlighted_block = block;
-                setBlockProperties(block, this->highlighted_block == this->selected_block, true);
-            }
-        }
-    }
-    else if (this->highlighted_block) {
-        this->highlighted_block = nullptr;
-    }
-    picker->Delete();
-}
-
-void
-MainWindow::highlightCell(const QPoint & pt)
-{
-    auto * picker = vtkCellPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
-        auto cell_id = picker->GetCellId();
-        this->highlight->selectCell(cell_id);
-        setHighlightProperties();
-    }
-    else
-        this->highlight->clear();
-    picker->Delete();
-}
-
-void
-MainWindow::highlightPoint(const QPoint & pt)
-{
-    auto * picker = vtkPointPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
-        auto point_id = picker->GetPointId();
-        this->highlight->selectPoint(point_id);
-        setHighlightProperties();
-    }
-    else
-        this->highlight->clear();
-    picker->Delete();
-}
-
-void
-MainWindow::selectBlock(const QPoint & pt)
-{
-    auto * picker = vtkPropPicker::New();
-    if (picker->PickProp(pt.x(), pt.y(), this->renderer)) {
-        auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
-        if (actor) {
-            auto blk_id = blockActorToId(actor);
-            auto * block = getBlock(blk_id);
-            onBlockSelectionChanged(blk_id);
-            this->selected_block = block;
-            setBlockProperties(block, true, this->selected_block == this->highlighted_block);
-        }
-    }
-    picker->Delete();
-}
-
-void
-MainWindow::selectCell(const QPoint & pt)
-{
-    auto * picker = vtkCellPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
-        auto cell_id = picker->GetCellId();
-        this->selection->selectCell(cell_id);
-        setSelectionProperties();
-
-        auto * unstr_grid = this->selection->getSelected();
-        auto * cell = unstr_grid->GetCell(0);
-        auto cell_type = cell->GetCellType();
-        QString nfo =
-            QString("Element ID: %1\nType: %2").arg(cell_id).arg(cellTypeToName(cell_type));
-        showSelectedMeshEntity(nfo);
-    }
-    picker->Delete();
-}
-
-void
-MainWindow::selectPoint(const QPoint & pt)
-{
-    auto * picker = vtkPointPicker::New();
-    if (picker->Pick(pt.x(), pt.y(), 0, this->renderer)) {
-        auto point_id = picker->GetPointId();
-        this->selection->selectPoint(point_id);
-        setSelectionProperties();
-
-        auto * unstr_grid = this->selection->getSelected();
-        auto * points = unstr_grid->GetPoints();
-        if (points) {
-            double * coords = points->GetPoint(0);
-            char format = 'f';
-            int precision = 5;
-            QString nfo = QString("Node ID: %1\nX: %2\nY: %3\nZ: %4")
-                              .arg(point_id)
-                              .arg(QString::number(coords[0], format, precision))
-                              .arg(QString::number(coords[1], format, precision))
-                              .arg(QString::number(coords[2], format, precision));
-            showSelectedMeshEntity(nfo);
-        }
-        else {
-            QString nfo = QString("Node ID: %1").arg(point_id);
-            showSelectedMeshEntity(nfo);
-        }
-    }
-    picker->Delete();
-}
-
-void
 MainWindow::setColorProfile()
 {
     ColorProfile * profile;
@@ -1306,18 +425,8 @@ MainWindow::setColorProfile()
     else
         profile = this->color_profiles[0];
 
-    const auto & qclr = profile->getColor("bkgnd");
-    double bkgnd[3] = { qclr.redF(), qclr.greenF(), qclr.blueF() };
-
-    this->renderer->SetBackground(bkgnd);
-    this->renderer->SetBackground2(bkgnd);
-
-    // color bar labels
-    {
-        auto qclr = profile->getColor("color_bar_label");
-        auto prop = this->color_bar->GetLabelTextProperty();
-        prop->SetColor(qclr.redF(), qclr.greenF(), qclr.blueF());
-    }
+    this->view->setColorProfile(profile);
+    this->mesh_quality_tool->setColorProfile(profile);
 }
 
 void
@@ -1341,24 +450,6 @@ MainWindow::loadColorProfiles()
     cp_dark_color_map["color_bar_label"] = QColor(255, 255, 255);
     auto * cp_dark = new ColorProfile("Dark", cp_dark_color_map);
     this->color_profiles.push_back(cp_dark);
-}
-
-QString
-MainWindow::getFileName(const QString & window_title,
-                        const QString & name_filter,
-                        const QString & default_suffix)
-{
-    QFileDialog dialog;
-    dialog.setWindowTitle(window_title);
-    dialog.setNameFilter(name_filter);
-    dialog.setFileMode(QFileDialog::AnyFile);
-    dialog.setAcceptMode(QFileDialog::AcceptSave);
-    dialog.setDefaultSuffix(default_suffix);
-
-    if (dialog.exec() == QDialog::Accepted)
-        return { dialog.selectedFiles()[0] };
-
-    return {};
 }
 
 void
@@ -1417,8 +508,8 @@ MainWindow::resizeEvent(QResizeEvent * event)
 {
     QMainWindow::resizeEvent(event);
     updateViewModeLocation();
-    updateExplodeWidgetLocation();
-    updateMeshQualityWidgetLocation();
+    this->explode_tool->updateLocation();
+    this->mesh_quality_tool->updateLocation();
 }
 
 void
@@ -1450,7 +541,7 @@ MainWindow::dropEvent(QDropEvent * event)
 void
 MainWindow::closeEvent(QCloseEvent * event)
 {
-    this->settings->setValue("tools/select_mode", this->select_mode);
+    this->select_tool->saveSettings(this->settings);
     this->settings->setValue("color_profile", (uint) this->color_profile_idx);
     this->settings->setValue("window/geometry", this->saveGeometry());
     this->settings->setValue("recent_files", this->recent_files);
@@ -1461,8 +552,6 @@ void
 MainWindow::onClose()
 {
     clear();
-    this->info_window->clear();
-    this->file_name = QString();
     hide();
     this->update_timer.stop();
     updateMenuBar();
@@ -1479,138 +568,66 @@ MainWindow::hideLoadProgressBar()
 void
 MainWindow::onLoadFinished()
 {
-    if (this->load_thread->hasValidFile()) {
-        loadIntoVtk();
+    hideLoadProgressBar();
+    if (this->model->hasValidFile()) {
+        update();
         showNormal();
         this->update_timer.start(250);
     }
     else {
-        QFileInfo fi(this->load_thread->getFileName());
+        auto fi = this->model->getFileInfo();
         showNotification(QString("Unsupported file '%1'.").arg(fi.fileName()));
     }
-    hideLoadProgressBar();
     this->updateMenuBar();
 }
 
 void
-MainWindow::loadIntoVtk()
+MainWindow::update()
 {
-    Reader * reader = this->load_thread->getReader();
-
-    this->info_window->clear();
-    this->info_window->init();
-    addBlocks();
-    addSideSets();
-    addNodeSets();
-
-    computeTotalBoundingBox();
-
-    this->info_window->setSummary(reader->getTotalNumberOfElements(),
-                                  reader->getTotalNumberOfNodes());
-
-    this->file_name = QString(reader->getFileName().c_str());
+    auto file_name = this->model->getFileName();
     updateWindowTitle();
-    addToRecentFiles(this->file_name);
+    addToRecentFiles(file_name);
     buildRecentFilesMenu();
-    this->file_watcher->addPath(this->file_name);
-    this->file_changed_notification->setFileName(this->file_name);
+    this->file_changed_notification->setFileName(file_name);
 
-    delete this->selection;
-    this->selection = new Selection(reader->getVtkOutputPort());
-    setSelectionProperties();
-    this->renderer->AddActor(this->selection->getActor());
-
-    delete this->highlight;
-    this->highlight = new Selection(reader->getVtkOutputPort());
-    setHighlightProperties();
-    this->renderer->AddActor(this->highlight->getActor());
-
-    this->renderer->AddActor2D(this->color_bar);
-
-    if (reader->getDimensionality() == 3)
-        this->interactor->SetInteractorStyle(this->interactor_style_3d);
-    else
-        this->interactor->SetInteractorStyle(this->interactor_style_2d);
-
-    auto * camera = this->renderer->GetActiveCamera();
-    auto * focal_point = camera->GetFocalPoint();
-    camera->SetPosition(focal_point[0], focal_point[1], 1);
-    camera->SetRoll(0);
-    this->renderer->ResetCamera();
+    this->select_tool->update();
+    this->mesh_quality_tool->update();
 }
 
 void
 MainWindow::onBlockVisibilityChanged(int block_id, bool visible)
 {
-    BlockObject * block = getBlock(block_id);
-    if (block) {
-        block->setVisible(visible);
-        if (this->render_mode == HIDDEN_EDGES_REMOVED || this->render_mode == TRANSLUENT)
-            block->setSilhouetteVisible(visible);
-        else
-            block->setSilhouetteVisible(false);
-    }
+    this->view->setBlockVisibility(block_id, visible);
 }
 
 void
 MainWindow::onBlockOpacityChanged(int block_id, double opacity)
 {
-    BlockObject * block = getBlock(block_id);
-    if (block) {
-        block->setOpacity(opacity);
-        if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
-            auto * property = block->getProperty();
-            property->SetOpacity(opacity);
-        }
-    }
+    this->view->setBlockOpacity(block_id, opacity);
 }
 
 void
 MainWindow::onBlockColorChanged(int block_id, QColor color)
 {
-    BlockObject * block = getBlock(block_id);
-    if (block) {
-        block->setColor(color);
-        auto * property = block->getProperty();
-        if (this->render_mode == HIDDEN_EDGES_REMOVED)
-            property->SetColor(1, 1, 1);
-        else
-            property->SetColor(color.redF(), color.greenF(), color.blueF());
-    }
+    this->view->setBlockColor(block_id, color);
 }
 
 void
 MainWindow::onSideSetVisibilityChanged(int sideset_id, bool visible)
 {
-    auto * sideset = getSideSet(sideset_id);
-    if (sideset)
-        sideset->setVisible(visible);
+    this->view->setSideSetVisibility(sideset_id, visible);
 }
 
 void
 MainWindow::onNodeSetVisibilityChanged(int nodeset_id, bool visible)
 {
-    auto * nodeset = getNodeSet(nodeset_id);
-    if (nodeset)
-        nodeset->setVisible(visible);
+    this->view->setNodeSetVisibility(nodeset_id, visible);
 }
 
 void
 MainWindow::onCubeAxisVisibilityChanged(bool visible)
 {
-    if (visible)
-        this->cube_axes_actor->VisibilityOn();
-    else
-        this->cube_axes_actor->VisibilityOff();
-}
-
-void
-MainWindow::onOrientationMarkerVisibilityChanged(bool visible)
-{
-    if (visible)
-        this->ori_marker->EnabledOn();
-    else
-        this->ori_marker->EnabledOff();
+    this->view->setCubeAxisVisibility(visible);
 }
 
 void
@@ -1622,7 +639,7 @@ MainWindow::onOpenFile()
                                                      "ExodusII files (*.e *.exo);;"
                                                      "VTK Unstructured Grid files (*.vtk)");
     if (!file_name.isNull())
-        this->loadFile(file_name);
+        loadFile(file_name);
 }
 
 void
@@ -1645,220 +662,52 @@ MainWindow::onClearRecentFiles()
 void
 MainWindow::onNewFile()
 {
-    onDeselect();
+    this->select_tool->onDeselect();
     this->clear();
-    this->info_window->clear();
-    this->file_name = QString();
     this->updateWindowTitle();
     showNormal();
 }
 
 void
-MainWindow::onShadedTriggered(bool checked)
-{
-    this->render_mode = SHADED;
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        bool selected = this->selected_block == block;
-        setBlockProperties(block, selected);
-        block->setSilhouetteVisible(false);
-    }
-    for (auto & it : this->side_sets) {
-        auto * sideset = it.second;
-        setSideSetProperties(sideset);
-    }
-}
-
-void
-MainWindow::onShadedWithEdgesTriggered(bool checked)
-{
-    this->render_mode = SHADED_WITH_EDGES;
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        bool selected = this->selected_block == block;
-        setBlockProperties(block, selected);
-        block->setSilhouetteVisible(false);
-    }
-    for (auto & it : this->side_sets) {
-        auto * sideset = it.second;
-        setSideSetProperties(sideset);
-    }
-}
-
-void
-MainWindow::onHiddenEdgesRemovedTriggered(bool checked)
-{
-    this->render_mode = HIDDEN_EDGES_REMOVED;
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        bool selected = this->selected_block == block;
-        setBlockProperties(block, selected);
-        block->setSilhouetteVisible(block->visible());
-    }
-    for (auto & it : this->side_sets) {
-        auto * sideset = it.second;
-        setSideSetProperties(sideset);
-    }
-}
-
-void
-MainWindow::onTransluentTriggered(bool checked)
-{
-    this->render_mode = TRANSLUENT;
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        bool selected = this->selected_block == block;
-        setBlockProperties(block, selected);
-        block->setSilhouetteVisible(block->visible());
-    }
-    for (auto & it : this->side_sets) {
-        auto * sideset = it.second;
-        setSideSetProperties(sideset);
-    }
-}
-
-void
-MainWindow::onPerspectiveToggled(bool checked)
-{
-    if (checked) {
-        auto * camera = this->renderer->GetActiveCamera();
-        camera->ParallelProjectionOff();
-    }
-    else {
-        auto * camera = this->renderer->GetActiveCamera();
-        camera->ParallelProjectionOn();
-    }
-}
-
-void
 MainWindow::onUpdateWindow()
 {
-    this->render_window->Render();
+    this->view->render();
 }
 
 void
 MainWindow::onFileChanged(const QString & path)
 {
-    if (!this->file_watcher->files().contains(path))
-        this->file_watcher->addPath(path);
     showFileChangedNotification();
 }
 
 void
 MainWindow::onReloadFile()
 {
-    loadFile(this->file_name);
-}
-
-void
-MainWindow::onBlockSelectionChanged(int block_id)
-{
-    deselectBlocks();
-    const auto & it = this->blocks.find(block_id);
-    if (it != this->blocks.end()) {
-        BlockObject * block = it->second;
-        auto info = QString("Block: %1\n"
-                            "Cells: %2\n"
-                            "Points: %3")
-                        .arg(block_id)
-                        .arg(QLocale::system().toString(block->getNumCells()))
-                        .arg(QLocale::system().toString(block->getNumPoints()));
-        showSelectedMeshEntity(info);
-    }
-    else
-        hideSelectedMeshEntity();
-}
-
-void
-MainWindow::onSideSetSelectionChanged(int sideset_id)
-{
-    const auto & it = this->side_sets.find(sideset_id);
-    if (it != this->side_sets.end()) {
-        auto * sideset = it->second;
-        auto info = QString("Side set: %1\n"
-                            "Cells: %2\n"
-                            "Points: %3")
-                        .arg(sideset_id)
-                        .arg(QLocale::system().toString(sideset->getNumCells()))
-                        .arg(QLocale::system().toString(sideset->getNumPoints()));
-        showSelectedMeshEntity(info);
-    }
-    else
-        hideSelectedMeshEntity();
-}
-
-void
-MainWindow::onNodeSetSelectionChanged(int nodeset_id)
-{
-    const auto & it = this->node_sets.find(nodeset_id);
-    if (it != this->node_sets.end()) {
-        auto * nodeset = it->second;
-        auto info = QString("Node set: %1\n"
-                            "Points: %2")
-                        .arg(nodeset_id)
-                        .arg(QLocale::system().toString(nodeset->getNumPoints()));
-        showSelectedMeshEntity(info);
-    }
-    else
-        hideSelectedMeshEntity();
+    loadFile(this->model->getFileName());
 }
 
 void
 MainWindow::onClicked(const QPoint & pt)
 {
-    onDeselect();
-    if (this->select_mode == MODE_SELECT_BLOCKS)
-        selectBlock(pt);
-    else if (this->select_mode == MODE_SELECT_CELLS)
-        selectCell(pt);
-    else if (this->select_mode == MODE_SELECT_POINTS)
-        selectPoint(pt);
+    this->select_tool->onClicked(pt);
 }
 
 void
 MainWindow::onMouseMove(const QPoint & pt)
 {
-    if (hasFile()) {
-        if (this->select_mode == MODE_SELECT_BLOCKS)
-            highlightBlock(pt);
-        else if (this->select_mode == MODE_SELECT_CELLS)
-            highlightCell(pt);
-        else if (this->select_mode == MODE_SELECT_POINTS)
-            highlightPoint(pt);
-    }
+    if (this->model->hasFile())
+        this->select_tool->onMouseMove(pt);
 }
 
 void
 MainWindow::onViewInfoWindow()
 {
-    if (this->info_dock->isVisible())
-        this->info_dock->hide();
+    if (this->info_view->isVisible())
+        this->info_view->hide();
     else
-        this->info_dock->show();
+        this->info_view->show();
     this->updateMenuBar();
-    this->updateViewModeLocation();
-}
-
-void
-MainWindow::onSelectModeTriggered(QAction * action)
-{
-    action->setChecked(true);
-    this->select_mode = static_cast<EModeSelect>(action->data().toInt());
-    if (this->select_mode == MODE_SELECT_NONE) {
-        deselectBlocks();
-        onDeselect();
-        if (this->highlight)
-            this->highlight->clear();
-    }
-}
-
-void
-MainWindow::onDeselect()
-{
-    deselectBlocks();
-    hideSelectedMeshEntity();
-    if (this->selection)
-        this->selection->clear();
+    updateViewModeLocation();
 }
 
 void
@@ -1870,87 +719,9 @@ MainWindow::onColorProfileTriggered(QAction * action)
 }
 
 void
-MainWindow::onExportAsPng()
-{
-    auto fname = getFileName("Export to PNG", "PNG files (*.png)", "png");
-    if (!fname.isNull()) {
-        auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->render_window);
-        windowToImageFilter->SetInputBufferTypeToRGBA();
-        windowToImageFilter->ReadFrontBufferOff();
-        windowToImageFilter->Update();
-
-        auto * writer = vtkPNGWriter::New();
-        writer->SetFileName(fname.toStdString().c_str());
-        writer->SetInputConnection(windowToImageFilter->GetOutputPort());
-        writer->Write();
-
-        if (writer->GetErrorCode() == 0) {
-            QFileInfo fi(fname);
-            showNotification(QString("Export to '%1' was successful.").arg(fi.fileName()));
-        }
-    }
-}
-
-void
-MainWindow::onExportAsJpg()
-{
-    auto fname = getFileName("Export to JPG", "JPG files (*.jpg)", "jpg");
-    if (!file_name.isNull()) {
-        auto * windowToImageFilter = vtkWindowToImageFilter::New();
-        windowToImageFilter->SetInput(this->render_window);
-        windowToImageFilter->ReadFrontBufferOff();
-        windowToImageFilter->Update();
-
-        auto * writer = vtkJPEGWriter::New();
-        writer->SetFileName(fname.toStdString().c_str());
-        writer->SetInputConnection(windowToImageFilter->GetOutputPort());
-        writer->Write();
-
-        if (writer->GetErrorCode() == 0) {
-            QFileInfo fi(fname);
-            showNotification(QString("Export to '%1' was successful.").arg(fi.fileName()));
-        }
-    }
-}
-
-void
-MainWindow::onToolsExplode()
-{
-    this->explode->adjustSize();
-    this->explode->show();
-    updateExplodeWidgetLocation();
-}
-
-void
-MainWindow::onExplodeValueChanged(double value)
-{
-    double dist = value / this->explode->range();
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        auto blk_cob = block->getCenterOfBounds();
-        vtkVector3d dir;
-        vtkMath::Subtract(blk_cob, this->center_of_bounds, dir);
-        dir.Normalize();
-        vtkMath::MultiplyScalar(dir.GetData(), dist);
-        block->setPosition(dir[0], dir[1], dir[2]);
-    }
-}
-
-void
 MainWindow::updateViewModeLocation()
 {
-    auto tr = this->view->geometry().topRight();
-    this->view_mode->move(tr.x() - 10 - this->view_mode->width(), tr.y() + 10);
-}
-
-void
-MainWindow::updateExplodeWidgetLocation()
-{
-    auto width = this->getRenderWindowWidth();
-    int left = (width - this->explode->width()) / 2;
-    int top = geometry().height() - this->explode->height() - 10;
-    this->explode->move(left, top);
+    this->view->updateLocation();
 }
 
 void
@@ -1988,416 +759,4 @@ MainWindow::onViewLicense()
     if (this->license_dlg == nullptr)
         this->license_dlg = new LicenseDialog(this);
     this->license_dlg->show();
-}
-
-QString
-MainWindow::cellTypeToName(int cell_type)
-{
-    // clang-format off
-    switch (cell_type) {
-        case 3: return "Edge2";
-        case 5: return "Tri3";
-        case 9: return "Quad4";
-        case 10: return "Tetra4";
-        case 12: return "Hex8";
-        case 13: return "Prism6";
-        case 14: return "Pyramid5";
-        case 21: return "Edge3";
-        case 22: return "Tri6";
-        case 23: return "Quad9";
-        case 24: return "Tetra10";
-        case 25: return "Hex27";
-        case 26: return "Prism18";
-        case 27: return "Pyramid14";
-        default: return QString::number(cell_type);
-    }
-    // clang-format on
-}
-
-void
-MainWindow::onCheckForUpdate()
-{
-    QNetworkRequest request;
-    request.setUrl(QUrl("https://api.github.com/repos/andrsd/mesh-inspector/releases/latest"));
-    request.setRawHeader(QByteArray("Accept"), QByteArray("application/vnd.github+json"));
-    request.setRawHeader(QByteArray("Authorization"),
-                         QByteArray("Bearer "
-                                    "github_pat_11AAAU5AA0uy230CCje7ng_"
-                                    "8pj7WNyfPIj8TZZRv7ZSF4RmpULmyRtN0Y9glzoh0bePPT6765WCoolMPhf"));
-    this->namgr->get(request);
-}
-
-void
-MainWindow::onHttpReply(QNetworkReply * reply)
-{
-    if (reply->error() == QNetworkReply::NoError) {
-        QVersionNumber latest = getVersionFromReply(reply);
-        QVersionNumber current(MESH_INSPECTOR_MAJOR_VERSION, MESH_INSPECTOR_MINOR_VERSION);
-
-        if (QVersionNumber::compare(latest, current) == 0)
-            showNotification("You are running the latest version.");
-        else
-            showNotification(QString("A newer version (%1.%2) is available.")
-                                 .arg(latest.majorVersion())
-                                 .arg(latest.minorVersion()));
-    }
-    else
-        showNotification("Check for a new version failed.");
-}
-
-QVersionNumber
-MainWindow::getVersionFromReply(QNetworkReply * reply)
-{
-    QByteArray val = reply->readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(val);
-    auto tag_name = doc["tag_name"].toString();
-    QRegularExpression re("v(\\d+)\\.(\\d+)");
-    QRegularExpressionMatch match = re.match(tag_name);
-    if (match.hasMatch())
-        return QVersionNumber(match.captured(1).toInt(), match.captured(2).toInt());
-    else
-        return QVersionNumber(-1);
-}
-
-void
-MainWindow::onToolsMeshQuality()
-{
-    this->mesh_quality->adjustSize();
-    this->mesh_quality->show();
-    updateMeshQualityWidgetLocation();
-
-    auto metric_id = this->mesh_quality->getMetricId();
-    onMetricChanged(metric_id);
-
-    updateMenuBar();
-    this->color_bar->VisibilityOn();
-}
-
-void
-MainWindow::updateMeshQualityWidgetLocation()
-{
-    auto width = this->getRenderWindowWidth();
-    int left = (width - this->mesh_quality->width()) / 2;
-    int top = geometry().height() - this->mesh_quality->height() - 10;
-    this->mesh_quality->move(left, top);
-}
-
-void
-MainWindow::onMetricChanged(int metric_id)
-{
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-
-        auto grid = block->getUnstructuredGrid();
-        auto cell_quality = vtkCellQuality::New();
-        switch (metric_id) {
-        default:
-        case MESH_METRIC_JACOBIAN:
-            cell_quality->SetQualityMeasureToJacobian();
-            break;
-        case MESH_METRIC_AREA:
-            cell_quality->SetQualityMeasureToArea();
-            break;
-        case MESH_METRIC_VOLUME:
-            cell_quality->SetQualityMeasureToVolume();
-            break;
-        case MESH_METRIC_ASPECT_RATIO:
-            cell_quality->SetQualityMeasureToAspectRatio();
-            break;
-        case MESH_METRIC_CONDITION:
-            cell_quality->SetQualityMeasureToCondition();
-            break;
-        }
-        cell_quality->SetInputData(grid);
-        cell_quality->Update();
-        auto out = cell_quality->GetOutput();
-        grid->GetCellData()->AddArray(out->GetCellData()->GetArray("CellQuality"));
-        cell_quality->Delete();
-    }
-
-    double range[2];
-    getCellQualityRange(range);
-
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        setBlockMeshQualityProperties(block, range);
-        block->modified();
-        block->update();
-    }
-}
-
-void
-MainWindow::getCellQualityRange(double range[])
-{
-    range[0] = std::numeric_limits<double>::max();
-    range[1] = -std::numeric_limits<double>::max();
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
-        auto cell_data = block->getCellData();
-
-        double block_range[2];
-        cell_data->GetRange(MESH_QUALITY_FIELD_NAME, block_range);
-        range[0] = std::min(range[0], block_range[0]);
-        range[1] = std::max(range[1], block_range[1]);
-    }
-}
-
-void
-MainWindow::onMeshQualityClosed()
-{
-    for (auto & it : this->blocks) {
-        BlockObject * block = it.second;
-        auto * mapper = block->getMapper();
-        mapper->ScalarVisibilityOff();
-        block->update();
-    }
-
-    switch (this->render_mode) {
-    case SHADED:
-        onShadedTriggered(true);
-        break;
-    case SHADED_WITH_EDGES:
-        onShadedWithEdgesTriggered(true);
-        break;
-    case HIDDEN_EDGES_REMOVED:
-        onHiddenEdgesRemovedTriggered(true);
-        break;
-    case TRANSLUENT:
-        onTransluentTriggered(true);
-        break;
-    }
-
-    updateMenuBar();
-    this->color_bar->VisibilityOff();
-}
-
-void
-MainWindow::setupLookupTable()
-{
-    // rainbow uniform color map by Colin Ware
-    double colors[] = { 0.02,
-                        0.38129999999999997,
-                        0.99809999999999999,
-                        1.,
-                        0.02000006,
-                        0.42426776799999999,
-                        0.96906968999999998,
-                        1.,
-                        0.02,
-                        0.46723376300000002,
-                        0.94003304300000001,
-                        1.,
-                        0.02,
-                        0.51019999999999999,
-                        0.91100000000000003,
-                        1.,
-                        0.02000006,
-                        0.54640149400000004,
-                        0.87266943799999996,
-                        1.,
-                        0.02,
-                        0.58260036199999998,
-                        0.83433294999999996,
-                        1.,
-                        0.02,
-                        0.61880000000000002,
-                        0.79600000000000004,
-                        1.,
-                        0.02000006,
-                        0.65253515600000001,
-                        0.74980243400000002,
-                        1.,
-                        0.02,
-                        0.68626700399999996,
-                        0.70359953799999997,
-                        1.,
-                        0.02,
-                        0.71999999999999997,
-                        0.65739999999999998,
-                        1.,
-                        0.02000006,
-                        0.757035456,
-                        0.60373535899999997,
-                        1.,
-                        0.02,
-                        0.79406703700000003,
-                        0.55006613000000004,
-                        1.,
-                        0.02,
-                        0.83109999999999995,
-                        0.49640000000000001,
-                        1.,
-                        0.021354336738172372,
-                        0.86453685552616311,
-                        0.42855794607611591,
-                        1.,
-                        0.023312914349117714,
-                        0.89799935992448399,
-                        0.36073871343115577,
-                        1.,
-                        0.015976108242848862,
-                        0.9310479513349017,
-                        0.29256318150880922,
-                        1.,
-                        0.27421074700988196,
-                        0.95256296099508297,
-                        0.15356836602739213,
-                        1.,
-                        0.49335462816816988,
-                        0.96190386253094817,
-                        0.11119493614749336,
-                        1.,
-                        0.64390000000000003,
-                        0.97729999999999995,
-                        0.046899999999999997,
-                        1.,
-                        0.76240181299999998,
-                        0.98466959099999996,
-                        0.034600153000000002,
-                        1.,
-                        0.88090118500000003,
-                        0.99203340699999998,
-                        0.022299876999999999,
-                        1.,
-                        0.99952854326271467,
-                        0.99951937067814922,
-                        0.0134884641450013,
-                        1.,
-                        0.99940299799999999,
-                        0.95503637600000002,
-                        0.079066628,
-                        1.,
-                        0.99939999999999996,
-                        0.910666223,
-                        0.148134024,
-                        1.,
-                        0.99939999999999996,
-                        0.86629999999999996,
-                        0.2172,
-                        1.,
-                        0.99926966500000003,
-                        0.81803598099999997,
-                        0.21720065199999999,
-                        1.,
-                        0.99913333199999999,
-                        0.76976618399999996,
-                        0.2172,
-                        1.,
-                        0.999,
-                        0.72150000000000003,
-                        0.2172,
-                        1.,
-                        0.99913633000000002,
-                        0.673435546,
-                        0.21720065199999999,
-                        1.,
-                        0.99926666799999997,
-                        0.62536618600000005,
-                        0.2172,
-                        1.,
-                        0.99939999999999996,
-                        0.57730000000000004,
-                        0.2172,
-                        1.,
-                        0.99940299799999999,
-                        0.52106845499999999,
-                        0.21720065199999999,
-                        1.,
-                        0.99939999999999996,
-                        0.46483277099999998,
-                        0.2172,
-                        1.,
-                        0.99939999999999996,
-                        0.40860000000000002,
-                        0.2172,
-                        1.,
-                        0.99475999176873464,
-                        0.33177297300202935,
-                        0.21123096385202059,
-                        1.,
-                        0.98671295054795893,
-                        0.25951834109149341,
-                        0.19012239549291934,
-                        1.,
-                        0.99124588756464194,
-                        0.14799417507952672,
-                        0.21078892136920357,
-                        1.,
-                        0.94990303700000001,
-                        0.11686717100000001,
-                        0.252900603,
-                        1.,
-                        0.903199533,
-                        0.078432949000000002,
-                        0.29180038899999999,
-                        1.,
-                        0.85650000000000004,
-                        0.040000000000000001,
-                        0.33069999999999999,
-                        1.,
-                        0.79890262700000003,
-                        0.043333450000000003,
-                        0.35843429799999998,
-                        1.,
-                        0.74129942400000004,
-                        0.046666699999999998,
-                        0.38616694400000001,
-                        1.,
-                        0.68369999999999997,
-                        0.050000000000000003,
-                        0.41389999999999999,
-                        1. };
-
-    this->lut = vtkLookupTable::New();
-    this->lut->SetNumberOfTableValues(43);
-    double * clr_ptr = colors;
-    for (int i = 0; i < 43; i++, clr_ptr += 4)
-        this->lut->SetTableValue(i, clr_ptr);
-
-    this->lut->Build();
-}
-
-void
-MainWindow::setupColorBar()
-{
-    this->color_bar = vtkScalarBarActor::New();
-    this->color_bar->VisibilityOff();
-    this->color_bar->SetNumberOfLabels(5);
-    this->color_bar->SetLookupTable(this->lut);
-    this->color_bar->SetBarRatio(0.2);
-    this->color_bar->SetHeight(0.5);
-    this->color_bar->SetWidth(0.08);
-    this->color_bar->SetMaximumNumberOfColors(16);
-    this->color_bar->SetPosition(0.9, 0.3);
-    this->color_bar->SetLabelFormat("    %-#6.3g");
-    this->color_bar->UnconstrainedFontSizeOn();
-
-    {
-        auto prop = this->color_bar->GetTitleTextProperty();
-        prop->BoldOff();
-        prop->ItalicOff();
-        prop->ShadowOff();
-        prop->SetColor(0, 0, 0);
-        prop->SetFontFamilyToArial();
-        prop->SetFontSize(18);
-    }
-    {
-        auto prop = this->color_bar->GetLabelTextProperty();
-        prop->BoldOff();
-        prop->ItalicOff();
-        prop->ShadowOff();
-        prop->SetColor(0, 0, 0);
-        prop->SetFontFamilyToArial();
-        prop->SetFontSize(17);
-    }
-    {
-        auto prop = this->color_bar->GetFrameProperty();
-        prop->SetColor(0, 0, 0);
-        prop->SetLineWidth(4);
-    }
-    {
-        auto prop = this->color_bar->GetBackgroundProperty();
-        prop->SetOpacity(0.99);
-        prop->SetColor(1, 1, 1);
-    }
 }
