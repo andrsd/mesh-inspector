@@ -35,11 +35,6 @@ CheckForUpdateTool::onCheckForUpdate()
     QNetworkRequest request;
     request.setUrl(QUrl("https://api.github.com/repos/andrsd/mesh-inspector/releases/latest"));
     request.setRawHeader(QByteArray("Accept"), QByteArray("application/vnd.github+json"));
-    // clang-format off
-    request.setRawHeader(
-        QByteArray("Authorization"),
-        QByteArray("Bearer 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"));
-    // clang-format on
     this->namgr->get(request);
 }
 
