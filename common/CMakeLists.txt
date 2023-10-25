@@ -35,10 +35,3 @@ target_link_libraries(
     PRIVATE
         Qt6::Widgets
 )
-
-install(
-    TARGETS
-        ${PROJECT_NAME}
-    LIBRARY DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}
-)
