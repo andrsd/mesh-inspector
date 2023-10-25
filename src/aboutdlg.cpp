@@ -3,14 +3,25 @@
 #include <QLabel>
 #include <QApplication>
 #include <QIcon>
+#include <QPalette>
+#include <QDesktopServices>
+#include "common/clickablelabel.h"
 #include "meshinspectorconfig.h"
+
+namespace {
+
+QString HOME_PAGE_URL("https://github.com/andrsd/mesh-inspector");
+
+}
 
 AboutDialog::AboutDialog(QWidget * parent) :
     QDialog(parent),
     layout(nullptr),
     icon(nullptr),
     title(nullptr),
-    text(nullptr)
+    version(nullptr),
+    homepage(nullptr),
+    copyright(nullptr)
 {
     setWindowFlag(Qt::CustomizeWindowHint, true);
     setWindowFlag(Qt::WindowMaximizeButtonHint, false);
@@ -31,16 +42,36 @@ AboutDialog::AboutDialog(QWidget * parent) :
     this->title->setAlignment(Qt::AlignHCenter);
     this->layout->addWidget(this->title);
 
-    QString t =
-        QString("Version %1\n\n%2").arg(MESH_INSPECTOR_VERSION).arg(MESH_INSPECTOR_COPYRIGHT);
-    this->text = new QLabel(t);
-    font = this->text->font();
+    this->version = new QLabel(QString("Version %1").arg(MESH_INSPECTOR_VERSION));
+    font = this->version->font();
     font.setPointSize(0.9 * font.pointSize());
-    this->text->setFont(font);
-    this->text->setAlignment(Qt::AlignHCenter);
-    this->layout->addWidget(this->text);
+    this->version->setFont(font);
+    this->version->setAlignment(Qt::AlignHCenter);
+    this->layout->addWidget(this->version);
+
+    this->homepage = new ClickableLabel();
+    this->homepage->setText(HOME_PAGE_URL);
+    auto plt = QApplication::palette();
+    auto link_clr = plt.color(QPalette::Link);
+    this->homepage->setStyleSheet(QString("color: %1").arg(link_clr.name()));
+    font = this->homepage->font();
+    font.setPointSize(0.9 * font.pointSize());
+    this->homepage->setFont(font);
+    this->homepage->setAlignment(Qt::AlignHCenter);
+    this->layout->addWidget(this->homepage);
+
+    this->layout->addSpacing(20);
+
+    this->copyright = new QLabel(QString("%1").arg(MESH_INSPECTOR_COPYRIGHT));
+    font = this->copyright->font();
+    font.setPointSize(0.9 * font.pointSize());
+    this->copyright->setFont(font);
+    this->copyright->setAlignment(Qt::AlignHCenter);
+    this->layout->addWidget(this->copyright);
 
     setLayout(this->layout);
+
+    connect(this->homepage, &ClickableLabel::clicked, this, &AboutDialog::onHomepageClicked);
 }
 
 AboutDialog::~AboutDialog()
@@ -48,5 +79,12 @@ AboutDialog::~AboutDialog()
     delete this->layout;
     delete this->icon;
     delete this->title;
-    delete this->text;
+    delete this->version;
+    delete this->copyright;
+}
+
+void
+AboutDialog::onHomepageClicked()
+{
+    QDesktopServices::openUrl(QUrl(HOME_PAGE_URL));
 }
