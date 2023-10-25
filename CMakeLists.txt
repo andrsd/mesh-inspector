@@ -27,6 +27,7 @@ find_package(Qt6 REQUIRED
         Gui
         Widgets
         Network
+        Svg
 )
 
 find_package(VTK
