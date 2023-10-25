@@ -7,7 +7,7 @@ class QHBoxLayout;
 class QSlider;
 class QSpinBox;
 
-class COMMON_EXPORT SliderWithEdit : public QWidget {
+class SliderWithEdit : public QWidget {
 public:
     explicit SliderWithEdit(QWidget * parent = nullptr);
     ~SliderWithEdit() override;

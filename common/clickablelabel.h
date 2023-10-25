@@ -3,7 +3,7 @@
 #include "common_export.h"
 #include <QLabel>
 
-class COMMON_EXPORT ClickableLabel : public QLabel {
+class ClickableLabel : public QLabel {
     Q_OBJECT
 
 public:

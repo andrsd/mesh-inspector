@@ -8,7 +8,7 @@ class QGraphicsOpacityEffect;
 class QVBoxLayout;
 class QLabel;
 
-class COMMON_EXPORT InfoWidget : public QWidget {
+class InfoWidget : public QWidget {
 public:
     explicit InfoWidget(QWidget * parent = nullptr);
     ~InfoWidget() override;

@@ -7,7 +7,7 @@
 class QPaintEvent;
 class QMouseEvent;
 
-class COMMON_EXPORT OTreeView : public QTreeView {
+class OTreeView : public QTreeView {
 public:
     explicit OTreeView(QWidget * parent = nullptr);
 

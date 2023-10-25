@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(
     ${PROJECT_NAME}
-    SHARED
+    OBJECT
         clickablelabel.cpp
         colorpicker.cpp
         expandablewidget.cpp

@@ -4,7 +4,7 @@
 #include <QEvent>
 #include <QString>
 
-class COMMON_EXPORT LoadFileEvent : public QEvent {
+class LoadFileEvent : public QEvent {
 public:
     explicit LoadFileEvent(const QString & file_name);
 
