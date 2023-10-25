@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(
     ${PROJECT_NAME}
-    SHARED
+    OBJECT
         clickablelabel.cpp
         colorpicker.cpp
         expandablewidget.cpp
@@ -34,11 +34,4 @@ target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE
         Qt6::Widgets
-)
-
-install(
-    TARGETS
-        ${PROJECT_NAME}
-    LIBRARY DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}
 )

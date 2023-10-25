@@ -8,7 +8,7 @@ class QLabel;
 class ClickableLabel;
 class QPropertyAnimation;
 
-class COMMON_EXPORT NotificationWidget : public QWidget {
+class NotificationWidget : public QWidget {
     Q_OBJECT
 
 public:

@@ -8,7 +8,7 @@ class QPushButton;
 class QLabel;
 class QGridLayout;
 
-class COMMON_EXPORT ExpandableWidget : public QWidget {
+class ExpandableWidget : public QWidget {
     Q_OBJECT
 
 public:

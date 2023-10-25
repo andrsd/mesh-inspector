@@ -16,7 +16,7 @@ class QSlider;
 class QLineEdit;
 class QAbstractButton;
 
-class COMMON_EXPORT ColorPicker : public QDialog {
+class ColorPicker : public QDialog {
     Q_OBJECT;
 
 public:

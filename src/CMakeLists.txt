@@ -101,12 +101,9 @@ add_custom_command(
 )
 
 install(
-    TARGETS
-        ${PROJECT_NAME}
-    BUNDLE DESTINATION
-        .
-    LIBRARY DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}
+    TARGETS  ${PROJECT_NAME}
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 configure_file(meshinspectorconfig.h.in meshinspectorconfig.h)
