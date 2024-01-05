@@ -683,7 +683,8 @@ MainWindow::onFileChanged(const QString & path)
 void
 MainWindow::onReloadFile()
 {
-    loadFile(this->model->getFileName());
+    QString file_name = this->model->getFileName();
+    loadFile(file_name);
 }
 
 void
