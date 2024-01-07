@@ -12,11 +12,16 @@ add_executable(
         ../resources/render-mode.svg
 )
 
+if (NOT HAVE_UNISTD_H)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE YY_NO_UNISTD_H)
+endif()
+
 target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/contrib/gmshparsercpp/include
 )
 
 target_link_libraries(
@@ -29,6 +34,7 @@ target_link_libraries(
         Qt6::Svg
         common
         ${VTK_LIBRARIES}
+        gmshparsercpp
 )
 
 set_target_properties(
