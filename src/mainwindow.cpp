@@ -637,6 +637,7 @@ MainWindow::onOpenFile()
                                                      "Open File",
                                                      "",
                                                      "ExodusII files (*.e *.exo);;"
+                                                     "STL files (*.stl);;"
                                                      "VTK Unstructured Grid files (*.vtk)");
     if (!file_name.isNull())
         loadFile(file_name);
