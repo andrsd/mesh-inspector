@@ -15,6 +15,7 @@
 #include "exodusiireader.h"
 #include "vtkreader.h"
 #include "stlreader.h"
+#include "mshreader.h"
 
 class LoadThread : public QThread {
 public:
@@ -326,6 +327,8 @@ Model::createReader(const QString & file_name)
         return new VTKReader(file_name.toStdString());
     else if (file_name.endsWith(".stl"))
         return new STLReader(file_name.toStdString());
+    else if (file_name.endsWith(".msh"))
+        return new MSHReader(file_name.toStdString());
     else
         return nullptr;
 }
