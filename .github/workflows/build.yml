@@ -71,14 +71,15 @@ jobs:
           cmake --install . --config Release
           echo "::endgroup::"
 
-      - name: Install dependencies (linux)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: |
-          sudo apt-get update -qq
-          sudo apt install libgl1-mesa-dev
+      - name: Install dependencies
+        uses: ConorMacBride/install-package@v1
+        with:
+          apt: libgl1-mesa-dev libfmt-dev
+          brew:
+          choco:
 
       - name: Configure
-        run: cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -S . -B "${{ github.workspace }}/build"
+        run: cmake -S . -B "${{ github.workspace }}/build" -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build "${{ github.workspace }}/build" --config Release
