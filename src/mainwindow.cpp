@@ -636,6 +636,8 @@ MainWindow::onOpenFile()
     QString file_name = QFileDialog::getOpenFileName(this,
                                                      "Open File",
                                                      "",
+                                                     "Supported files (*.e *.exo *.stl *.vtk);;"
+                                                     "All files (*);;"
                                                      "ExodusII files (*.e *.exo);;"
                                                      "STL files (*.stl);;"
                                                      "VTK Unstructured Grid files (*.vtk)");
