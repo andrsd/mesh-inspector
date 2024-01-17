@@ -2,38 +2,12 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set(APP_ICON_MACOSX icon.icns)
 endif()
 
+file(GLOB SRCS CONFIGURE_DEPENDS *.cpp)
+
 add_executable(
     ${PROJECT_NAME}
-        aboutdlg.cpp
-        blockobject.cpp
-        checkforupdatetool.cpp
-        colorprofile.cpp
-        exodusiireader.cpp
-        explodetool.cpp
-        explodewidget.cpp
-        exporttool.cpp
-        filechangednotificationwidget.cpp
-        infoview.cpp
-        licensedlg.cpp
-        main.cpp
-        mainwindow.cpp
-        meshmodel.cpp
-        meshobject.cpp
-        meshqualitytool.cpp
-        meshqualitywidget.cpp
-        model.cpp
-        nodesetobject.cpp
-        ointeractorinterface.cpp
-        ointeractorstyle2d.cpp
-        ointeractorstyle3d.cpp
-        reader.cpp
-        selection.cpp
-        selecttool.cpp
-        sidesetobject.cpp
-        stlreader.cpp
+        ${SRCS}
         resources.qrc
-        view.cpp
-        vtkreader.cpp
         ${APP_ICON_MACOSX}
         ../resources/render-mode.svg
 )
@@ -92,12 +66,9 @@ add_custom_command(
 )
 
 add_custom_command(
-    OUTPUT
-        icon.icns
-    COMMAND
-        iconutil -c icns icon.iconset
-    DEPENDS
-        icon.iconset/icon_512x512.png
+    OUTPUT icon.icns
+    COMMAND iconutil -c icns icon.iconset
+    DEPENDS icon.iconset/icon_512x512.png
 )
 
 install(
