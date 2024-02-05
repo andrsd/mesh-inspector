@@ -18,6 +18,7 @@
 #include <QFileDialog>
 #include <QVector3D>
 #include <QShortcut>
+#include <QStandardPaths>
 #include "vtkExtractBlock.h"
 #include "vtkCamera.h"
 #include "aboutdlg.h"
@@ -77,6 +78,10 @@ MainWindow::MainWindow(QWidget * parent) :
     model(new Model(this)),
     progress(nullptr)
 {
+    auto doc_dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    auto cwd = this->settings->value("cwd", doc_dir).toString();
+    QDir::setCurrent(cwd);
+
     QSize default_size = QSize(1000, 700);
     QVariant geom = this->settings->value("window/geometry", default_size);
     if (!this->restoreGeometry(geom.toByteArray()))
@@ -545,6 +550,7 @@ MainWindow::closeEvent(QCloseEvent * event)
     this->settings->setValue("color_profile", (uint) this->color_profile_idx);
     this->settings->setValue("window/geometry", this->saveGeometry());
     this->settings->setValue("recent_files", this->recent_files);
+    this->settings->setValue("cwd", QDir::currentPath());
     QMainWindow::closeEvent(event);
 }
 
@@ -633,16 +639,20 @@ MainWindow::onCubeAxisVisibilityChanged(bool visible)
 void
 MainWindow::onOpenFile()
 {
+    auto cwd = QDir::currentPath();
     QString file_name = QFileDialog::getOpenFileName(this,
                                                      "Open File",
-                                                     "",
+                                                     cwd,
                                                      "Supported files (*.e *.exo *.stl *.vtk);;"
                                                      "All files (*);;"
                                                      "ExodusII files (*.e *.exo);;"
                                                      "STL files (*.stl);;"
                                                      "VTK Unstructured Grid files (*.vtk)");
-    if (!file_name.isNull())
+    if (!file_name.isNull()) {
         loadFile(file_name);
+        auto fi = QFileInfo(file_name);
+        QDir::setCurrent(fi.canonicalPath());
+    }
 }
 
 void
