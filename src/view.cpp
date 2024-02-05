@@ -425,15 +425,21 @@ View::setSideSetProperties(SideSetObject * sideset)
     property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
     property->SetEdgeVisibility(false);
     property->LightingOff();
-    if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
+    if (this->render_mode == SHADED_WITH_EDGES) {
         property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                                SIDESET_EDGE_CLR.greenF(),
                                SIDESET_EDGE_CLR.blueF());
-        if (this->render_mode == SHADED_WITH_EDGES) {
-            property->SetLineWidth(this->main_window->HIDPI(EDGE_WIDTH));
-            property->SetEdgeVisibility(true);
-        }
+        property->SetLineWidth(this->main_window->HIDPI(EDGE_WIDTH));
+        property->SetEdgeVisibility(true);
     }
+    else {
+        // this is a trick to prevent flickering between underlying block surface and the
+        // side-set surface
+        property->SetLineWidth(0);
+        property->SetEdgeColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
+        property->SetEdgeVisibility(true);
+    }
+    property->SetBackfaceCulling(true);
 }
 
 void
