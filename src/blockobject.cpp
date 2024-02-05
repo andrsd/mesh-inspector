@@ -46,7 +46,6 @@ BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
         update();
     }
 
-    this->actor->SetScale(0.999);
     this->actor->VisibilityOn();
 
     this->color = QColor::fromRgbF(1., 1., 1.);
