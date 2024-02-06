@@ -81,6 +81,7 @@ protected:
     Model *& model;
     QWidget * widget;
     QVBoxLayout * layout;
+    QLabel * title;
     MeshModel * mesh_model;
     OTreeView * mesh_view;
     QTreeWidget * totals;
