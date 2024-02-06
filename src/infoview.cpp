@@ -25,7 +25,7 @@ QList<QColor> InfoView::colors({ QColor(156, 207, 237),
                                  QColor(250, 182, 0) });
 
 InfoView::InfoView(MainWindow * main_wnd) :
-    QDockWidget("Information", main_wnd),
+    QDockWidget(main_wnd),
     model(main_wnd->getModel()),
     widget(nullptr),
     layout(nullptr),
@@ -47,6 +47,8 @@ InfoView::InfoView(MainWindow * main_wnd) :
     sideset_root(nullptr),
     nodeset_root(nullptr)
 {
+    setTitleBarWidget(new QWidget());
+
     setupWidgets();
     this->widget = new QWidget();
     this->widget->setLayout(this->layout);
@@ -68,6 +70,14 @@ InfoView::setupWidgets()
     this->layout = new QVBoxLayout();
     this->layout->setContentsMargins(20, 10, 20, 10);
     this->layout->setSpacing(4);
+
+    this->title = new QLabel();
+    this->title->setText("Information");
+    this->title->setStyleSheet("color: #444;"
+                               "font-weight: bold;");
+    this->title->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    this->title->setContentsMargins(0, 0, 0, 4);
+    this->layout->addWidget(this->title);
 
     this->color_picker = new ColorPicker(this);
     connect(this->color_picker, &ColorPicker::colorChanged, this, &InfoView::onBlockColorPicked);
