@@ -247,7 +247,6 @@ Model::onLoadFinished()
     if (this->hasValidFile()) {
         this->file_watcher->addPath(this->file_name);
         this->info_view->clear();
-        this->info_view->init();
         addBlocks();
         addSideSets();
         addNodeSets();

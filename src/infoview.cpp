@@ -173,6 +173,8 @@ InfoView::setupRangeWidgets()
 void
 InfoView::onBlockAdded(int id, const QString & name)
 {
+    addBlocksRoot();
+
     QModelIndex index = this->block_root->index();
     int row = this->mesh_model->rowCount(index);
 
@@ -386,6 +388,8 @@ InfoView::onAppearance()
 void
 InfoView::onSideSetAdded(int id, const QString & name)
 {
+    addSideSetsRoot();
+
     QModelIndex index = this->sideset_root->index();
     auto row = this->mesh_model->rowCount(index);
 
@@ -428,6 +432,8 @@ InfoView::onSideSetSelectionChanged(QStandardItem * item)
 void
 InfoView::onNodeSetAdded(int id, const QString & name)
 {
+    addNodeSetsRoot();
+
     QModelIndex index = this->nodeset_root->index();
     auto row = this->mesh_model->rowCount(index);
 
@@ -538,32 +544,46 @@ InfoView::clear()
 }
 
 void
-InfoView::init()
+InfoView::addBlocksRoot()
 {
-    auto * si_name = new QStandardItem();
-    si_name->setText("Blocks");
-    si_name->setCheckable(true);
-    si_name->setCheckState(Qt::Checked);
-    si_name->setAutoTristate(true);
-    this->mesh_model->setItem(0, si_name);
-    this->block_root = this->mesh_model->item(0);
-    this->mesh_view->expand(this->block_root->index());
+    if (this->block_root == nullptr) {
+        auto * si_name = new QStandardItem();
+        si_name->setText("Blocks");
+        si_name->setCheckable(true);
+        si_name->setCheckState(Qt::Checked);
+        si_name->setAutoTristate(true);
+        this->mesh_model->setItem(0, si_name);
+        this->block_root = this->mesh_model->item(0);
+        this->mesh_view->expand(this->block_root->index());
+    }
+}
 
-    si_name = new QStandardItem();
-    si_name->setText("Side sets");
-    si_name->setCheckable(true);
-    si_name->setCheckState(Qt::Unchecked);
-    si_name->setAutoTristate(true);
-    this->mesh_model->setItem(1, si_name);
-    this->sideset_root = this->mesh_model->item(1);
+void
+InfoView::addSideSetsRoot()
+{
+    if (this->sideset_root == nullptr) {
+        auto * si_name = new QStandardItem();
+        si_name->setText("Side sets");
+        si_name->setCheckable(true);
+        si_name->setCheckState(Qt::Unchecked);
+        si_name->setAutoTristate(true);
+        this->mesh_model->setItem(1, si_name);
+        this->sideset_root = this->mesh_model->item(1);
+    }
+}
 
-    si_name = new QStandardItem();
-    si_name->setText("Node sets");
-    si_name->setCheckable(true);
-    si_name->setCheckState(Qt::Unchecked);
-    si_name->setAutoTristate(true);
-    this->mesh_model->setItem(2, si_name);
-    this->nodeset_root = this->mesh_model->item(2);
+void
+InfoView::addNodeSetsRoot()
+{
+    if (this->nodeset_root == nullptr) {
+        auto * si_name = new QStandardItem();
+        si_name->setText("Node sets");
+        si_name->setCheckable(true);
+        si_name->setCheckState(Qt::Unchecked);
+        si_name->setAutoTristate(true);
+        this->mesh_model->setItem(2, si_name);
+        this->nodeset_root = this->mesh_model->item(2);
+    }
 }
 
 void

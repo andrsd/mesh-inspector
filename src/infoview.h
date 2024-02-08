@@ -25,7 +25,6 @@ public:
     ~InfoView() override;
 
     void clear();
-    void init();
     void update();
     void setSummary(int total_elems, int total_nodes);
     void setBounds(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax);
@@ -67,6 +66,9 @@ protected:
     void setupSummaryWidgets();
     void setupRangeWidgets();
     void setColorPickerColorFromIndex(const QModelIndex & index);
+    void addBlocksRoot();
+    void addSideSetsRoot();
+    void addNodeSetsRoot();
 
     void onBlockChanged(QStandardItem * item);
     void onSideSetChanged(QStandardItem * item);
