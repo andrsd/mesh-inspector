@@ -64,7 +64,8 @@ void
 BlockObject::modified()
 {
     MeshObject::modified();
-    this->grid->Modified();
+    if (this->grid)
+        this->grid->Modified();
 }
 
 void
