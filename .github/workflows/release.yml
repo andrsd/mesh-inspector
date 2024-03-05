@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-11
+          - os: macos-13
             arch: macos
     runs-on: ${{ matrix.os }}
     steps:
