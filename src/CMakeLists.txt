@@ -12,10 +12,6 @@ add_executable(
         ../resources/render-mode.svg
 )
 
-if (NOT HAVE_UNISTD_H)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE YY_NO_UNISTD_H)
-endif()
-
 target_include_directories(
     ${PROJECT_NAME}
     PRIVATE

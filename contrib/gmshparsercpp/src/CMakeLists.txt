@@ -15,6 +15,10 @@ set_target_properties(${PROJECT_NAME}
         POSITION_INDEPENDENT_CODE ON
 )
 
+if (NOT HAVE_UNISTD_H)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE YY_NO_UNISTD_H)
+endif()
+
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
