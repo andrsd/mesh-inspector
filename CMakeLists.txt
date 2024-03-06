@@ -12,6 +12,8 @@ mark_as_advanced(FORCE MESH_INSPECTOR_COPYRIGHT)
 math(EXPR MESH_INSPECTOR_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 math(EXPR MESH_INSPECTOR_MINOR_VERSION ${PROJECT_VERSION_MINOR})
 
+include(CheckIncludeFiles)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
@@ -57,5 +59,8 @@ if(NOT(TARGET VTK::GUISupportQt))
     message(FATAL_ERROR "VTK not built with Qt support.")
 endif()
 
+CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
+
+add_subdirectory(contrib/gmshparsercpp)
 add_subdirectory(common)
 add_subdirectory(src)

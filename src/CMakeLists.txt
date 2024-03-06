@@ -17,6 +17,7 @@ target_include_directories(
     PRIVATE
         ${CMAKE_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}
+        ${CMAKE_SOURCE_DIR}/contrib/gmshparsercpp/include
 )
 
 target_link_libraries(
@@ -29,6 +30,7 @@ target_link_libraries(
         Qt6::Svg
         common
         ${VTK_LIBRARIES}
+        gmshparsercpp
 )
 
 set_target_properties(

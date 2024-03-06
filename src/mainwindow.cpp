@@ -640,14 +640,16 @@ void
 MainWindow::onOpenFile()
 {
     auto cwd = QDir::currentPath();
-    QString file_name = QFileDialog::getOpenFileName(this,
-                                                     "Open File",
-                                                     cwd,
-                                                     "Supported files (*.e *.exo *.stl *.vtk);;"
-                                                     "All files (*);;"
-                                                     "ExodusII files (*.e *.exo);;"
-                                                     "STL files (*.stl);;"
-                                                     "VTK Unstructured Grid files (*.vtk)");
+    QString file_name =
+        QFileDialog::getOpenFileName(this,
+                                     "Open File",
+                                     cwd,
+                                     "Supported files (*.e *.exo *.msh *.stl *.vtk);;"
+                                     "All files (*);;"
+                                     "ExodusII files (*.e *.exo);;"
+                                     "GMSH mesh files (*.msh);;"
+                                     "STL files (*.stl);;"
+                                     "VTK Unstructured Grid files (*.vtk)");
     if (!file_name.isNull()) {
         loadFile(file_name);
         auto fi = QFileInfo(file_name);
