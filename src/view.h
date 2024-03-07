@@ -102,5 +102,6 @@ public:
     static QColor NODESET_CLR;
 
     static float EDGE_WIDTH;
+    static float SIDESET_EDGE_WIDTH;
     static float OUTLINE_WIDTH;
 };
