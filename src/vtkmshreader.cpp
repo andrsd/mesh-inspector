@@ -281,11 +281,14 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
 void
 vtkMshReader::DetectDimensionality()
 {
-    this->Dimension = -1;
-    // the highest dimension of physical block is our mesh spatial dimension
-    for (auto & physBlk : this->Msh->get_physical_names()) {
-        this->Dimension = std::max(this->Dimension, physBlk.dimension);
-    }
+    if (!this->Msh->get_volume_entities().empty())
+        this->Dimension = 3;
+    else if (!this->Msh->get_surface_entities().empty())
+        this->Dimension = 2;
+    else if (!this->Msh->get_curve_entities().empty())
+        this->Dimension = 1;
+    else
+        this->Dimension = -1;
 }
 
 void
