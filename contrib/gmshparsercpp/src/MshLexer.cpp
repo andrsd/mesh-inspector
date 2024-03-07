@@ -1,6 +1,6 @@
-#line 1 "/Users/andrsd/devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
+#line 1 "devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
 
-#line 3 "/Users/andrsd/devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
+#line 3 "devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -446,8 +446,8 @@ static const flex_int32_t yy_rule_can_match_eol[7] =
 #define yymore() yymore_used_but_not_detected
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
-#line 1 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
-#line 2 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 1 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 2 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
  // lexer for MSH files
 #include <iostream>
 using namespace std;
@@ -458,8 +458,8 @@ enum mshFlexLexerToken : int {
     Section
 };
 
-#line 461 "/Users/andrsd/devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
-#line 462 "/Users/andrsd/devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
+#line 461 "devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
+#line 462 "devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
 
 #define INITIAL 0
 
@@ -591,10 +591,10 @@ YY_DECL
 		}
 
 	{
-#line 29 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 29 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 
 
-#line 597 "/Users/andrsd/devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
+#line 597 "devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -659,36 +659,36 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 31 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 31 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 /* skip blanks and tabs */
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 33 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 33 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 /* skip newlines */
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 35 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 35 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 return mshFlexLexerToken::Number;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 37 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 37 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 return mshFlexLexerToken::String;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 39 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 39 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 return mshFlexLexerToken::Section;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 41 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 41 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 ECHO;
 	YY_BREAK
-#line 691 "/Users/andrsd/devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
+#line 691 "devel/mesh-inspector/build-release/contrib/gmshparsercpp/src/MshLexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1661,7 +1661,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 41 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 41 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 
 
 // comment

@@ -434,7 +434,7 @@ static int yy_flex_strlen ( const char * );
 #undef yyTABLES_NAME
 #endif
 
-#line 41 "/Users/andrsd/devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
+#line 41 "devel/mesh-inspector/contrib/gmshparsercpp/src/msh.lex"
 
 
 #line 440 "MshLexer.h"
