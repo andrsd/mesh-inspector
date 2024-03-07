@@ -195,6 +195,14 @@ vtkMshReader::RequestInformation(vtkInformation * vtkNotUsed(request),
         vtkErrorMacro("" << e.what());
         return 0;
     }
+    catch (std::domain_error & e) {
+        vtkErrorMacro("" << e.what());
+        return 0;
+    }
+    catch (...) {
+        vtkErrorMacro("Unknown exception thrown");
+        return 0;
+    }
 
     // Advertise the SIL.
     outInfo->Set(vtkDataObject::SIL(), this->GetSIL());
