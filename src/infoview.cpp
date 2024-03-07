@@ -534,6 +534,9 @@ void
 InfoView::clear()
 {
     this->mesh_model->removeRows(0, this->mesh_model->rowCount());
+    this->block_root = nullptr;
+    this->sideset_root = nullptr;
+    this->nodeset_root = nullptr;
 
     this->total_elements->setText(1, "");
     this->total_nodes->setText(1, "");
