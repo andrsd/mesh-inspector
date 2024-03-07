@@ -51,7 +51,7 @@ protected:
     RequestInformation(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
     int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *) override;
     void DetectDimensionality();
-    void ReadPhysicalEntites();
+    void ReadPhysicalEntities();
     void BuildCoordinates();
     void ProcessMsh();
     const std::vector<gmshparsercpp::MshFile::MultiDEntity> * GetEntitiesByDim(int dim);

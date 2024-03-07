@@ -293,7 +293,7 @@ vtkMshReader::ProcessMsh()
 {
     DetectDimensionality();
     BuildCoordinates();
-    ReadPhysicalEntites();
+    ReadPhysicalEntities();
 
     this->ElemBlkByDim.resize(4);
     for (const auto & eb : this->Msh->get_element_blocks())
@@ -315,7 +315,7 @@ vtkMshReader::ProcessMsh()
 }
 
 void
-vtkMshReader::ReadPhysicalEntites()
+vtkMshReader::ReadPhysicalEntities()
 {
     for (const auto & pe : this->Msh->get_physical_names()) {
         this->PhysEntByTag[pe.tag] = &pe;
