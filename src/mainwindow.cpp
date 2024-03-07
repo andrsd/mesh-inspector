@@ -644,10 +644,11 @@ MainWindow::onOpenFile()
         QFileDialog::getOpenFileName(this,
                                      "Open File",
                                      cwd,
-                                     "Supported files (*.e *.exo *.msh *.stl *.vtk);;"
+                                     "Supported files (*.e *.exo *.msh *.obj *.stl *.vtk);;"
                                      "All files (*);;"
                                      "ExodusII files (*.e *.exo);;"
                                      "GMSH mesh files (*.msh);;"
+                                     "Wavefront OBJ files (*.obj);;"
                                      "STL files (*.stl);;"
                                      "VTK Unstructured Grid files (*.vtk)");
     if (!file_name.isNull()) {
