@@ -35,8 +35,16 @@ STLReader::getTotalNumberOfNodes() const
 int
 STLReader::getDimensionality() const
 {
-    // FIXME: get this from the cell type
-    return 3;
+    auto output = this->reader->GetOutput();
+    auto * bounds = output->GetBounds();
+    if (std::abs(bounds[4] - bounds[5]) > 1e-15)
+        return 3;
+    else if (std::abs(bounds[2] - bounds[3]) > 1e-15)
+        return 2;
+    else if (std::abs(bounds[0] - bounds[1]) > 1e-15)
+        return 1;
+    else
+        return -1;
 }
 
 vtkAlgorithmOutput *
