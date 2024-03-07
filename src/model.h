@@ -8,6 +8,7 @@
 
 class MainWindow;
 class vtkExtractBlock;
+class vtkExtractMaterialBlock;
 class vtkActor;
 class vtkAlgorithmOutput;
 class BlockObject;
@@ -76,6 +77,7 @@ protected:
     InfoView *& info_view;
 
     std::vector<vtkExtractBlock *> extract_blocks;
+    std::vector<vtkExtractMaterialBlock *> extract_mat_blocks;
     std::map<int, BlockObject *> blocks;
     std::map<int, SideSetObject *> side_sets;
     std::map<int, NodeSetObject *> node_sets;

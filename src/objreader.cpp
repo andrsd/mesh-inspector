@@ -1,6 +1,8 @@
 #include "objreader.h"
 #include "vtkOBJReader.h"
 #include "vtkPolyData.h"
+#include "vtkCellData.h"
+#include "vtkDataArray.h"
 
 OBJReader::OBJReader(const std::string & file_name) : Reader(file_name), reader(nullptr) {}
 
@@ -80,12 +82,36 @@ OBJReader::getNodeSets()
 void
 OBJReader::readBlockInfo()
 {
-    int vtkid = 0;
-    BlockInformation binfo;
-    binfo.object_type = 0;
-    binfo.name = "block";
-    binfo.number = vtkid;
-    binfo.object_index = 0;
-    binfo.multiblock_index = -1;
-    this->block_info[vtkid] = binfo;
+    auto output = this->reader->GetOutput();
+    auto cd = output->GetCellData();
+    if (cd->HasArray("MaterialIds")) {
+        auto array = cd->GetAbstractArray("MaterialIds");
+        if (std::string(array->GetDataTypeAsString()) == "int") {
+            // there is MaterialsIds array with `int` values
+            auto mat_ids = cd->GetScalars("MaterialIds");
+            auto * range = mat_ids->GetRange();
+
+            for (int vtkid = range[0]; vtkid <= range[1]; vtkid++) {
+                BlockInformation binfo;
+                binfo.object_type = 0;
+                binfo.name = std::to_string(vtkid);
+                binfo.number = vtkid;
+                binfo.object_index = 0;
+                binfo.multiblock_index = -1;
+                binfo.material_index = vtkid;
+                this->block_info[vtkid] = binfo;
+            }
+        }
+    }
+    else {
+        int vtkid = 0;
+        BlockInformation binfo;
+        binfo.object_type = 0;
+        binfo.name = "block";
+        binfo.number = vtkid;
+        binfo.object_index = 0;
+        binfo.multiblock_index = -1;
+        binfo.material_index = -1;
+        this->block_info[vtkid] = binfo;
+    }
 }
