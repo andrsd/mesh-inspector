@@ -87,11 +87,8 @@ InfoView::setupWidgets()
             &InfoView::onBlockOpacityChanged);
 
     setupBlocksWidgets();
-    this->layout->addWidget(new HorzLine());
     setupSummaryWidgets();
-    this->layout->addWidget(new HorzLine());
     setupRangeWidgets();
-    this->layout->addWidget(new HorzLine());
 }
 
 void
