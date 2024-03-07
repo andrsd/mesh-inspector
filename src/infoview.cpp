@@ -142,6 +142,7 @@ InfoView::setupRangeWidgets()
     this->range->setFixedHeight(80);
     this->range->setIndentation(0);
     this->range->setHeaderLabels(QStringList({ "Dimension", "Range" }));
+    this->range->setColumnWidth(0, 70);
     this->x_range = new QTreeWidgetItem(QStringList({ "X", "" }));
     this->range->addTopLevelItem(this->x_range);
     this->y_range = new QTreeWidgetItem(QStringList({ "Y", "" }));
