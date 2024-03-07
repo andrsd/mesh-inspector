@@ -195,6 +195,14 @@ vtkMshReader::RequestInformation(vtkInformation * vtkNotUsed(request),
         vtkErrorMacro("" << e.what());
         return 0;
     }
+    catch (std::domain_error & e) {
+        vtkErrorMacro("" << e.what());
+        return 0;
+    }
+    catch (...) {
+        vtkErrorMacro("Unknown exception thrown");
+        return 0;
+    }
 
     // Advertise the SIL.
     outInfo->Set(vtkDataObject::SIL(), this->GetSIL());
@@ -227,6 +235,8 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
             for (const auto & ent : *GetEntitiesByDim(dim)) {
                 if (!ent.physical_tags.empty())
                     physBlocksByDim[dim][ent.physical_tags[0]].push_back(ent.tag);
+                else
+                    physBlocksByDim[dim][ent.tag].push_back(ent.tag);
             }
         }
 
@@ -257,20 +267,24 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
 
             long idx = 0;
             for (auto & [physId, blockIds] : physBlocksByDim[dim]) {
-                std::string blockName = GetMshPhysBlockName(physId);
-                this->ObjectIds[objType].push_back(physId);
-                this->ObjectNames[objType].push_back(blockName);
-
                 std::vector<const gmshparsercpp::MshFile::ElementBlock *> blocks;
-                for (auto & blkId : blockIds)
-                    blocks.push_back(blocksByDimById[dim][blkId]);
+                for (auto & blkId : blockIds) {
+                    if (blocksByDimById[dim].count(blkId) == 1)
+                        blocks.push_back(blocksByDimById[dim][blkId]);
+                }
 
-                auto ug = CreateUnstructuredGrid(blocks);
-                mbds->SetBlock(idx, ug);
-                mbds->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), blockName);
-                ug->FastDelete();
+                if (!blocks.empty()) {
+                    std::string blockName = GetMshPhysBlockName(physId);
+                    this->ObjectIds[objType].push_back(physId);
+                    this->ObjectNames[objType].push_back(blockName);
 
-                idx++;
+                    auto ug = CreateUnstructuredGrid(blocks);
+                    mbds->SetBlock(idx, ug);
+                    mbds->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), blockName);
+                    ug->FastDelete();
+
+                    idx++;
+                }
             }
         }
     }
@@ -281,11 +295,14 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
 void
 vtkMshReader::DetectDimensionality()
 {
-    this->Dimension = -1;
-    // the highest dimension of physical block is our mesh spatial dimension
-    for (auto & physBlk : this->Msh->get_physical_names()) {
-        this->Dimension = std::max(this->Dimension, physBlk.dimension);
-    }
+    if (!this->Msh->get_volume_entities().empty())
+        this->Dimension = 3;
+    else if (!this->Msh->get_surface_entities().empty())
+        this->Dimension = 2;
+    else if (!this->Msh->get_curve_entities().empty())
+        this->Dimension = 1;
+    else
+        this->Dimension = -1;
 }
 
 void
@@ -293,7 +310,7 @@ vtkMshReader::ProcessMsh()
 {
     DetectDimensionality();
     BuildCoordinates();
-    ReadPhysicalEntites();
+    ReadPhysicalEntities();
 
     this->ElemBlkByDim.resize(4);
     for (const auto & eb : this->Msh->get_element_blocks())
@@ -315,7 +332,7 @@ vtkMshReader::ProcessMsh()
 }
 
 void
-vtkMshReader::ReadPhysicalEntites()
+vtkMshReader::ReadPhysicalEntities()
 {
     for (const auto & pe : this->Msh->get_physical_names()) {
         this->PhysEntByTag[pe.tag] = &pe;
