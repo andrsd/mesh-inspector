@@ -14,6 +14,7 @@
 #include "reader.h"
 #include "exodusiireader.h"
 #include "vtkreader.h"
+#include "objreader.h"
 #include "stlreader.h"
 #include "mshreader.h"
 
@@ -325,6 +326,8 @@ Model::createReader(const QString & file_name)
         return new ExodusIIReader(file_name.toStdString());
     else if (file_name.endsWith(".vtk"))
         return new VTKReader(file_name.toStdString());
+    else if (file_name.endsWith(".obj"))
+        return new OBJReader(file_name.toStdString());
     else if (file_name.endsWith(".stl"))
         return new STLReader(file_name.toStdString());
     else if (file_name.endsWith(".msh"))
