@@ -26,7 +26,8 @@ QColor View::SIDESET_CLR = QColor(255, 173, 79);
 QColor View::SIDESET_EDGE_CLR = QColor(26, 26, 102);
 QColor View::NODESET_CLR = QColor(168, 91, 2);
 
-float View::EDGE_WIDTH = 1;
+float View::EDGE_WIDTH = 0.5;
+float View::SIDESET_EDGE_WIDTH = 1.5;
 float View::OUTLINE_WIDTH = 1.5;
 
 View::View(MainWindow * main_wnd) :
@@ -429,7 +430,10 @@ View::setSideSetProperties(SideSetObject * sideset)
         property->SetEdgeColor(SIDESET_EDGE_CLR.redF(),
                                SIDESET_EDGE_CLR.greenF(),
                                SIDESET_EDGE_CLR.blueF());
-        property->SetLineWidth(this->main_window->HIDPI(EDGE_WIDTH));
+        if (this->model->getDimension() == 3)
+            property->SetLineWidth(this->main_window->HIDPI(EDGE_WIDTH));
+        else
+            property->SetLineWidth(this->main_window->HIDPI(SIDESET_EDGE_WIDTH));
         property->SetEdgeVisibility(true);
     }
     else {
