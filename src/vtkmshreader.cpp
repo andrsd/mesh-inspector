@@ -227,6 +227,8 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
             for (const auto & ent : *GetEntitiesByDim(dim)) {
                 if (!ent.physical_tags.empty())
                     physBlocksByDim[dim][ent.physical_tags[0]].push_back(ent.tag);
+                else
+                    physBlocksByDim[dim][ent.tag].push_back(ent.tag);
             }
         }
 
@@ -257,20 +259,24 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
 
             long idx = 0;
             for (auto & [physId, blockIds] : physBlocksByDim[dim]) {
-                std::string blockName = GetMshPhysBlockName(physId);
-                this->ObjectIds[objType].push_back(physId);
-                this->ObjectNames[objType].push_back(blockName);
-
                 std::vector<const gmshparsercpp::MshFile::ElementBlock *> blocks;
-                for (auto & blkId : blockIds)
-                    blocks.push_back(blocksByDimById[dim][blkId]);
+                for (auto & blkId : blockIds) {
+                    if (blocksByDimById[dim].count(blkId) == 1)
+                        blocks.push_back(blocksByDimById[dim][blkId]);
+                }
 
-                auto ug = CreateUnstructuredGrid(blocks);
-                mbds->SetBlock(idx, ug);
-                mbds->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), blockName);
-                ug->FastDelete();
+                if (!blocks.empty()) {
+                    std::string blockName = GetMshPhysBlockName(physId);
+                    this->ObjectIds[objType].push_back(physId);
+                    this->ObjectNames[objType].push_back(blockName);
 
-                idx++;
+                    auto ug = CreateUnstructuredGrid(blocks);
+                    mbds->SetBlock(idx, ug);
+                    mbds->GetMetaData(idx)->Set(vtkCompositeDataSet::NAME(), blockName);
+                    ug->FastDelete();
+
+                    idx++;
+                }
             }
         }
     }
