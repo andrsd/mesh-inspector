@@ -31,6 +31,7 @@ public:
     vtkUnstructuredGrid * getUnstructuredGrid() const;
 
 protected:
+    void setUpCellQuality(vtkUnstructuredGrid * unstr_grid);
     void setUpSilhouette(vtkCamera * camera);
 
     vtkUnstructuredGrid * grid;

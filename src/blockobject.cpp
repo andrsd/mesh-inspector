@@ -14,34 +14,31 @@
 
 BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     MeshObject(alg_output),
+    grid(nullptr),
     silhouette(nullptr),
     silhouette_mapper(nullptr),
     silhouette_actor(nullptr),
     opacity(1.)
 {
-    auto mb_ds = dynamic_cast<vtkMultiBlockDataSet *>(this->data_object);
-    if (mb_ds) {
+    auto do_class = std::string(this->data_object->GetClassName());
+    if (do_class == "vtkMultiBlockDataSet") {
+        auto mb_ds = dynamic_cast<vtkMultiBlockDataSet *>(this->data_object);
         auto n_blocks = mb_ds->GetNumberOfBlocks();
         for (unsigned int i = 0; i < n_blocks; i++) {
             auto blk = mb_ds->GetBlock(i);
 
             auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(blk);
-            if (unstr_grid) {
-                this->grid = unstr_grid;
-                auto n_cells = unstr_grid->GetNumberOfCells();
-
-                auto cell_quality = vtkDoubleArray::New();
-                cell_quality->SetNumberOfTuples(n_cells);
-                for (vtkIdType i = 0; i < n_cells; i++)
-                    cell_quality->SetValue(i, (double) i);
-                cell_quality->SetName(MeshQualityTool::MESH_QUALITY_FIELD_NAME);
-
-                auto cell_data = unstr_grid->GetCellData();
-                cell_data->AddArray(cell_quality);
-            }
+            if (unstr_grid)
+                setUpCellQuality(unstr_grid);
             else
                 std::cerr << "Unknown block type" << std::endl;
         }
+        modified();
+        update();
+    }
+    else if (do_class == "vtkUnstructuredGrid") {
+        auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(this->data_object);
+        setUpCellQuality(unstr_grid);
         modified();
         update();
     }
@@ -61,6 +58,22 @@ BlockObject::~BlockObject()
 }
 
 void
+BlockObject::setUpCellQuality(vtkUnstructuredGrid * unstr_grid)
+{
+    this->grid = unstr_grid;
+    auto n_cells = unstr_grid->GetNumberOfCells();
+
+    auto cell_quality = vtkDoubleArray::New();
+    cell_quality->SetNumberOfTuples(n_cells);
+    for (vtkIdType i = 0; i < n_cells; i++)
+        cell_quality->SetValue(i, (double) i);
+    cell_quality->SetName(MeshQualityTool::MESH_QUALITY_FIELD_NAME);
+
+    auto cell_data = unstr_grid->GetCellData();
+    cell_data->AddArray(cell_quality);
+}
+
+void
 BlockObject::modified()
 {
     MeshObject::modified();
@@ -77,15 +90,21 @@ BlockObject::update()
 vtkCellData *
 BlockObject::getCellData() const
 {
-    auto mb_ds = dynamic_cast<vtkMultiBlockDataSet *>(this->data_object);
-    if (mb_ds) {
+    auto do_class = std::string(this->data_object->GetClassName());
+    if (do_class == "vtkMultiBlockDataSet") {
+        auto mb_ds = dynamic_cast<vtkMultiBlockDataSet *>(this->data_object);
         auto n_blocks = mb_ds->GetNumberOfBlocks();
         if (n_blocks == 1) {
             auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(mb_ds->GetBlock(0));
             return unstr_grid->GetCellData();
         }
     }
-    return nullptr;
+    else if (do_class == "vtkUnstructuredGrid") {
+        auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(this->data_object);
+        return unstr_grid->GetCellData();
+    }
+    else
+        return nullptr;
 }
 
 vtkUnstructuredGrid *
