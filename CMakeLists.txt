@@ -51,6 +51,7 @@ find_package(VTK
         IOGeometry
         IOImage
         IOLegacy
+        IOXML
 )
 if(NOT VTK_FOUND)
     message(FATAL_ERROR "Unable to find the VTK build folder.")

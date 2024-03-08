@@ -341,7 +341,7 @@ Model::createReader(const QString & file_name)
 {
     if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
         return new ExodusIIReader(file_name.toStdString());
-    else if (file_name.endsWith(".vtk"))
+    else if (file_name.endsWith(".vtk") || file_name.endsWith(".vtu"))
         return new VTKReader(file_name.toStdString());
     else if (file_name.endsWith(".obj"))
         return new OBJReader(file_name.toStdString());

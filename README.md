@@ -20,6 +20,7 @@ Mesh inspector is a simple tool for inspecting mesh files.
   - OBJ (Wavefront OBJ)
   - MSH (gmsh mesh file format)
   - VTK (VTK's legacy unstructured grids)
+  - VTU (VTK's XML-based unstructured grids)
 - Export to PNG, JPG.
 - Four different view modes
 - Mesh quality
