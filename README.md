@@ -16,9 +16,13 @@ Mesh inspector is a simple tool for inspecting mesh files.
 - View mesh dimensions
 - Supported mesh file formats:
   - ExodusII
-  - STL
+  - STL (stereolithography)
+  - OBJ (Wavefront OBJ)
+  - MSH (gmsh mesh file format)
+  - VTK (VTK's legacy unstructured grids)
 - Export to PNG, JPG.
 - Four different view modes
+- Mesh quality
 
 ## Support
 
