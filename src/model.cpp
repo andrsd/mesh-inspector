@@ -3,11 +3,15 @@
 #include "view.h"
 #include "infoview.h"
 #include "vtkExtractBlock.h"
+#include "vtkIdList.h"
 #include "vtkBoundingBox.h"
 #include "vtkAlgorithmOutput.h"
+#include "vtkPolyData.h"
+#include "vtkCellData.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
 #include "nodesetobject.h"
+#include "vtkextractmaterialblock.h"
 #include <QThread>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
@@ -101,6 +105,9 @@ Model::clear()
     for (auto & eb : this->extract_blocks)
         eb->Delete();
     this->extract_blocks.clear();
+    for (auto & ec : this->extract_mat_blocks)
+        ec->Delete();
+    this->extract_mat_blocks.clear();
 
     this->file_name = QString();
     auto watched_files = this->file_watcher->files();
@@ -146,8 +153,18 @@ Model::addBlocks()
 
             block = new BlockObject(eb->GetOutputPort(), camera);
         }
-        else
+        else if (binfo.material_index != -1) {
+            auto eb = vtkExtractMaterialBlock::New();
+            eb->SetInputConnection(this->reader->getVtkOutputPort());
+            eb->SetBlockId(binfo.material_index);
+            eb->Update();
+            this->extract_mat_blocks.push_back(eb);
+
+            block = new BlockObject(eb->GetOutputPort(), camera);
+        }
+        else {
             block = new BlockObject(this->reader->getVtkOutputPort(), camera);
+        }
         this->blocks[binfo.number] = block;
         this->view->addBlock(block);
         emit blockAdded(binfo.number, QString::fromStdString(binfo.name));

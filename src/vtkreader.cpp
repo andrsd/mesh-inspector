@@ -79,5 +79,6 @@ VTKReader::readBlockInfo()
     binfo.number = vtkid;
     binfo.object_index = 0;
     binfo.multiblock_index = -1;
+    binfo.material_index = -1;
     this->block_info[vtkid] = binfo;
 }

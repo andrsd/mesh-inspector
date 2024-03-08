@@ -94,6 +94,7 @@ MSHReader::readBlockInfo()
             binfo.number = vtkid;
             binfo.object_index = j;
             binfo.multiblock_index = index;
+            binfo.material_index = -1;
             this->block_info[otype][vtkid] = binfo;
         }
     }

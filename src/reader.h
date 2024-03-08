@@ -4,6 +4,8 @@
 #include <vector>
 #include "vtkAlgorithmOutput.h"
 
+class vtkPolyData;
+
 /// Base class for file readers
 ///
 class Reader {
@@ -14,6 +16,7 @@ public:
         int object_index;
         int number;
         int multiblock_index;
+        int material_index;
     };
 
     struct VariableInformation {
