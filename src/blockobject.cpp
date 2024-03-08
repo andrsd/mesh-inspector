@@ -98,6 +98,8 @@ BlockObject::getCellData() const
             auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(mb_ds->GetBlock(0));
             return unstr_grid->GetCellData();
         }
+        else
+            return nullptr;
     }
     else if (do_class == "vtkUnstructuredGrid") {
         auto unstr_grid = dynamic_cast<vtkUnstructuredGrid *>(this->data_object);
