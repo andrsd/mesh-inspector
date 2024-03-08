@@ -4,6 +4,7 @@
 #include <map>
 
 class vtkUnstructuredGridReader;
+class vtkXMLUnstructuredGridReader;
 
 class VTKReader : public Reader {
 public:
@@ -24,5 +25,6 @@ protected:
     void readBlockInfo();
 
     vtkUnstructuredGridReader * reader;
+    vtkXMLUnstructuredGridReader * xml_reader;
     std::map<int, BlockInformation> block_info;
 };
