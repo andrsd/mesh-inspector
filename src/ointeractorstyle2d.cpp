@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2022 David Andrs <andrsd@gmail.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "ointeractorstyle2d.h"
 #include "vtkCommand.h"
 #include "vtkRenderWindowInteractor.h"

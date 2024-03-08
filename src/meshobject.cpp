@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2022 David Andrs <andrsd@gmail.com>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #include "meshobject.h"
 #include "vtkDataObject.h"
 #include "vtkAlgorithmOutput.h"
