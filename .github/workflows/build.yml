@@ -1,9 +1,9 @@
 name: build
 
 env:
-  QT_VERSION: 6.2.4
-  VTK_VERSION: 9.2.2
-  CACHE_NUM: 1
+  QT_VERSION: 6.5.3
+  VTK_VERSION: 9.3.0
+  CACHE_NUM: 2
 
 on:
   push:
@@ -56,7 +56,7 @@ jobs:
         if: steps.cache-env.outputs.cache-hit != 'true'
         run: |
           cd ${{ github.workspace }}
-          wget -q https://www.vtk.org/files/release/9.2/VTK-${{ env.VTK_VERSION }}.tar.gz
+          wget -q https://www.vtk.org/files/release/9.3/VTK-${{ env.VTK_VERSION }}.tar.gz
           tar -xzf VTK-${{ env.VTK_VERSION }}.tar.gz
           cd VTK-${{ env.VTK_VERSION }}
           echo "::group::configure"

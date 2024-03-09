@@ -202,9 +202,9 @@ MainWindow::setupMenuBar()
     setMenuBar(this->menu_bar);
     QMenu * file_menu = this->menu_bar->addMenu("File");
     this->new_action =
-        file_menu->addAction("New", this, &MainWindow::onNewFile, QKeySequence("Ctrl+N"));
+        file_menu->addAction("New", QKeySequence("Ctrl+N"), this, &MainWindow::onNewFile);
     this->open_action =
-        file_menu->addAction("Open", this, &MainWindow::onOpenFile, QKeySequence("Ctrl+O"));
+        file_menu->addAction("Open", QKeySequence("Ctrl+O"), this, &MainWindow::onOpenFile);
     this->recent_menu = file_menu->addMenu("Open Recent");
     buildRecentFilesMenu();
     file_menu->addSeparator();
@@ -212,7 +212,7 @@ MainWindow::setupMenuBar()
     this->export_tool->setupMenu(this->export_menu);
     file_menu->addSeparator();
     this->close_action =
-        file_menu->addAction("Close", this, &MainWindow::onClose, QKeySequence("Ctrl+W"));
+        file_menu->addAction("Close", QKeySequence("Ctrl+W"), this, &MainWindow::onClose);
 
     // The "About" item is fine here, since we assume Mac and that will
     // place the item into different submenu but this will need to be fixed
@@ -225,7 +225,7 @@ MainWindow::setupMenuBar()
         file_menu->addAction("View license", this, &MainWindow::onViewLicense);
     this->view_license_action->setMenuRole(QAction::ApplicationSpecificRole);
 
-    file_menu->addAction("Quit", this, &QCoreApplication::quit, QKeySequence("Ctrl+Q"));
+    file_menu->addAction("Quit", QKeySequence("Ctrl+Q"), this, &QCoreApplication::quit);
 
     QMenu * view_menu = this->menu_bar->addMenu("View");
     this->view->setMenu(view_menu);
@@ -246,7 +246,7 @@ MainWindow::setupMenuBar()
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
-        window_menu->addAction("Minimize", this, &MainWindow::onMinimize, QKeySequence("Ctrl+M"));
+        window_menu->addAction("Minimize", QKeySequence("Ctrl+M"), this, &MainWindow::onMinimize);
     window_menu->addSeparator();
     this->bring_all_to_front =
         window_menu->addAction("Bring All to Front", this, &MainWindow::onBringAllToFront);
