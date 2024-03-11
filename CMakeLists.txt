@@ -23,7 +23,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED
+find_package(Qt6 6.4
     COMPONENTS
         Core
         Gui
@@ -31,8 +31,13 @@ find_package(Qt6 REQUIRED
         Network
         Svg
 )
+if(Qt6_FOUND)
+    message(STATUS "Found Qt6: ${Qt6_VERSION_MAJOR}.${Qt6_VERSION_MINOR}.${Qt6_VERSION_PATCH} (found in: ${Qt6_DIR})")
+else()
+    message(FATAL_ERROR "Unable to find the Qt6.")
+endif()
 
-find_package(VTK
+find_package(VTK 9.3.0...<9.4.0
     COMPONENTS
         CommonCore
         FiltersExtraction
@@ -53,7 +58,9 @@ find_package(VTK
         IOLegacy
         IOXML
 )
-if(NOT VTK_FOUND)
+if(VTK_FOUND)
+    message(STATUS "Found VTK: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION} (found in: ${VTK_DIR})")
+else()
     message(FATAL_ERROR "Unable to find the VTK build folder.")
 endif()
 if(NOT(TARGET VTK::GUISupportQt))
