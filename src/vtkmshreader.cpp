@@ -15,6 +15,7 @@
 #include "vtkDataSetAttributes.h"
 #include "vtkStringArray.h"
 #include "vtkUnstructuredGrid.h"
+#include <deque>
 
 vtkObjectFactoryNewMacro(vtkMshReader);
 
