@@ -1,0 +1,10 @@
+{
+    "common/*.{cpp,h}": [
+        "// SPDX-FileCopyrightText:",
+        "// SPDX-License-Identifier:"
+    ],
+    "src/*.{cpp,h}": [
+        "// SPDX-FileCopyrightText:",
+        "// SPDX-License-Identifier:"
+    ]
+}
