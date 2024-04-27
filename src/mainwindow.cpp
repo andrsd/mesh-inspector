@@ -235,6 +235,11 @@ MainWindow::setupMenuBar()
     this->view_info_wnd_action->setCheckable(true);
     QMenu * color_profile_menu = view_menu->addMenu("Color profile");
     setupColorProfileMenu(color_profile_menu);
+    view_menu->addSeparator();
+    view_menu->addAction("Reset camera",
+                         QKeySequence("Ctrl+Shift+R"),
+                         this->view,
+                         &View::resetCamera);
 
     QMenu * tools_menu = this->menu_bar->addMenu("Tools");
     this->select_tool->setupMenu(tools_menu);
