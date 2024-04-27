@@ -54,7 +54,8 @@ Model::Model(MainWindow * main_win) :
     load_thread(nullptr),
     reader(nullptr),
     file_name(),
-    file_watcher(new QFileSystemWatcher())
+    file_watcher(new QFileSystemWatcher()),
+    reset_camera_on_load(true)
 {
     connect(this->file_watcher, &QFileSystemWatcher::fileChanged, this, &Model::onFileChanged);
 }
@@ -275,7 +276,8 @@ Model::onLoadFinished()
         computeTotalBoundingBox();
         this->view->updateBoundingBox();
         this->view->setInteractorStyle(getDimension());
-        this->view->resetCamera();
+        if (this->reset_camera_on_load)
+            this->view->resetCamera();
         this->info_view->update();
     }
     emit loadFinished();
@@ -329,6 +331,12 @@ int
 Model::getDimension() const
 {
     return this->reader->getDimensionality();
+}
+
+void
+Model::resetCameraOnLoad(bool state)
+{
+    this->reset_camera_on_load = state;
 }
 
 void

@@ -512,6 +512,7 @@ MainWindow::customEvent(QEvent * event)
 {
     if (event->type() == LoadFileEvent::type) {
         auto * e = dynamic_cast<LoadFileEvent *>(event);
+        this->model->resetCameraOnLoad(true);
         loadFile(e->fileName());
     }
 }
@@ -544,8 +545,10 @@ MainWindow::dropEvent(QDropEvent * event)
         QStringList file_names;
         for (auto & url : event->mimeData()->urls())
             file_names.append(url.toLocalFile());
-        if (file_names.length() > 0)
+        if (file_names.length() > 0) {
+            this->model->resetCameraOnLoad(true);
             loadFile(file_names[0]);
+        }
     }
     else
         event->ignore();
@@ -661,6 +664,7 @@ MainWindow::onOpenFile()
                                      "VTK Unstructured grid files (*.vtk);;"
                                      "VTU Unstructured grid files (*.vtu)");
     if (!file_name.isNull()) {
+        this->model->resetCameraOnLoad(true);
         loadFile(file_name);
         auto fi = QFileInfo(file_name);
         QDir::setCurrent(fi.canonicalPath());
@@ -672,6 +676,7 @@ MainWindow::onOpenRecentFile()
 {
     auto action = dynamic_cast<QAction *>(this->sender());
     if (action != nullptr) {
+        this->model->resetCameraOnLoad(true);
         auto file_name = action->data();
         loadFile(file_name.toString());
     }
@@ -708,6 +713,7 @@ MainWindow::onFileChanged(const QString & path)
 void
 MainWindow::onReloadFile()
 {
+    this->model->resetCameraOnLoad(false);
     QString file_name = this->model->getFileName();
     loadFile(file_name);
 }
