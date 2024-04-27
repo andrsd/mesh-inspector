@@ -7,6 +7,7 @@
 #include "vtkPoints.h"
 #include "vtkSmartPointer.h"
 #include "gmshparsercpp/MshFile.h"
+#include <deque>
 
 class vtkMutableDirectedGraph;
 class vtkUnstructuredGrid;

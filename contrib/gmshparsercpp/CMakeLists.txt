@@ -10,4 +10,6 @@ project(gmshparsercpp
 
 set(GMSHPARSERCPP_LIBRARY_TYPE "STATIC")
 
+find_package(fmt 0.8 REQUIRED)
+
 add_subdirectory(src)
