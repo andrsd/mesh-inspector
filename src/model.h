@@ -57,6 +57,8 @@ public:
     std::size_t getTotalNumberOfNodes() const;
     int getDimension() const;
 
+    void resetCameraOnLoad(bool state);
+
 signals:
     void blockAdded(int id, const QString & name);
     void sideSetAdded(int id, const QString & name);
@@ -94,4 +96,5 @@ protected:
     Reader * reader;
     QString file_name;
     QFileSystemWatcher * file_watcher;
+    bool reset_camera_on_load;
 };
