@@ -69,6 +69,7 @@ endif()
 
 CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
 
+add_subdirectory(contrib/fmt)
 add_subdirectory(contrib/gmshparsercpp)
 add_subdirectory(common)
 add_subdirectory(src)
