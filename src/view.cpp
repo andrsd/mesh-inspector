@@ -446,7 +446,8 @@ View::setSideSetProperties(SideSetObject * sideset)
         property->SetEdgeColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
         property->SetEdgeVisibility(true);
     }
-    property->SetBackfaceCulling(true);
+    // so that side sets are visible from both directions (in case blocks are hidden)
+    property->SetBackfaceCulling(false);
 }
 
 void
