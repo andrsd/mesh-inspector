@@ -202,6 +202,10 @@ vtkMshReader::RequestInformation(vtkInformation * vtkNotUsed(request),
         vtkErrorMacro("" << e.what());
         return 0;
     }
+    catch (gmshparsercpp::Exception & e) {
+        vtkErrorMacro("Error parsing MSH file: " << e.what());
+        return 0;
+    }
     catch (...) {
         vtkErrorMacro("Unknown exception thrown");
         return 0;
@@ -234,12 +238,21 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
 
         // Map: {dim -> { physId -> [blockId, blockId, ...] }}
         std::map<int, std::map<int, std::vector<int>>> physBlocksByDim;
-        for (int dim = this->Dimension; dim > 0; dim--) {
-            for (const auto & ent : *GetEntitiesByDim(dim)) {
-                if (!ent.physical_tags.empty())
-                    physBlocksByDim[dim][ent.physical_tags[0]].push_back(ent.tag);
-                else
-                    physBlocksByDim[dim][ent.tag].push_back(ent.tag);
+        if ((int) this->Msh->get_version() == 4) {
+            for (int dim = this->Dimension; dim > 0; dim--) {
+                for (const auto & ent : *GetEntitiesByDim(dim)) {
+                    if (!ent.physical_tags.empty())
+                        physBlocksByDim[dim][ent.physical_tags[0]].push_back(ent.tag);
+                    else
+                        physBlocksByDim[dim][ent.tag].push_back(ent.tag);
+                }
+            }
+        }
+        else if ((int) this->Msh->get_version() == 2) {
+            for (int dim = this->Dimension; dim > 0; dim--) {
+                for (auto & blk : this->ElemBlkByDim[dim]) {
+                    physBlocksByDim[dim][blk->tag].push_back(blk->tag);
+                }
             }
         }
 
@@ -298,21 +311,26 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
 void
 vtkMshReader::DetectDimensionality()
 {
-    if (!this->Msh->get_volume_entities().empty())
-        this->Dimension = 3;
-    else if (!this->Msh->get_surface_entities().empty())
-        this->Dimension = 2;
-    else if (!this->Msh->get_curve_entities().empty())
+    vtkBoundingBox bbox;
+    bbox.ComputeBounds(this->AllPoints);
+    double x_width = bbox.GetLength(0);
+    double y_width = bbox.GetLength(1);
+    double z_width = bbox.GetLength(2);
+
+    constexpr double EPS = 1e-16;
+    if ((std::fabs(x_width) > 0) && (std::fabs(y_width) < EPS) && (std::fabs(z_width) < EPS))
         this->Dimension = 1;
+    else if ((std::fabs(x_width) > 0) && (std::fabs(y_width) > 0) && (std::fabs(z_width) < EPS))
+        this->Dimension = 2;
     else
-        this->Dimension = -1;
+        this->Dimension = 3;
 }
 
 void
 vtkMshReader::ProcessMsh()
 {
-    DetectDimensionality();
     BuildCoordinates();
+    DetectDimensionality();
     ReadPhysicalEntities();
 
     this->ElemBlkByDim.resize(4);
@@ -322,10 +340,10 @@ vtkMshReader::ProcessMsh()
     // count total number of elements and nodes
     std::map<int, int> nodeCnt;
     this->TotalNumOfElems = 0;
-    for (const auto & eb : this->Msh->get_element_blocks()) {
-        if (eb.dimension == this->Dimension) {
-            this->TotalNumOfElems += eb.elements.size();
-            for (auto & e : eb.elements) {
+    if (this->Dimension >= 0) {
+        for (const auto & eb : this->ElemBlkByDim[this->Dimension]) {
+            this->TotalNumOfElems += eb->elements.size();
+            for (auto & e : eb->elements) {
                 for (auto & nid : e.node_tags)
                     nodeCnt[nid]++;
             }
@@ -360,7 +378,6 @@ vtkMshReader::BuildCoordinates()
 const std::vector<gmshparsercpp::MshFile::MultiDEntity> *
 vtkMshReader::GetEntitiesByDim(int dim)
 {
-    const std::vector<gmshparsercpp::MshFile::MultiDEntity> * ents = nullptr;
     switch (dim) {
     case 1:
         return &this->Msh->get_curve_entities();

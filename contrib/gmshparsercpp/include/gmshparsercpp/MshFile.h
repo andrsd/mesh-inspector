@@ -1,55 +1,22 @@
+// SPDX-FileCopyrightText: 2022 David Andrs <andrsd@gmail.com>
+// SPDX-License-Identifier: MIT
+
 #pragma once
 
 #include <string>
 #include <fstream>
-#include <deque>
 #include <vector>
-#include "Enums.h"
+#include "gmshparsercpp/Enums.h"
+#include "gmshparsercpp/Exception.h"
+#include "gmshparsercpp/MshLexer.h"
 
 namespace gmshparsercpp {
+
+class MshLexer;
 
 /// Class for parsing MSH files
 ///
 class MshFile {
-protected:
-    struct Token {
-        enum EType : int { EndOfFile = 0, Number = 1, String, Section };
-
-        ///
-        EType type;
-        ///
-        std::string str;
-        /// Line number
-        int line_no;
-
-        int
-        as_int() const
-        {
-            if (this->type == Number)
-                return std::stoi(this->str);
-            else
-                throw std::domain_error("Token is not a number");
-        }
-
-        double
-        as_float() const
-        {
-            if (this->type == Number)
-                return std::stod(this->str);
-            else
-                throw std::domain_error("Token is not a number");
-        }
-
-        std::string
-        as_string() const
-        {
-            if (this->type == String)
-                return this->str.substr(1, this->str.length() - 2);
-            else
-                throw std::domain_error("Token is not a string");
-        }
-    };
-
 public:
     struct PhysicalName {
         /// Physical entity dimension
@@ -126,6 +93,7 @@ public:
         double x, y, z;
 
         Point() : x(0.), y(0.), z(0.) {}
+        Point(double x, double y, double z) : x(x), y(y), z(z) {}
     };
 
     struct Node {
@@ -225,29 +193,46 @@ public:
     /// Close the file
     void close();
 
+    /// Get the number of nodes per element type
+    ///
+    /// @param element_type GMSH element type
+    /// @return Number of nodes per element
+    static int get_nodes_per_element(ElementType element_type);
+
+    /// Get element dimension
+    ///
+    /// @param element_type GMSH element type
+    /// @return Dimension
+    static int get_element_dimension(ElementType element_type);
+
 protected:
-    void process_tokens();
-    void process_optional_sections();
+    void process_section(const MshLexer::Token & token);
     void process_mesh_format_section();
     void process_physical_names_section();
     void process_entities_section();
     void process_nodes_section();
+    void process_nodes_section_v2();
+    void process_nodes_section_v4();
     void process_elements_section();
+    void process_elements_section_v2();
+    void process_elements_section_v4();
     std::vector<int> process_array_of_ints();
     void skip_section();
-    const Token & peek();
-    Token read();
     void read_end_section_marker(const std::string & section_name);
-    int get_nodes_per_element(ElementType element_type);
+    ElementBlock & get_element_block_by_tag_create(int tag);
 
     /// File name
     std::string file_name;
     /// Input stream
     std::ifstream file;
+    /// Lexer for lexicographic analysis
+    MshLexer lexer;
     /// File format version
     double version;
     /// ASCII/binary flag
     bool binary;
+    /// Endianness for binary files
+    int endianness;
     /// Physical names
     std::vector<PhysicalName> physical_names;
     /// Point entities
@@ -262,8 +247,6 @@ protected:
     std::vector<Node> nodes;
     /// Element blocks
     std::vector<ElementBlock> element_blocks;
-    /// Parsed tokens (valid only during process_XYZ)
-    std::deque<Token> tokens;
 };
 
 } // namespace gmshparsercpp

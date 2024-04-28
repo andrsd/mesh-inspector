@@ -22,10 +22,13 @@ jobs:
         include:
           - os: ubuntu-22.04
             arch: gcc_64
+            config_args: "-DGMSHPARSERCPP_WITH_FMT=ON"
           - os: macos-13
             arch: macos
+            config_args: "-DGMSHPARSERCPP_WITH_FMT=OFF"
           - os: windows-2019
             arch: msvc2019_64
+            config_args: "-DGMSHPARSERCPP_WITH_FMT=OFF"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
@@ -79,7 +82,7 @@ jobs:
           choco:
 
       - name: Configure
-        run: cmake -S . -B "${{ github.workspace }}/build" -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B "${{ github.workspace }}/build" -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release ${{ matrix.config_args }}
 
       - name: Build
         run: cmake --build "${{ github.workspace }}/build" --config Release

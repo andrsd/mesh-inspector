@@ -1,5 +1,6 @@
 add_library(${PROJECT_NAME}
     ${GMSHPARSERCPP_LIBRARY_TYPE}
+        Exception.cpp
         MshFile.cpp
         MshLexer.cpp
 )
@@ -23,9 +24,15 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/contrib/flex
 )
+
+if (GMSHPARSERCPP_WITH_FMT)
+target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+        fmt::fmt
+)
+target_compile_definitions(${PROJECT_NAME} PRIVATE GMSHPARSERCPP_WITH_FMT)
+endif()
 
 install(
     TARGETS gmshparsercpp
