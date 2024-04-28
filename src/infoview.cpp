@@ -556,8 +556,8 @@ InfoView::addBlocksRoot()
         si_name->setCheckable(true);
         si_name->setCheckState(Qt::Checked);
         si_name->setAutoTristate(true);
-        this->mesh_model->setItem(0, si_name);
-        this->block_root = this->mesh_model->item(0);
+        this->mesh_model->appendRow(si_name);
+        this->block_root = this->mesh_model->item(this->mesh_model->rowCount() - 1);
         this->mesh_view->expand(this->block_root->index());
     }
 }
@@ -571,8 +571,8 @@ InfoView::addSideSetsRoot()
         si_name->setCheckable(true);
         si_name->setCheckState(Qt::Unchecked);
         si_name->setAutoTristate(true);
-        this->mesh_model->setItem(1, si_name);
-        this->sideset_root = this->mesh_model->item(1);
+        this->mesh_model->appendRow(si_name);
+        this->sideset_root = this->mesh_model->item(this->mesh_model->rowCount() - 1);
     }
 }
 
@@ -585,8 +585,8 @@ InfoView::addNodeSetsRoot()
         si_name->setCheckable(true);
         si_name->setCheckState(Qt::Unchecked);
         si_name->setAutoTristate(true);
-        this->mesh_model->setItem(2, si_name);
-        this->nodeset_root = this->mesh_model->item(2);
+        this->mesh_model->appendRow(si_name);
+        this->nodeset_root = this->mesh_model->item(this->mesh_model->rowCount() - 1);
     }
 }
 
