@@ -6,7 +6,9 @@
 #include <exception>
 #include <string>
 #include <vector>
-#include "fmt/format.h"
+#ifdef GMSHPARSERCPP_WITH_FMT
+    #include "fmt/format.h"
+#endif
 
 namespace gmshparsercpp {
 
@@ -14,11 +16,19 @@ namespace gmshparsercpp {
 /// from
 class Exception : public std::exception {
 public:
+#ifdef GMSHPARSERCPP_WITH_FMT
     template <typename... T>
     Exception(fmt::format_string<T...> format, T... args)
     {
         this->msg = fmt::format(format, std::forward<T>(args)...);
     }
+#else
+    template <typename... T>
+    Exception(const std::string & what, T... args)
+    {
+        this->msg = what;
+    }
+#endif
 
     /// Get the exception message
     const char * what() const noexcept override;

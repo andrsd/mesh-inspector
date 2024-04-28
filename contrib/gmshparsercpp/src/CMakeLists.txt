@@ -26,10 +26,13 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:include>
 )
 
+if (GMSHPARSERCPP_WITH_FMT)
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         fmt::fmt
 )
+target_compile_definitions(${PROJECT_NAME} PRIVATE GMSHPARSERCPP_WITH_FMT)
+endif()
 
 install(
     TARGETS gmshparsercpp
