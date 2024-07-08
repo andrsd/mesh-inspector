@@ -26,11 +26,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache environment
         id: cache-env
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Qt
           key: ${{ runner.os }}-qt-cache-${{ env.CACHE_NUM }}
@@ -83,7 +83,7 @@ jobs:
           zip -r mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip "Mesh Inspector.app"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos-x86_64
           path: "${{ github.workspace }}/build/src/mesh-inspector-${{ github.ref_name }}-macos-x86_64.zip"
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -185,7 +185,7 @@ jobs:
           ./linuxdeploy-x86_64.AppImage --appdir AppDir --output appimage
 
       - name: Upload AppImage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-x86_64.AppImage
           path: mesh-inspector-${{ github.ref_name }}-x86_64.AppImage
@@ -201,11 +201,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Cache environment
         id: cache-env
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Qt
           key: ${{ runner.os }}-qt-cache-${{ env.CACHE_NUM }}
@@ -257,7 +257,7 @@ jobs:
           zip -r mesh-inspector-${{ github.ref_name }}-windows-x86_64.zip "${{ github.workspace }}/dist/mesh-inspector"
 
       - name: Upload distributable
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-x86_64
           path: "${{ github.workspace }}/mesh-inspector-${{ github.ref_name }}-windows-x86_64.zip"
@@ -267,13 +267,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
 
       - name: Create release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ github.ref_name }}
           draft: false
