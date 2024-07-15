@@ -45,7 +45,6 @@ public:
     void addBlock(BlockObject * block);
     void addSideSet(SideSetObject * sideset);
     void addNodeSet(NodeSetObject * nodeset);
-    void setColorProfile(ColorProfile * profile);
     void setInteractorStyle(int dim);
     void resetCamera();
     void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
@@ -69,6 +68,7 @@ public slots:
     void onTransluentTriggered(bool checked);
     void onPerspectiveToggled(bool checked);
     void onOrientationMarkerVisibilityChanged(bool visible);
+    void onColorProfileChanged(ColorProfile * profile);
 
 protected:
     void setupViewModeWidget();

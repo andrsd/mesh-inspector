@@ -55,6 +55,9 @@ public:
         return devicePixelRatio() * value;
     }
 
+signals:
+    void colorProfileChanged(ColorProfile * profile);
+
 protected:
     void setupWidgets();
     void setupNotificationWidget();

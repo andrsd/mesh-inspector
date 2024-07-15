@@ -291,6 +291,18 @@ View::onOrientationMarkerVisibilityChanged(bool visible)
 }
 
 void
+View::onColorProfileChanged(ColorProfile * profile)
+{
+    const auto & qclr = profile->getColor("bkgnd");
+    double bkgnd[3] = { qclr.redF(), qclr.greenF(), qclr.blueF() };
+
+    this->renderer->SetBackground(bkgnd);
+    this->renderer->SetBackground2(bkgnd);
+
+    setCubeAxesColors(profile);
+}
+
+void
 View::setSelectedBlockProperties(BlockObject * block, bool highlighted)
 {
     auto * property = block->getProperty();
@@ -500,18 +512,6 @@ View::setupOrientationMarker()
     this->ori_marker->SetInteractor(this->interactor);
     this->ori_marker->SetEnabled(true);
     this->ori_marker->SetInteractive(false);
-}
-
-void
-View::setColorProfile(ColorProfile * profile)
-{
-    const auto & qclr = profile->getColor("bkgnd");
-    double bkgnd[3] = { qclr.redF(), qclr.greenF(), qclr.blueF() };
-
-    this->renderer->SetBackground(bkgnd);
-    this->renderer->SetBackground2(bkgnd);
-
-    setCubeAxesColors(profile);
 }
 
 void

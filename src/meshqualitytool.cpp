@@ -76,14 +76,6 @@ MeshQualityTool::done()
 }
 
 void
-MeshQualityTool::setColorProfile(ColorProfile * profile)
-{
-    auto qclr = profile->getColor("color_bar_label");
-    auto prop = this->color_bar->GetLabelTextProperty();
-    prop->SetColor(qclr.redF(), qclr.greenF(), qclr.blueF());
-}
-
-void
 MeshQualityTool::onMeshQuality()
 {
     this->mesh_quality->adjustSize();
@@ -179,6 +171,14 @@ MeshQualityTool::onClose()
     this->view->activateRenderMode();
     this->main_window->updateMenuBar();
     this->color_bar->VisibilityOff();
+}
+
+void
+MeshQualityTool::onColorProfileChanged(ColorProfile * profile)
+{
+    auto qclr = profile->getColor("color_bar_label");
+    auto prop = this->color_bar->GetLabelTextProperty();
+    prop->SetColor(qclr.redF(), qclr.greenF(), qclr.blueF());
 }
 
 void

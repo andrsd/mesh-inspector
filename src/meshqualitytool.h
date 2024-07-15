@@ -24,13 +24,13 @@ public:
     void updateLocation();
     bool isVisible() const;
     void done();
-    void setColorProfile(ColorProfile * profile);
     void update();
 
 public slots:
     void onMeshQuality();
     void onMetricChanged(int metric_id);
     void onClose();
+    void onColorProfileChanged(ColorProfile * profile);
 
 protected:
     void setupLookupTable();
