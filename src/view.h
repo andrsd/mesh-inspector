@@ -78,6 +78,7 @@ protected:
     void setSideSetProperties(SideSetObject * sideset);
     void setNodeSetProperties(NodeSetObject * nodeset);
     void setupCubeAxesActor();
+    void setCubeAxesColors(ColorProfile * profile);
 
     MainWindow * main_window;
     Model *& model;
