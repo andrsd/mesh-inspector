@@ -359,6 +359,12 @@ MainWindow::connectSignals()
             &InfoView::dimensionsStateChanged,
             this,
             &MainWindow::onCubeAxisVisibilityChanged);
+
+    connect(this, &MainWindow::colorProfileChanged, this->view, &View::onColorProfileChanged);
+    connect(this,
+            &MainWindow::colorProfileChanged,
+            this->mesh_quality_tool,
+            &MeshQualityTool::onColorProfileChanged);
 }
 
 void
@@ -438,8 +444,7 @@ MainWindow::setColorProfile()
     else
         profile = this->color_profiles[0];
 
-    this->view->setColorProfile(profile);
-    this->mesh_quality_tool->setColorProfile(profile);
+    emit colorProfileChanged(profile);
 }
 
 void
