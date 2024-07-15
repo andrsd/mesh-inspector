@@ -510,6 +510,8 @@ View::setColorProfile(ColorProfile * profile)
 
     this->renderer->SetBackground(bkgnd);
     this->renderer->SetBackground2(bkgnd);
+
+    setCubeAxesColors(profile);
 }
 
 void
@@ -647,6 +649,39 @@ View::setCubeAxisVisibility(bool visible)
         this->cube_axes_actor->VisibilityOn();
     else
         this->cube_axes_actor->VisibilityOff();
+}
+
+void
+View::setCubeAxesColors(ColorProfile * profile)
+{
+    const auto & qclr = profile->getColor("dimensions");
+    double clr[3] = { qclr.redF(), qclr.greenF(), qclr.blueF() };
+
+    for (int i = 0; i < 3; i++) {
+        auto * title_prop = this->cube_axes_actor->GetTitleTextProperty(i);
+        title_prop->SetColor(clr);
+        auto * label_prop = this->cube_axes_actor->GetLabelTextProperty(i);
+        label_prop->SetColor(clr);
+    }
+
+    {
+        auto prop = this->cube_axes_actor->GetXAxesLinesProperty();
+        prop->SetColor(clr);
+        prop = this->cube_axes_actor->GetXAxesGridlinesProperty();
+        prop->SetColor(clr);
+    }
+    {
+        auto prop = this->cube_axes_actor->GetYAxesLinesProperty();
+        prop->SetColor(clr);
+        prop = this->cube_axes_actor->GetYAxesGridlinesProperty();
+        prop->SetColor(clr);
+    }
+    {
+        auto prop = this->cube_axes_actor->GetZAxesLinesProperty();
+        prop->SetColor(clr);
+        prop = this->cube_axes_actor->GetZAxesGridlinesProperty();
+        prop->SetColor(clr);
+    }
 }
 
 vtkRenderer *

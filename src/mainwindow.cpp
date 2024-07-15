@@ -449,18 +449,21 @@ MainWindow::loadColorProfiles()
     std::map<QString, QColor> cp_default_color_map;
     cp_default_color_map["bkgnd"] = QColor(82, 87, 110);
     cp_default_color_map["color_bar_label"] = QColor(255, 255, 255);
+    cp_default_color_map["dimensions"] = QColor(255, 255, 255);
     auto * cp_default = new ColorProfile("Default", cp_default_color_map);
     this->color_profiles.push_back(cp_default);
 
     std::map<QString, QColor> cp_light_color_map;
     cp_light_color_map["bkgnd"] = QColor(255, 255, 255);
     cp_light_color_map["color_bar_label"] = QColor(0, 0, 0);
+    cp_light_color_map["dimensions"] = QColor(0, 0, 0);
     auto * cp_light = new ColorProfile("Light", cp_light_color_map);
     this->color_profiles.push_back(cp_light);
 
     std::map<QString, QColor> cp_dark_color_map;
     cp_dark_color_map["bkgnd"] = QColor(0, 0, 0);
     cp_dark_color_map["color_bar_label"] = QColor(255, 255, 255);
+    cp_dark_color_map["dimensions"] = QColor(255, 255, 255);
     auto * cp_dark = new ColorProfile("Dark", cp_dark_color_map);
     this->color_profiles.push_back(cp_dark);
 }
