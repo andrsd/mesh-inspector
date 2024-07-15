@@ -630,6 +630,9 @@ View::setupCubeAxesActor()
     this->cube_axes_actor->SetCamera(getActiveCamera());
     this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);
     this->cube_axes_actor->SetFlyMode(vtkCubeAxesActor::VTK_FLY_OUTER_EDGES);
+
+    auto fnt_sz = this->cube_axes_actor->GetScreenSize();
+    this->cube_axes_actor->SetScreenSize(fnt_sz * 1.75);
 }
 
 void
