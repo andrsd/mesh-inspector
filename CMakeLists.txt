@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(mesh-inspector
-    VERSION 1.6
+    VERSION 1.7
     LANGUAGES C CXX)
 
 set(MESH_INSPECTOR_COPYRIGHT
