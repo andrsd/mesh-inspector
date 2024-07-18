@@ -26,6 +26,7 @@ class SelectTool;
 class ExportTool;
 class ExplodeTool;
 class MeshQualityTool;
+class ClipTool;
 class CheckForUpdateTool;
 class FileChangedNotificationWidget;
 class BlockObject;
@@ -129,6 +130,7 @@ protected:
     ExplodeTool * explode_tool;
     MeshQualityTool * mesh_quality_tool;
     CheckForUpdateTool * update_tool;
+    ClipTool * clip_tool;
 
     QAction * new_action;
     QAction * open_action;
@@ -137,6 +139,7 @@ protected:
     QAction * view_info_wnd_action;
     QAction * tools_explode_action;
     QAction * tools_mesh_quality_action;
+    QAction * tools_clip_action;
     QAction * minimize;
     QAction * bring_all_to_front;
     QAction * show_main_window;

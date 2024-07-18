@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "mainwindow.h"
+#include "cliptool.h"
 #include "meshinspectorconfig.h"
 #include <QLabel>
 #include <QMenuBar>
@@ -32,6 +33,7 @@
 #include "explodetool.h"
 #include "meshqualitytool.h"
 #include "checkforupdatetool.h"
+#include "cliptool.h"
 #include "blockobject.h"
 #include "sidesetobject.h"
 #include "nodesetobject.h"
@@ -64,6 +66,7 @@ MainWindow::MainWindow(QWidget * parent) :
     explode_tool(new ExplodeTool(this)),
     mesh_quality_tool(new MeshQualityTool(this)),
     update_tool(new CheckForUpdateTool(this)),
+    clip_tool(new ClipTool(this)),
     new_action(nullptr),
     open_action(nullptr),
     close_action(nullptr),
@@ -121,6 +124,7 @@ MainWindow::~MainWindow()
     delete this->explode_tool;
     delete this->mesh_quality_tool;
     delete this->update_tool;
+    delete this->clip_tool;
     for (auto & it : this->color_profiles)
         delete it;
     delete this->notification;
@@ -176,6 +180,7 @@ MainWindow::setupWidgets()
     this->select_tool->setupWidgets();
     this->explode_tool->setupWidgets();
     this->mesh_quality_tool->setupWidgets();
+    this->clip_tool->setupWidgets();
 }
 
 void
@@ -248,6 +253,7 @@ MainWindow::setupMenuBar()
     this->tools_mesh_quality_action = tools_menu->addAction("Mesh quality",
                                                             this->mesh_quality_tool,
                                                             &MeshQualityTool::onMeshQuality);
+    this->tools_clip_action = tools_menu->addAction("Clip", this->clip_tool, &ClipTool::onClip);
 
     QMenu * window_menu = this->menu_bar->addMenu("Window");
     this->minimize =
@@ -297,6 +303,7 @@ MainWindow::updateMenuBar()
     this->export_tool->setMenuEnabled(has_file);
     this->tools_explode_action->setEnabled(has_file);
     this->tools_mesh_quality_action->setEnabled(has_file);
+    this->tools_clip_action->setEnabled(has_file);
     this->close_action->setEnabled(has_file);
 
     bool showing_mesh_quality = this->mesh_quality_tool->isVisible();
