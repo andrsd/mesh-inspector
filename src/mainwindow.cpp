@@ -101,6 +101,7 @@ MainWindow::MainWindow(QWidget * parent) :
 
     connectSignals();
     this->view->setupVtk();
+    this->view->setInteractorStyle(0);
     this->mesh_quality_tool->setupVtk();
     setColorProfile();
 
