@@ -14,9 +14,10 @@ ClipTool::ClipTool(MainWindow * main_wnd) :
     main_window(main_wnd),
     model(main_wnd->getModel()),
     widget(nullptr),
-    clip_plane(vtkPlane::New())
+    clip_plane(vtkPlane::New()),
+    normal(0, 0, 1),
+    normal_ori(1.)
 {
-    setPlaneNormal(QVector3D(0, 0, -1));
 }
 
 ClipTool::~ClipTool()
@@ -26,9 +27,12 @@ ClipTool::~ClipTool()
 }
 
 void
-ClipTool::setPlaneNormal(const QVector3D & normal)
+ClipTool::setPlaneNormal(const QVector3D & n)
 {
-    this->clip_plane->SetNormal(normal.x(), normal.y(), normal.z());
+    this->normal = n;
+    QVector3D tmp = this->normal_ori * n;
+    this->clip_plane->SetNormal(tmp.x(), tmp.y(), tmp.z());
+    updateModelBlocks();
 }
 
 void
@@ -44,6 +48,13 @@ ClipTool::setupWidgets()
     this->widget->setVisible(false);
 
     QMainWindow::connect(this->widget, &ClipWidget::closed, this, &ClipTool::onClose);
+    QMainWindow::connect(this->widget, &ClipWidget::planeChanged, this, &ClipTool::onPlaneChanged);
+    QMainWindow::connect(this->widget,
+                         &ClipWidget::planeNormalFlipped,
+                         this,
+                         &ClipTool::onPlaneNormalFlipped);
+
+    this->widget->setClipPlane(2);
 }
 
 void
@@ -81,5 +92,35 @@ ClipTool::clipBlocks()
         auto * block = it.second;
         block->setClip(true);
         block->setClipPlane(this->clip_plane);
+    }
+}
+
+void
+ClipTool::onPlaneChanged(int id)
+{
+    if (id == 0)
+        setPlaneNormal(QVector3D(1, 0, 0));
+    else if (id == 1)
+        setPlaneNormal(QVector3D(0, 1, 0));
+    else if (id == 2)
+        setPlaneNormal(QVector3D(0, 0, 1));
+}
+
+void
+ClipTool::onPlaneNormalFlipped()
+{
+    this->normal_ori *= -1;
+    setPlaneNormal(this->normal);
+    updateModelBlocks();
+}
+
+void
+ClipTool::updateModelBlocks()
+{
+    for (auto & it : this->model->getBlocks()) {
+        auto * block = it.second;
+        block->setClipPlane(this->clip_plane);
+        block->modified();
+        block->update();
     }
 }

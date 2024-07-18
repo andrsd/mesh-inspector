@@ -4,6 +4,10 @@
 #pragma once
 
 #include <QWidget>
+#include <QButtonGroup>
+#include <QRadioButton>
+#include <QLabel>
+#include <QCheckBox>
 
 class QGraphicsOpacityEffect;
 class QHBoxLayout;
@@ -15,14 +19,26 @@ class ClipWidget : public QWidget {
 public:
     explicit ClipWidget(QWidget * parent = nullptr);
 
+    void setClipPlane(int id);
+
 signals:
     void closed();
+    void planeChanged(int id);
+    void planeNormalFlipped();
 
 protected slots:
     void onClose();
+    void onPlaneIdClicked(int id);
+    void onFlipPlaneNormal();
 
 protected:
     QGraphicsOpacityEffect * opacity;
     QHBoxLayout * layout;
+    QLabel * plane_label;
+    QButtonGroup * plane_group;
+    QRadioButton * x_plane;
+    QRadioButton * y_plane;
+    QRadioButton * z_plane;
+    QCheckBox * flip_plane_normal;
     ClickableLabel * close;
 };
