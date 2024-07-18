@@ -13,6 +13,8 @@ class vtkMapper;
 class vtkActor;
 class vtkProperty;
 class vtkVector3d;
+class vtkPlane;
+class vtkPolyDataPlaneClipper;
 
 class MeshObject {
 public:
@@ -33,6 +35,11 @@ public:
     void setVisible(bool visible);
     void setPosition(double x, double y, double z);
 
+    void setClip(bool state);
+    void setClipPlane(vtkPlane * plane);
+    vtkActor * getClippedActor();
+    vtkProperty * getClippedProperty();
+
 protected:
     vtkVector3d computeCenterOfBounds();
 
@@ -42,4 +49,10 @@ protected:
     vtkActor * actor;
     vtkBoundingBox bounding_box;
     vtkVector3d center_of_bounds;
+
+    bool clipping;
+    vtkPolyDataPlaneClipper * clipper;
+    vtkPlane * clip_plane;
+    vtkMapper * clipped_away_mapper;
+    vtkActor * clipped_actor;
 };

@@ -11,8 +11,15 @@
 #include "vtkMultiBlockDataSet.h"
 #include "vtkActor.h"
 #include "vtkProperty.h"
+#include "vtkPolyDataPlaneClipper.h"
+#include "vtkPlane.h"
+#include "vtkTriangleFilter.h"
 
-MeshObject::MeshObject(vtkAlgorithmOutput * alg_output)
+MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
+    clipping(false),
+    clipper(vtkPolyDataPlaneClipper::New()),
+    clip_plane(vtkPlane::New()),
+    clipped_actor(vtkActor::New())
 {
     auto * algoritm = alg_output->GetProducer();
     this->data_object = algoritm->GetOutputDataObject(0);
@@ -20,10 +27,12 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output)
     if (dynamic_cast<vtkMultiBlockDataSet *>(this->data_object)) {
         this->geometry = vtkCompositeDataGeometryFilter::New();
         this->mapper = vtkPolyDataMapper::New();
+        this->clipped_away_mapper = vtkPolyDataMapper::New();
     }
     else {
         this->geometry = vtkGeometryFilter::New();
         this->mapper = vtkDataSetMapper::New();
+        this->clipped_away_mapper = vtkDataSetMapper::New();
     }
 
     this->geometry->SetInputConnection(0, alg_output);
@@ -80,6 +89,8 @@ MeshObject::modified()
     this->data_object->Modified();
     this->geometry->Modified();
     this->mapper->Modified();
+    if (this->clipping)
+        this->clipped_away_mapper->Modified();
 }
 
 void
@@ -87,15 +98,21 @@ MeshObject::update()
 {
     this->geometry->Update();
     this->mapper->Update();
+    if (this->clipping)
+        this->clipped_away_mapper->Update();
 }
 
 void
 MeshObject::setVisible(bool visible)
 {
-    if (visible)
+    if (visible) {
         this->actor->VisibilityOn();
-    else
+        this->clipped_actor->VisibilityOn();
+    }
+    else {
         this->actor->VisibilityOff();
+        this->clipped_actor->VisibilityOff();
+    }
 }
 
 void
@@ -126,4 +143,63 @@ int
 MeshObject::getNumPoints() const
 {
     return this->data_object->GetNumberOfElements(vtkDataSet::POINT);
+}
+
+void
+MeshObject::setClip(bool state)
+{
+    if (state) {
+        this->clipping = true;
+
+        this->clipper->SetInputConnection(this->geometry->GetOutputPort());
+        this->clipper->SetPlane(this->clip_plane);
+        this->clipper->SetCapping(true);
+        this->clipper->SetClippingLoops(false);
+        this->clipper->Update();
+
+        this->mapper->SetInputConnection(this->clipper->GetOutputPort(0));
+        this->mapper->Update();
+
+        this->clipped_away_mapper->SetInputConnection(this->clipper->GetOutputPort(1));
+        this->clipped_away_mapper->SetScalarModeToUsePointFieldData();
+        this->clipped_away_mapper->InterpolateScalarsBeforeMappingOn();
+        this->clipped_away_mapper->Update();
+
+        this->clipped_actor->SetMapper(this->clipped_away_mapper);
+        this->clipped_actor->SetVisibility(this->actor->GetVisibility());
+
+        this->clipped_actor->SetProperty(this->actor->GetProperty());
+    }
+    else {
+        this->clipping = false;
+
+        this->mapper->SetInputConnection(this->geometry->GetOutputPort());
+        this->mapper->SetScalarModeToUsePointFieldData();
+        this->mapper->InterpolateScalarsBeforeMappingOn();
+        this->mapper->Update();
+
+        this->clipped_away_mapper->RemoveAllInputs();
+        this->clipped_actor->SetMapper(nullptr);
+    }
+}
+
+void
+MeshObject::setClipPlane(vtkPlane * plane)
+{
+    auto normal = plane->GetNormal();
+    this->clip_plane->SetNormal(normal);
+    auto origin = plane->GetOrigin();
+    this->clip_plane->SetOrigin(origin);
+}
+
+vtkActor *
+MeshObject::getClippedActor()
+{
+    return this->clipped_actor;
+}
+
+vtkProperty *
+MeshObject::getClippedProperty()
+{
+    return this->clipped_actor->GetProperty();
 }

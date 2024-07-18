@@ -179,6 +179,7 @@ View::addBlock(BlockObject * block)
     setBlockProperties(block);
     this->renderer->AddViewProp(block->getActor());
     this->renderer->AddViewProp(block->getSilhouetteActor());
+    this->renderer->AddViewProp(block->getClippedActor());
 }
 
 void

@@ -3,10 +3,14 @@
 
 #pragma once
 
+#include "clipwidget.h"
 #include <QObject>
+#include <QVector3D>
+#include <QtGui/qvectornd.h>
 
 class MainWindow;
 class Model;
+class vtkPlane;
 
 class ClipTool : public QObject {
     Q_OBJECT
@@ -17,11 +21,20 @@ public:
 
     void setupWidgets();
     void updateLocation();
+    void setPlaneNormal(const QVector3D & normal);
+    void setPlaneOrigin(const QVector3D & pt);
 
 public slots:
     void onClip();
 
+protected slots:
+    void onClose();
+
 protected:
+    void clipBlocks();
+
     MainWindow * main_window;
     Model *& model;
+    ClipWidget * widget;
+    vtkPlane * clip_plane;
 };
