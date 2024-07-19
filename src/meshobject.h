@@ -15,6 +15,7 @@ class vtkProperty;
 class vtkVector3d;
 class vtkPlane;
 class vtkPolyDataPlaneClipper;
+class vtkPlaneCutter;
 
 class MeshObject {
 public:
@@ -55,4 +56,6 @@ protected:
     vtkPlane * clip_plane;
     vtkMapper * clipped_away_mapper;
     vtkActor * clipped_actor;
+    vtkPlaneCutter * cutter;
+    vtkPolyDataAlgorithm * cut_away_geometry;
 };

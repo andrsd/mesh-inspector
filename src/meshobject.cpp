@@ -12,8 +12,8 @@
 #include "vtkActor.h"
 #include "vtkProperty.h"
 #include "vtkPolyDataPlaneClipper.h"
+#include "vtkPlaneCutter.h"
 #include "vtkPlane.h"
-#include "vtkTriangleFilter.h"
 
 MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
     clipping(false),
@@ -28,11 +28,13 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
         this->geometry = vtkCompositeDataGeometryFilter::New();
         this->mapper = vtkPolyDataMapper::New();
         this->clipped_away_mapper = vtkPolyDataMapper::New();
+        this->cut_away_geometry = vtkCompositeDataGeometryFilter::New();
     }
     else {
         this->geometry = vtkGeometryFilter::New();
         this->mapper = vtkDataSetMapper::New();
         this->clipped_away_mapper = vtkDataSetMapper::New();
+        this->cut_away_geometry = vtkGeometryFilter::New();
     }
 
     this->geometry->SetInputConnection(0, alg_output);
@@ -50,6 +52,9 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
     double center[3];
     this->bounding_box.GetCenter(center);
     this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
+
+    this->cutter = vtkPlaneCutter::New();
+    this->cutter->SetInputData(this->data_object);
 }
 
 MeshObject::~MeshObject()
@@ -153,22 +158,31 @@ MeshObject::setClip(bool state)
 
         this->clipper->SetInputConnection(this->geometry->GetOutputPort());
         this->clipper->SetPlane(this->clip_plane);
-        this->clipper->SetCapping(true);
+        this->clipper->SetCapping(false);
         this->clipper->SetClippingLoops(false);
         this->clipper->Update();
 
-        this->mapper->SetInputConnection(this->clipper->GetOutputPort(0));
+        this->mapper->SetInputConnection(this->clipper->GetOutputPort());
         this->mapper->Update();
 
-        this->clipped_away_mapper->SetInputConnection(this->clipper->GetOutputPort(1));
-        this->clipped_away_mapper->SetScalarModeToUsePointFieldData();
-        this->clipped_away_mapper->InterpolateScalarsBeforeMappingOn();
-        this->clipped_away_mapper->Update();
+        // set up surface from the cut
+        this->cutter->SetPlane(this->clip_plane);
+        this->cutter->Update();
+
+        this->cut_away_geometry->SetInputConnection(this->cutter->GetOutputPort());
+        this->clipped_away_mapper->SetInputConnection(this->cut_away_geometry->GetOutputPort());
 
         this->clipped_actor->SetMapper(this->clipped_away_mapper);
         this->clipped_actor->SetVisibility(this->actor->GetVisibility());
 
-        this->clipped_actor->SetProperty(this->actor->GetProperty());
+        // copy some actor properties into the clipped-away actor
+        auto prop = this->actor->GetProperty();
+        auto clip_prop = this->clipped_actor->GetProperty();
+        clip_prop->SetAmbient(prop->GetAmbient());
+        clip_prop->SetDiffuse(prop->GetDiffuse());
+        clip_prop->SetColor(prop->GetColor());
+        clip_prop->SetSpecular(prop->GetSpecular());
+        clip_prop->SetOpacity(prop->GetOpacity());
     }
     else {
         this->clipping = false;
