@@ -4,14 +4,17 @@
 #pragma once
 
 #include <QWidget>
-#include <QButtonGroup>
-#include <QRadioButton>
-#include <QLabel>
-#include <QCheckBox>
 
 class QGraphicsOpacityEffect;
 class QHBoxLayout;
+class QLabel;
 class ClickableLabel;
+class QButtonGroup;
+class QCheckBox;
+class QRadioButton;
+class QStackedWidget;
+class DoubleSlider;
+class QVector3D;
 
 class ClipWidget : public QWidget {
     Q_OBJECT
@@ -20,16 +23,21 @@ public:
     explicit ClipWidget(QWidget * parent = nullptr);
 
     void setClipPlane(int id);
+    void setBoundingBox(const QVector3D & min_pt, const QVector3D & max_pt);
+    void setOrigin(const QVector3D & origin);
+    QVector3D origin() const;
 
 signals:
     void closed();
     void planeChanged(int id);
     void planeNormalFlipped();
+    void planeMoved();
 
 protected slots:
     void onClose();
     void onPlaneIdClicked(int id);
     void onFlipPlaneNormal();
+    void onPlaneMoved(double value);
 
 protected:
     QGraphicsOpacityEffect * opacity;
@@ -40,5 +48,7 @@ protected:
     QRadioButton * y_plane;
     QRadioButton * z_plane;
     QCheckBox * flip_plane_normal;
+    QStackedWidget * sliders_stack;
+    std::array<DoubleSlider *, 3> slider;
     ClickableLabel * close;
 };

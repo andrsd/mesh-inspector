@@ -9,6 +9,7 @@
 #include "vtkPlane.h"
 #include "vtkClipPolyData.h"
 #include "vtkPolyDataPlaneClipper.h"
+#include "vtkVector.h"
 
 ClipTool::ClipTool(MainWindow * main_wnd) :
     main_window(main_wnd),
@@ -45,6 +46,7 @@ void
 ClipTool::setupWidgets()
 {
     this->widget = new ClipWidget(this->main_window);
+    this->widget->setFixedHeight(40);
     this->widget->setVisible(false);
 
     QMainWindow::connect(this->widget, &ClipWidget::closed, this, &ClipTool::onClose);
@@ -53,6 +55,7 @@ ClipTool::setupWidgets()
                          &ClipWidget::planeNormalFlipped,
                          this,
                          &ClipTool::onPlaneNormalFlipped);
+    QMainWindow::connect(this->widget, &ClipWidget::planeMoved, this, &ClipTool::onPlaneMoved);
 
     this->widget->setClipPlane(2);
 }
@@ -69,6 +72,18 @@ ClipTool::updateLocation()
 void
 ClipTool::onClip()
 {
+    auto bbox = this->model->getTotalBoundingBox();
+    auto max_pt = bbox.GetMaxPoint();
+    auto min_pt = bbox.GetMinPoint();
+    QVector3D qmin_pt(min_pt[0], min_pt[1], min_pt[2]);
+    QVector3D qmax_pt(max_pt[0], max_pt[1], max_pt[2]);
+    this->widget->setBoundingBox(qmin_pt, qmax_pt);
+
+    auto cob = this->model->getCenterOfBounds();
+    QVector3D ctr(cob[0], cob[1], cob[2]);
+    this->widget->setOrigin(ctr);
+    this->clip_plane->SetOrigin(cob.GetData());
+
     this->widget->adjustSize();
     this->widget->show();
     updateLocation();
@@ -111,6 +126,14 @@ ClipTool::onPlaneNormalFlipped()
 {
     this->normal_ori *= -1;
     setPlaneNormal(this->normal);
+    updateModelBlocks();
+}
+
+void
+ClipTool::onPlaneMoved()
+{
+    auto origin = this->widget->origin();
+    this->clip_plane->SetOrigin(origin.x(), origin.y(), origin.z());
     updateModelBlocks();
 }
 

@@ -6,7 +6,6 @@
 #include "clipwidget.h"
 #include <QObject>
 #include <QVector3D>
-#include <QtGui/qvectornd.h>
 
 class MainWindow;
 class Model;
@@ -31,6 +30,7 @@ protected slots:
     void onClose();
     void onPlaneChanged(int id);
     void onPlaneNormalFlipped();
+    void onPlaneMoved();
 
 protected:
     void clipBlocks();
