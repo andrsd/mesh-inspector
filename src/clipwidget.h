@@ -26,6 +26,7 @@ public:
     void setBoundingBox(const QVector3D & min_pt, const QVector3D & max_pt);
     void setOrigin(const QVector3D & origin);
     QVector3D origin() const;
+    void done();
 
 signals:
     void closed();

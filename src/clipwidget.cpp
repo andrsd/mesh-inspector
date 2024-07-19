@@ -125,3 +125,10 @@ ClipWidget::onPlaneMoved(double value)
 {
     emit planeMoved();
 }
+
+void
+ClipWidget::done()
+{
+    if (isVisible())
+        onClose();
+}

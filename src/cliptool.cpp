@@ -70,6 +70,12 @@ ClipTool::updateLocation()
 }
 
 void
+ClipTool::done()
+{
+    this->widget->done();
+}
+
+void
 ClipTool::onClip()
 {
     auto bbox = this->model->getTotalBoundingBox();

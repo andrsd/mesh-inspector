@@ -20,6 +20,7 @@ public:
 
     void setupWidgets();
     void updateLocation();
+    void done();
     void setPlaneNormal(const QVector3D & n);
     void setPlaneOrigin(const QVector3D & pt);
 
