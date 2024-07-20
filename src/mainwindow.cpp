@@ -23,8 +23,6 @@
 #include <QVector3D>
 #include <QShortcut>
 #include <QStandardPaths>
-#include "vtkExtractBlock.h"
-#include "vtkCamera.h"
 #include "aboutdlg.h"
 #include "licensedlg.h"
 #include "filechangednotificationwidget.h"
@@ -35,16 +33,12 @@
 #include "checkforupdatetool.h"
 #include "cliptool.h"
 #include "blockobject.h"
-#include "sidesetobject.h"
-#include "nodesetobject.h"
 #include "colorprofile.h"
-#include "selection.h"
 #include "model.h"
 #include "view.h"
 #include "infoview.h"
 #include "common/loadfileevent.h"
 #include "common/notificationwidget.h"
-#include "common/infowidget.h"
 
 static const int MAX_RECENT_FILES = 10;
 

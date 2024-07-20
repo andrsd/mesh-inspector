@@ -8,7 +8,6 @@
 #include "vtkInformationVector.h"
 #include "vtkDataSet.h"
 #include "vtkCellData.h"
-#include "vtkExtractCells.h"
 #include "vtkIdList.h"
 #include "vtkUnstructuredGrid.h"
 #include "vtkCellIterator.h"

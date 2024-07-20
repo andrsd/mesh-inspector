@@ -12,7 +12,6 @@
 #include "vtkUnstructuredGrid.h"
 #include "vtkDoubleArray.h"
 #include "vtkAlgorithmOutput.h"
-#include "mainwindow.h"
 #include "meshqualitytool.h"
 
 BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
