@@ -13,6 +13,7 @@ add_library(
     OBJECT
         clickablelabel.cpp
         colorpicker.cpp
+        doubleslider.cpp
         expandablewidget.cpp
         horzline.cpp
         infowidget.cpp
