@@ -3,7 +3,6 @@
 
 #include "ointeractorinterface.h"
 #include "mainwindow.h"
-#include "vtkInteractorStyle.h"
 #include "vtkRenderWindowInteractor.h"
 #include <QPoint>
 #include <QCoreApplication>

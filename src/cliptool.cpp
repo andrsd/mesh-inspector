@@ -7,8 +7,6 @@
 #include "model.h"
 #include "blockobject.h"
 #include "vtkPlane.h"
-#include "vtkClipPolyData.h"
-#include "vtkPolyDataPlaneClipper.h"
 #include "vtkVector.h"
 
 ClipTool::ClipTool(MainWindow * main_wnd) :

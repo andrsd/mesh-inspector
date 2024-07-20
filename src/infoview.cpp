@@ -13,7 +13,6 @@
 #include <QBrush>
 #include <QMenu>
 #include <QLocale>
-#include "common/horzline.h"
 #include "common/expandablewidget.h"
 #include "common/otreeview.h"
 #include "common/colorpicker.h"
