@@ -6,15 +6,18 @@
 #include "view.h"
 #include <QMenu>
 #include <QFileDialog>
+#include <QFileInfo>
 #include "vtkGenericOpenGLRenderWindow.h"
 #include "vtkWindowToImageFilter.h"
 #include "vtkPNGWriter.h"
 #include "vtkJPEGWriter.h"
+#include "vtkGL2PSExporter.h"
 
 ExportTool::ExportTool(MainWindow * main_window) :
     main_window(main_window),
     export_as_png(nullptr),
-    export_as_jpg(nullptr)
+    export_as_jpg(nullptr),
+    export_as_pdf(nullptr)
 {
 }
 
@@ -23,6 +26,7 @@ ExportTool::setupMenu(QMenu * menu)
 {
     this->export_as_png = menu->addAction("PNG...", this, &ExportTool::onExportAsPng);
     this->export_as_jpg = menu->addAction("JPG...", this, &ExportTool::onExportAsJpg);
+    this->export_as_pdf = menu->addAction("PDF...", this, &ExportTool::onExportAsPdf);
 }
 
 void
@@ -30,6 +34,7 @@ ExportTool::setMenuEnabled(bool enabled)
 {
     this->export_as_png->setEnabled(enabled);
     this->export_as_jpg->setEnabled(enabled);
+    this->export_as_pdf->setEnabled(enabled);
 }
 
 QString
@@ -96,5 +101,27 @@ ExportTool::onExportAsJpg()
             this->main_window->showNotification(
                 QString("Export to '%1' was successful.").arg(fi.fileName()));
         }
+    }
+}
+
+void
+ExportTool::onExportAsPdf()
+{
+    auto fname = getFileName("Export to PDF", "PDF files (*.pdf)", "pdf");
+    if (!fname.isNull()) {
+        QFileInfo fi(fname);
+        auto path = QDir(fi.absoluteDir());
+        auto base_name = fi.baseName();
+        auto file_prefix = QFileInfo(path, base_name).absoluteFilePath();
+
+        auto view = this->main_window->getView();
+        auto * writer = vtkGL2PSExporter::New();
+        writer->SetFileFormatToPDF();
+        writer->DrawBackgroundOff();
+        writer->SetSortToBSP();
+        writer->SetCompress(true);
+        writer->SetInput(view->getRenderWindow());
+        writer->SetFilePrefix(file_prefix.toStdString().c_str());
+        writer->Write();
     }
 }

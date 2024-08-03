@@ -58,6 +58,7 @@ find_package(VTK 9.3.0...<9.4.0
         IOImage
         IOLegacy
         IOXML
+        IOExportGL2PS
 )
 if(VTK_FOUND)
     message(STATUS "Found VTK: ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION} (found in: ${VTK_DIR})")

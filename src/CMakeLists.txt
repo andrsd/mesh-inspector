@@ -33,6 +33,11 @@ target_link_libraries(
         gmshparsercpp
 )
 
+vtk_module_autoinit(
+    TARGETS ${PROJECT_NAME}
+    MODULES ${VTK_LIBRARIES}
+)
+
 set_target_properties(
     ${PROJECT_NAME}
     PROPERTIES
