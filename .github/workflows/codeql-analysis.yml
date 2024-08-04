@@ -3,7 +3,7 @@ name: code-ql
 env:
   QT_VERSION: 6.5.3
   VTK_VERSION: 9.3.0
-  CACHE_NUM: 2
+  CACHE_NUM: 3
 
 on:
   push:

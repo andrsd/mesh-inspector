@@ -3,7 +3,7 @@ name: build
 env:
   QT_VERSION: 6.5.3
   VTK_VERSION: 9.3.0
-  CACHE_NUM: 2
+  CACHE_NUM: 3
 
 on:
   push:
@@ -62,7 +62,7 @@ jobs:
           echo "::group::configure"
           mkdir build
           cd build
-          cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DVTK_GROUP_ENABLE_Qt=WANT ..
+          cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DVTK_GROUP_ENABLE_Qt=WANT -DVTK_MODULE_ENABLE_VTK_IOExportGL2PS=YES ..
           echo "::endgroup::"
           echo "::group::build"
           cmake --build . --config Release

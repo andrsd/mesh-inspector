@@ -19,6 +19,7 @@ public:
 public slots:
     void onExportAsPng();
     void onExportAsJpg();
+    void onExportAsPdf();
 
 protected:
     QString getFileName(const QString & window_title,
@@ -28,4 +29,5 @@ protected:
     MainWindow * main_window;
     QAction * export_as_png;
     QAction * export_as_jpg;
+    QAction * export_as_pdf;
 };
