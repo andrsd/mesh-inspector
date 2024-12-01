@@ -171,6 +171,7 @@ void
 View::clear()
 {
     this->renderer->RemoveAllViewProps();
+    render();
 }
 
 void
