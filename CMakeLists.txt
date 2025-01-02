@@ -9,6 +9,8 @@ set(MESH_INSPECTOR_COPYRIGHT
 )
 mark_as_advanced(FORCE MESH_INSPECTOR_COPYRIGHT)
 
+option(MESH_INSPECTOR_BUILD_TESTS "Build tests" OFF)
+
 math(EXPR MESH_INSPECTOR_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 math(EXPR MESH_INSPECTOR_MINOR_VERSION ${PROJECT_VERSION_MINOR})
 
@@ -75,3 +77,8 @@ add_subdirectory(contrib/fmt)
 add_subdirectory(contrib/gmshparsercpp)
 add_subdirectory(common)
 add_subdirectory(src)
+
+if (MESH_INSPECTOR_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
