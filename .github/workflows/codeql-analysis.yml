@@ -48,14 +48,15 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - name: Configure
+    - name: Environment variables
       run: |
-        cmake \
-          -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/gcc_64 \
-          -S . -B ${{ github.workspace }}/build
+        echo "CMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/gcc_64" >> $GITHUB_ENV
+
+    - name: Configure
+      run: cmake --preset=release
 
     - name: Build
-      run: make -C ${{ github.workspace }}/build
+      run: cmake --build --preset=release
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
