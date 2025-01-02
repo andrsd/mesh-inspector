@@ -48,9 +48,13 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           version: ${{ env.QT_VERSION }}
-          target: 'desktop'
-          dir: '${{ github.workspace }}'
-          install-deps: 'true'
+          target: "desktop"
+          dir: "${{ github.workspace }}"
+          install-deps: "true"
+
+      - name: Environment variables
+        run: |
+          echo "CMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" >> $GITHUB_ENV
 
       - name: Build VTK
         if: steps.cache-env.outputs.cache-hit != 'true'
@@ -62,7 +66,7 @@ jobs:
           echo "::group::configure"
           mkdir build
           cd build
-          cmake -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DVTK_GROUP_ENABLE_Qt=WANT -DVTK_MODULE_ENABLE_VTK_IOExportGL2PS=YES ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DVTK_GROUP_ENABLE_Qt=WANT -DVTK_MODULE_ENABLE_VTK_IOExportGL2PS=YES ..
           echo "::endgroup::"
           echo "::group::build"
           cmake --build . --config Release
@@ -79,7 +83,7 @@ jobs:
           choco:
 
       - name: Configure
-        run: cmake -S . -B "${{ github.workspace }}/build" -DCMAKE_PREFIX_PATH="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" -DCMAKE_BUILD_TYPE=Release
+        run: cmake --preset release
 
       - name: Build
-        run: cmake --build "${{ github.workspace }}/build" --config Release
+        run: cmake --build --preset=release

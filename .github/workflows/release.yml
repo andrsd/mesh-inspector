@@ -44,6 +44,10 @@ jobs:
           dir: '${{ github.workspace }}'
           install-deps: 'true'
 
+      - name: Environment variables
+        run: |
+          echo "CMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/${{ matrix.arch }}" >> $GITHUB_ENV
+
       - name: Build VTK
         if: steps.cache-env.outputs.cache-hit != 'true'
         run: |
@@ -54,7 +58,6 @@ jobs:
           echo "::group::configure"
           mkdir build && cd build
           cmake \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
@@ -67,14 +70,10 @@ jobs:
           echo "::endgroup::"
 
       - name: Configure
-        run: |
-          cmake \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${QT_VERSION}/${{ matrix.arch }} \
-            -DCMAKE_BUILD_TYPE=Release \
-            -S . -B ${{ github.workspace }}/build
+        run: cmake --preset=release
 
       - name: Build
-        run: make -C ${{ github.workspace }}/build
+        run: cmake --build --preset=release
 
       - name: Deploy app bundle
         run: |
