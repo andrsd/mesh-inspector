@@ -47,7 +47,6 @@ MainWindow::MainWindow(QWidget * parent) :
     settings(new QSettings("David Andrs", "MeshInspector")),
     notification(nullptr),
     file_changed_notification(nullptr),
-    color_profile_idx(0),
     menu_bar(new QMenuBar(nullptr)),
     recent_menu(nullptr),
     export_menu(nullptr),
@@ -76,6 +75,7 @@ MainWindow::MainWindow(QWidget * parent) :
     color_profile_action_group(nullptr),
     windows_action_group(nullptr),
     model(new Model(this)),
+    color_profile_idx(0),
     progress(nullptr)
 {
     auto doc_dir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);

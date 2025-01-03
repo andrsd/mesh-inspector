@@ -441,7 +441,7 @@ vtkMshReader::GetObjectId(int objectType, int objectIndex)
 }
 
 const char *
-vtkMshReader::GetObjectName(int objectType, int objectIndex)
+vtkMshReader::GetObjectNameStr(int objectType, int objectIndex)
 {
     if (this->ObjectIds.count(objectType) == 1) {
         const auto & arr = this->ObjectNames[objectType];

@@ -86,7 +86,7 @@ MSHReader::readBlockInfo()
         this->block_info[otype] = std::map<int, BlockInformation>();
         for (int j = 0; j < this->reader->GetNumberOfObjects(otype); j++) {
             index += 1;
-            std::string name = this->reader->GetObjectName(otype, j);
+            std::string name = this->reader->GetObjectNameStr(otype, j);
             auto vtkid = this->reader->GetObjectId(otype, j);
             if (name.rfind("Unnamed", 0) == 0)
                 name = std::to_string(vtkid);

@@ -41,7 +41,7 @@ public:
 
     int GetNumberOfObjects(int objectType);
     int GetObjectId(int objectType, int objectIndex);
-    const char * GetObjectName(int objectType, int objectIndex);
+    const char * GetObjectNameStr(int objectType, int objectIndex);
 
 protected:
     vtkMshReader();
