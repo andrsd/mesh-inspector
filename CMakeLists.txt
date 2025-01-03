@@ -9,12 +9,15 @@ set(MESH_INSPECTOR_COPYRIGHT
 )
 mark_as_advanced(FORCE MESH_INSPECTOR_COPYRIGHT)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 option(MESH_INSPECTOR_BUILD_TESTS "Build tests" OFF)
 
 math(EXPR MESH_INSPECTOR_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 math(EXPR MESH_INSPECTOR_MINOR_VERSION ${PROJECT_VERSION_MINOR})
 
 include(CheckIncludeFiles)
+include(MacOSXIcons)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -87,6 +90,7 @@ add_subdirectory(src)
 add_executable(mesh-inspector
     main.cpp
     ${APP_ICON_MACOSX}
+    ${CMAKE_SOURCE_DIR}/resources/render-mode.svg
 )
 
 target_include_directories(
@@ -114,32 +118,15 @@ set_target_properties(
         MACOSX_BUNDLE TRUE
 )
 
+make_icon_icns(
+    FILE ${CMAKE_SOURCE_DIR}/resources/app-icon.png
+    SIZE 512
+)
+
 set_source_files_properties(
-    icon.icns
-    ../resources/render-mode.svg
+    ${CMAKE_SOURCE_DIR}/resources/render-mode.svg
     PROPERTIES
         MACOSX_PACKAGE_LOCATION "Resources"
-)
-
-add_custom_target(make-icon-iconset-dir ALL
-    COMMAND
-        ${CMAKE_COMMAND} -E make_directory icon.iconset
-)
-
-add_custom_command(
-    OUTPUT
-        icon.iconset/icon_512x512.png
-    COMMAND
-        sips -z 512 512 ${CMAKE_SOURCE_DIR}/resources/app-icon.png --out icon.iconset/icon_512x512.png
-    DEPENDS
-        make-icon-iconset-dir
-        ${CMAKE_SOURCE_DIR}/resources/app-icon.png
-)
-
-add_custom_command(
-    OUTPUT icon.icns
-    COMMAND iconutil -c icns icon.iconset
-    DEPENDS icon.iconset/icon_512x512.png
 )
 
 # install

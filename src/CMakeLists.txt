@@ -5,7 +5,6 @@ add_library(
     SHARED
         ${SRCS}
         resources.qrc
-        ../resources/render-mode.svg
 )
 
 set_target_properties(mesh-inspector-lib
