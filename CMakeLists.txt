@@ -9,10 +9,15 @@ set(MESH_INSPECTOR_COPYRIGHT
 )
 mark_as_advanced(FORCE MESH_INSPECTOR_COPYRIGHT)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
+option(MESH_INSPECTOR_BUILD_TESTS "Build tests" OFF)
+
 math(EXPR MESH_INSPECTOR_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 math(EXPR MESH_INSPECTOR_MINOR_VERSION ${PROJECT_VERSION_MINOR})
 
 include(CheckIncludeFiles)
+include(MacOSXIcons)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -71,7 +76,71 @@ endif()
 
 CHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)
 
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(APP_ICON_MACOSX icon.icns)
+endif()
+
 add_subdirectory(contrib/fmt)
 add_subdirectory(contrib/gmshparsercpp)
 add_subdirectory(common)
 add_subdirectory(src)
+
+# main executable
+
+add_executable(mesh-inspector
+    main.cpp
+    ${APP_ICON_MACOSX}
+    ${CMAKE_SOURCE_DIR}/resources/render-mode.svg
+)
+
+target_include_directories(
+    mesh-inspector
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+        ${CMAKE_BINARY_DIR}/src
+)
+
+target_link_libraries(
+    mesh-inspector
+    PRIVATE
+        mesh-inspector-lib
+)
+
+set_target_properties(
+    mesh-inspector
+    PROPERTIES
+        MACOSX_BUNDLE_BUNDLE_NAME "Mesh Inspector"
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE_COPYRIGHT ${MESH_INSPECTOR_COPYRIGHT}
+        MACOSX_BUNDLE_ICON_FILE icon.icns
+        WIN32_EXECUTABLE TRUE
+        MACOSX_BUNDLE TRUE
+)
+
+make_icon_icns(
+    FILE ${CMAKE_SOURCE_DIR}/resources/app-icon.png
+    SIZE 512
+)
+
+set_source_files_properties(
+    ${CMAKE_SOURCE_DIR}/resources/render-mode.svg
+    PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+)
+
+# install
+
+install(
+    TARGETS
+        mesh-inspector
+        mesh-inspector-lib
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+# test
+if (MESH_INSPECTOR_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
