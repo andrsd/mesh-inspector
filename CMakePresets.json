@@ -10,7 +10,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_CXX_FLAGS_DEBUG": "-g -Wall",
                 "CMAKE_C_FLAGS_DEBUG": "-g -Wall",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "MESH_INSPECTOR_BUILD_TESTS": "YES"
             }
         },
         {
