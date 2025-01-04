@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QVector3D>
 #include "vtkSmartPointer.h"
+#include <QPoint>
 
 class MainWindow;
 class Model;
@@ -44,4 +45,5 @@ protected:
     vtkSmartPointer<vtkPlane> clip_plane;
     QVector3D normal;
     float normal_ori;
+    QPoint pos;
 };

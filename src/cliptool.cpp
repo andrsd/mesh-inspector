@@ -8,6 +8,7 @@
 #include "blockobject.h"
 #include "vtkPlane.h"
 #include "vtkVector.h"
+#include <QSettings>
 
 ClipTool::ClipTool(MainWindow * main_wnd) :
     main_window(main_wnd),
@@ -17,6 +18,8 @@ ClipTool::ClipTool(MainWindow * main_wnd) :
     normal(0, 0, 1),
     normal_ori(1.)
 {
+    auto * settings = this->main_window->getSettings();
+    this->pos = settings->value("clip_tool/pos", QPoint(-1, -1)).toPoint();
 }
 
 ClipTool::~ClipTool()
@@ -43,7 +46,6 @@ void
 ClipTool::setupWidgets()
 {
     this->widget = new ClipWidget(this->main_window);
-    this->widget->setFixedHeight(40);
     this->widget->setVisible(false);
 
     QMainWindow::connect(this->widget, &ClipWidget::closed, this, &ClipTool::onClose);
@@ -60,10 +62,13 @@ ClipTool::setupWidgets()
 void
 ClipTool::updateLocation()
 {
-    auto width = this->main_window->getRenderWindowWidth();
-    int left = (width - this->widget->width()) / 2;
-    int top = this->main_window->geometry().height() - this->widget->height() - 10;
-    this->widget->move(left, top);
+    if (this->pos.x() == -1 && this->pos.y() == -1) {
+        auto width = this->main_window->getRenderWindowWidth();
+        int left = (width - this->widget->width()) / 2;
+        int top = this->main_window->geometry().height() - this->widget->height() - 10;
+        this->pos = QPoint(left, top);
+    }
+    this->widget->move(this->pos);
 }
 
 void
@@ -100,6 +105,10 @@ ClipTool::onClose()
     for (auto & [id, block] : this->model->getBlocks()) {
         block->setClip(false);
     }
+
+    this->pos = this->widget->pos();
+    auto * settings = this->main_window->getSettings();
+    settings->setValue("clip_tool/pos", this->pos);
 }
 
 void

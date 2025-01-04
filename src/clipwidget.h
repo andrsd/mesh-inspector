@@ -5,13 +5,10 @@
 
 #include <QWidget>
 
-class QGraphicsOpacityEffect;
-class QHBoxLayout;
+class QFormLayout;
 class QLabel;
-class ClickableLabel;
-class QButtonGroup;
+class QComboBox;
 class QCheckBox;
-class QRadioButton;
 class QStackedWidget;
 class DoubleSlider;
 class QVector3D;
@@ -36,20 +33,17 @@ signals:
 
 protected slots:
     void onClose();
-    void onPlaneIdClicked(int id);
+    void onPlaneIndexChanged(int index);
     void onFlipPlaneNormal();
     void onPlaneMoved(double value);
 
 protected:
-    QGraphicsOpacityEffect * opacity;
-    QHBoxLayout * layout;
-    QLabel * plane_label;
-    QButtonGroup * plane_group;
-    QRadioButton * x_plane;
-    QRadioButton * y_plane;
-    QRadioButton * z_plane;
+    void closeEvent(QCloseEvent * event) override;
+
+protected:
+    QFormLayout * layout;
+    QComboBox * plane;
     QCheckBox * flip_plane_normal;
     QStackedWidget * sliders_stack;
     std::array<DoubleSlider *, 3> slider;
-    ClickableLabel * close;
 };

@@ -3,7 +3,7 @@
 
 #include "clipwidget.h"
 #include <QGraphicsOpacityEffect>
-#include <QHBoxLayout>
+#include <QFormLayout>
 #include <QDoubleValidator>
 #include <QLineEdit>
 #include <QLabel>
@@ -13,61 +13,44 @@
 #include <QStackedWidget>
 #include <QVector3D>
 #include <QButtonGroup>
-#include "common/clickablelabel.h"
+#include <QComboBox>
 #include "common/doubleslider.h"
 
 ClipWidget::ClipWidget(QWidget * parent) : QWidget(parent)
 {
-    setAttribute(Qt::WA_StyledBackground, true);
-    setStyleSheet("border-radius: 3px;"
-                  "background-color: #222;"
-                  "color: #fff;"
-                  "font-size: 14px;");
-    this->opacity = new QGraphicsOpacityEffect(this);
-    this->opacity->setOpacity(0.8);
-    setGraphicsEffect(this->opacity);
+    setWindowTitle("Clip");
+    setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint |
+                   Qt::WindowTitleHint | Qt::WindowCloseButtonHint);
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setFixedHeight(100);
+    setFixedWidth(200);
 
-    this->layout = new QHBoxLayout();
+    this->layout = new QFormLayout();
     this->layout->setContentsMargins(15, 8, 15, 6);
+    this->layout->setSpacing(6);
+    this->layout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
 
-    this->plane_label = new QLabel("Clipping plane");
-    this->layout->addWidget(this->plane_label);
+    this->plane = new QComboBox();
+    this->plane->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    this->plane->addItem("YZ", 0);
+    this->plane->addItem("XZ", 1);
+    this->plane->addItem("XY", 2);
+    this->layout->addRow("Plane", this->plane);
 
-    this->x_plane = new QRadioButton("YZ");
-    this->y_plane = new QRadioButton("XZ");
-    this->z_plane = new QRadioButton("XY");
-
-    this->plane_group = new QButtonGroup();
-    this->plane_group->addButton(this->x_plane, 0);
-    this->plane_group->addButton(this->y_plane, 1);
-    this->plane_group->addButton(this->z_plane, 2);
-
-    this->layout->addWidget(this->x_plane);
-    this->layout->addWidget(this->y_plane);
-    this->layout->addWidget(this->z_plane);
-
-    this->flip_plane_normal = new QCheckBox("Flip normal");
-    this->layout->addWidget(this->flip_plane_normal);
+    this->flip_plane_normal = new QCheckBox("");
+    this->layout->addRow("Flip normal", this->flip_plane_normal);
 
     this->sliders_stack = new QStackedWidget();
-    this->sliders_stack->setFixedWidth(200);
+    this->sliders_stack->setContentsMargins(0, 0, 0, 0);
     for (int i = 0; i < 3; i++) {
         this->slider[i] = new DoubleSlider(Qt::Horizontal);
         this->sliders_stack->addWidget(this->slider[i]);
     }
-    this->layout->addWidget(this->sliders_stack);
-
-    this->layout->addSpacing(20);
-
-    this->close = new ClickableLabel();
-    this->close->setText("Close");
-    this->close->setStyleSheet("font-weight: bold;");
-    this->layout->addWidget(this->close);
+    this->layout->addRow(this->sliders_stack);
 
     this->setLayout(this->layout);
 
-    connect(this->close, &ClickableLabel::clicked, this, &ClipWidget::onClose);
-    connect(this->plane_group, &QButtonGroup::idClicked, this, &ClipWidget::onPlaneIdClicked);
+    connect(this->plane, &QComboBox::currentIndexChanged, this, &ClipWidget::onPlaneIndexChanged);
     connect(this->flip_plane_normal, &QCheckBox::clicked, this, &ClipWidget::onFlipPlaneNormal);
     connect(this->slider[0], &QSlider::sliderMoved, this, &ClipWidget::onPlaneMoved);
     connect(this->slider[1], &QSlider::sliderMoved, this, &ClipWidget::onPlaneMoved);
@@ -77,7 +60,7 @@ ClipWidget::ClipWidget(QWidget * parent) : QWidget(parent)
 void
 ClipWidget::setClipPlane(int id)
 {
-    this->plane_group->button(id)->click();
+    this->plane->setCurrentIndex(id);
 }
 
 void
@@ -108,10 +91,10 @@ ClipWidget::onClose()
 }
 
 void
-ClipWidget::onPlaneIdClicked(int id)
+ClipWidget::onPlaneIndexChanged(int index)
 {
-    this->sliders_stack->setCurrentIndex(id);
-    emit planeChanged(id);
+    this->sliders_stack->setCurrentIndex(index);
+    emit planeChanged(index);
 }
 
 void
@@ -131,4 +114,11 @@ ClipWidget::done()
 {
     if (isVisible())
         onClose();
+}
+
+void
+ClipWidget::closeEvent(QCloseEvent * event)
+{
+    emit closed();
+    QWidget::closeEvent(event);
 }
