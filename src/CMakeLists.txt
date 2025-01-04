@@ -9,7 +9,7 @@ add_library(
 
 set_target_properties(mesh-inspector-lib
     PROPERTIES
-        OUTPUT mesh-inspector-lib
+        OUTPUT_NAME mesh-inspector
 )
 
 target_include_directories(
