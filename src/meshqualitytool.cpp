@@ -18,6 +18,7 @@
 #include "vtkUnstructuredGrid.h"
 #include "vtkMapper.h"
 #include "vtkRenderer.h"
+#include <QSettings>
 
 const char * MeshQualityTool::MESH_QUALITY_FIELD_NAME = "CellQuality";
 
@@ -29,6 +30,8 @@ MeshQualityTool::MeshQualityTool(MainWindow * main_wnd) :
     lut(nullptr),
     color_bar(nullptr)
 {
+    auto * settings = this->main_window->getSettings();
+    this->pos = settings->value("mesh_quality/pos", QPoint(-1, -1)).toPoint();
 }
 
 MeshQualityTool::~MeshQualityTool()
@@ -91,10 +94,13 @@ MeshQualityTool::onMeshQuality()
 void
 MeshQualityTool::updateLocation()
 {
-    auto width = this->main_window->getRenderWindowWidth();
-    int left = (width - this->mesh_quality->width()) / 2;
-    int top = this->main_window->geometry().height() - this->mesh_quality->height() - 10;
-    this->mesh_quality->move(left, top);
+    if (this->pos.x() == -1 && this->pos.y() == -1) {
+        auto width = this->main_window->getRenderWindowWidth();
+        int left = (width - this->mesh_quality->width()) / 2;
+        int top = this->main_window->geometry().height() - this->mesh_quality->height() - 10;
+        this->pos = QPoint(left, top);
+    }
+    this->mesh_quality->move(this->pos);
 }
 
 void
@@ -164,6 +170,10 @@ MeshQualityTool::onClose()
     this->view->activateRenderMode();
     this->main_window->updateMenuBar();
     this->color_bar->VisibilityOff();
+
+    this->pos = this->mesh_quality->pos();
+    auto * settings = this->main_window->getSettings();
+    settings->setValue("mesh_quality/pos", this->pos);
 }
 
 void

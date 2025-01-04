@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include "vtkSmartPointer.h"
+#include <QPoint>
 
 class MainWindow;
 class Model;
