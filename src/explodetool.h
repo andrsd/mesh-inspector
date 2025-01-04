@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QObject>
+#include <QPoint>
 
 class MainWindow;
 class Model;
@@ -24,9 +25,11 @@ public:
 public slots:
     void onExplode();
     void onValueChanged(double value);
+    void onClose();
 
 protected:
     MainWindow * main_window;
     Model *& model;
     ExplodeWidget * explode;
+    QPoint pos;
 };
