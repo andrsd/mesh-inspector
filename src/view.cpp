@@ -302,6 +302,7 @@ View::onColorProfileChanged(ColorProfile * profile)
     this->renderer->SetBackground2(bkgnd);
 
     setCubeAxesColors(profile);
+    render();
 }
 
 void
