@@ -193,6 +193,7 @@ jobs:
 
   build-windows:
     name: build Windows distributable
+    if: false
     strategy:
       fail-fast: false
       matrix:

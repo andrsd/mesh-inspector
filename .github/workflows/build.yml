@@ -24,8 +24,6 @@ jobs:
             arch: gcc_64
           - os: macos-13
             arch: macos
-          - os: windows-2019
-            arch: msvc2019_64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source
