@@ -15,6 +15,7 @@ class vtkLookupTable;
 class vtkScalarBarActor;
 class ColorProfile;
 class BlockObject;
+class QCloseEvent;
 
 class MeshQualityTool : public QObject {
 public:
@@ -26,6 +27,7 @@ public:
     bool isVisible() const;
     void done();
     void update();
+    void closeEvent(QCloseEvent * event);
 
 public slots:
     void onMeshQuality();

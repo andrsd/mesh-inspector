@@ -6,7 +6,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QComboBox>
-#include <QtDebug>
 
 MeshQualityWidget::MeshQualityWidget(QWidget * parent) : QWidget(parent)
 {

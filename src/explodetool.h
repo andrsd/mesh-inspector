@@ -11,6 +11,7 @@ class Model;
 class ExplodeWidget;
 class QAction;
 class QMenu;
+class QCloseEvent;
 
 class ExplodeTool : public QObject {
     Q_OBJECT
@@ -20,6 +21,7 @@ public:
     ~ExplodeTool() override;
 
     void setupWidgets();
+    void closeEvent(QCloseEvent * event);
 
 public slots:
     void onExplode();
@@ -30,5 +32,4 @@ protected:
     MainWindow * main_window;
     Model *& model;
     ExplodeWidget * explode;
-    QPoint pos;
 };

@@ -24,6 +24,7 @@ public:
     void done();
     void setPlaneNormal(const QVector3D & n);
     void setPlaneOrigin(const QVector3D & pt);
+    void closeEvent(QCloseEvent * event);
 
 public slots:
     void onClip();
@@ -44,5 +45,4 @@ protected:
     vtkSmartPointer<vtkPlane> clip_plane;
     QVector3D normal;
     float normal_ori;
-    QPoint pos;
 };

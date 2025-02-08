@@ -18,8 +18,6 @@ ClipTool::ClipTool(MainWindow * main_wnd) :
     normal(0, 0, 1),
     normal_ori(1.)
 {
-    auto * settings = this->main_window->getSettings();
-    this->pos = settings->value("clip_tool/pos", QPoint(-1, -1)).toPoint();
 }
 
 ClipTool::~ClipTool()
@@ -55,6 +53,11 @@ ClipTool::setupWidgets()
                          this,
                          &ClipTool::onPlaneNormalFlipped);
     QMainWindow::connect(this->widget, &ClipWidget::planeMoved, this, &ClipTool::onPlaneMoved);
+
+    auto * settings = this->main_window->getSettings();
+    auto pos = settings->value("clip_tool/pos", QPoint(-1, -1)).toPoint();
+    if (pos.x() >= 0 && pos.y() >= 0)
+        this->widget->move(pos);
 
     this->widget->setClipPlane(2);
 }
@@ -92,10 +95,6 @@ ClipTool::onClose()
     for (auto & [id, block] : this->model->getBlocks()) {
         block->setClip(false);
     }
-
-    this->pos = this->widget->pos();
-    auto * settings = this->main_window->getSettings();
-    settings->setValue("clip_tool/pos", this->pos);
 }
 
 void
@@ -142,4 +141,12 @@ ClipTool::updateModelBlocks()
         block->modified();
         block->update();
     }
+}
+
+void
+ClipTool::closeEvent(QCloseEvent * event)
+{
+    auto pos = this->widget->pos();
+    auto * settings = this->main_window->getSettings();
+    settings->setValue("clip_tool/pos", pos);
 }

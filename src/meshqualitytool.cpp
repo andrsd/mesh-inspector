@@ -30,8 +30,6 @@ MeshQualityTool::MeshQualityTool(MainWindow * main_wnd) :
     lut(nullptr),
     color_bar(nullptr)
 {
-    auto * settings = this->main_window->getSettings();
-    this->pos = settings->value("mesh_quality/pos", QPoint(-1, -1)).toPoint();
 }
 
 MeshQualityTool::~MeshQualityTool()
@@ -56,6 +54,11 @@ MeshQualityTool::setupWidgets()
             &MeshQualityTool::onMetricChanged);
     connect(this->mesh_quality, &MeshQualityWidget::closed, this, &MeshQualityTool::onClose);
     this->mesh_quality->setVisible(false);
+
+    auto * settings = this->main_window->getSettings();
+    auto pos = settings->value("mesh_quality/pos", QPoint(-1, -1)).toPoint();
+    if (pos.x() >= 0 && pos.y() >= 0)
+        this->mesh_quality->move(pos);
 }
 
 void
@@ -157,10 +160,6 @@ MeshQualityTool::onClose()
     this->view->activateRenderMode();
     this->main_window->updateMenuBar();
     this->color_bar->VisibilityOff();
-
-    this->pos = this->mesh_quality->pos();
-    auto * settings = this->main_window->getSettings();
-    settings->setValue("mesh_quality/pos", this->pos);
 }
 
 void
@@ -424,4 +423,12 @@ MeshQualityTool::setBlockMeshQualityProperties(std::shared_ptr<BlockObject> bloc
     mapper->SetColorModeToMapScalars();
     mapper->SetScalarRange(range);
     mapper->SetLookupTable(this->lut);
+}
+
+void
+MeshQualityTool::closeEvent(QCloseEvent * event)
+{
+    auto pos = this->mesh_quality->pos();
+    auto * settings = this->main_window->getSettings();
+    settings->setValue("mesh_quality/pos", pos);
 }

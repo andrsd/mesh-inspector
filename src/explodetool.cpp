@@ -13,11 +13,8 @@
 ExplodeTool::ExplodeTool(MainWindow * main_wnd) :
     main_window(main_wnd),
     model(main_wnd->getModel()),
-    explode(nullptr),
-    pos(-1, -1)
+    explode(nullptr)
 {
-    auto * settings = this->main_window->getSettings();
-    this->pos = settings->value("explode_tool/pos", QPoint(-1, -1)).toPoint();
 }
 
 ExplodeTool::~ExplodeTool()
@@ -35,6 +32,11 @@ ExplodeTool::setupWidgets()
                          &ExplodeTool::onValueChanged);
     QMainWindow::connect(this->explode, &ExplodeWidget::closed, this, &ExplodeTool::onClose);
     this->explode->setVisible(false);
+
+    auto * settings = this->main_window->getSettings();
+    auto pos = settings->value("explode_tool/pos", QPoint(-1, -1)).toPoint();
+    if (pos.x() >= 0 && pos.y() >= 0)
+        this->explode->move(pos);
 }
 
 void
@@ -62,7 +64,12 @@ ExplodeTool::onValueChanged(double value)
 void
 ExplodeTool::onClose()
 {
-    this->pos = this->explode->pos();
+}
+
+void
+ExplodeTool::closeEvent(QCloseEvent * event)
+{
+    auto pos = this->explode->pos();
     auto * settings = this->main_window->getSettings();
-    settings->setValue("explode_tool/pos", this->pos);
+    settings->setValue("explode_tool/pos", pos);
 }
