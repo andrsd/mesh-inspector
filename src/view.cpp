@@ -49,7 +49,6 @@ View::View(MainWindow * main_wnd) :
     ori_marker(nullptr),
     render_window(vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New()),
     renderer(vtkSmartPointer<vtkRenderer>::New()),
-    interactor(nullptr),
     interactor_style_2d(new OInteractorStyle2D(this->main_window)),
     interactor_style_3d(new OInteractorStyle3D(this->main_window)),
     cube_axes_actor(nullptr)
@@ -153,8 +152,6 @@ View::updateMenuBar(bool enabled)
 void
 View::setupVtk()
 {
-    this->interactor = this->render_window->GetInteractor();
-
     // TODO: set background from preferences/templates
     this->renderer->SetGradientBackground(true);
     // set anti-aliasing on
@@ -506,11 +503,12 @@ View::setupOrientationMarker()
         text_prop->ShadowOff();
     }
 
+    auto interactor = this->render_window->GetInteractor();
     this->ori_marker = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
     this->ori_marker->SetDefaultRenderer(this->renderer);
     this->ori_marker->SetOrientationMarker(axes);
     this->ori_marker->SetViewport(0.8, 0, 1.0, 0.2);
-    this->ori_marker->SetInteractor(this->interactor);
+    this->ori_marker->SetInteractor(interactor);
     this->ori_marker->SetEnabled(true);
     this->ori_marker->SetInteractive(false);
 }
@@ -518,10 +516,11 @@ View::setupOrientationMarker()
 void
 View::setInteractorStyle(int dim)
 {
+    auto interactor = this->render_window->GetInteractor();
     if (dim == 3)
-        this->interactor->SetInteractorStyle(this->interactor_style_3d);
+        interactor->SetInteractorStyle(this->interactor_style_3d);
     else
-        this->interactor->SetInteractorStyle(this->interactor_style_2d);
+        interactor->SetInteractorStyle(this->interactor_style_2d);
 }
 
 void

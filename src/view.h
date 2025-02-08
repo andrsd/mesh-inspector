@@ -13,7 +13,6 @@ class QPushButton;
 class QAction;
 class QActionGroup;
 class vtkOrientationMarkerWidget;
-class vtkRenderWindowInteractor;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -96,7 +95,6 @@ protected:
     vtkSmartPointer<vtkOrientationMarkerWidget> ori_marker;
     vtkSmartPointer<vtkGenericOpenGLRenderWindow> render_window;
     vtkSmartPointer<vtkRenderer> renderer;
-    vtkRenderWindowInteractor * interactor;
     OInteractorStyle2D * interactor_style_2d;
     OInteractorStyle3D * interactor_style_3d;
     vtkSmartPointer<vtkCubeAxesActor> cube_axes_actor;
