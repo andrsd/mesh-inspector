@@ -67,9 +67,9 @@ protected:
     QActionGroup * mode_select_action_group;
 
     EModeSelect select_mode;
-    Selection * selection;
+    std::shared_ptr<Selection> selection;
     std::shared_ptr<BlockObject> selected_block;
-    Selection * highlight;
+    std::shared_ptr<Selection> highlight;
     std::shared_ptr<BlockObject> highlighted_block;
 
 public:

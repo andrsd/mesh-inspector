@@ -130,14 +130,12 @@ SelectTool::update()
 {
     auto output_port = this->model->getVtkOutputPort();
 
-    delete this->selection;
-    this->selection = new Selection(output_port);
+    this->selection = std::make_shared<Selection>(output_port);
     setSelectionProperties();
     auto renderer = this->view->getRenderer();
     renderer->AddActor(this->selection->getActor());
 
-    delete this->highlight;
-    this->highlight = new Selection(output_port);
+    this->highlight = std::make_shared<Selection>(output_port);
     setHighlightProperties();
     renderer->AddActor(this->highlight->getActor());
 }
@@ -248,14 +246,8 @@ SelectTool::onSelectModeTriggered(QAction * action)
 void
 SelectTool::clear()
 {
-    if (this->selection) {
-        delete this->selection;
-        this->selection = nullptr;
-    }
-    if (this->highlight) {
-        delete this->highlight;
-        this->highlight = nullptr;
-    }
+    this->selection = nullptr;
+    this->highlight = nullptr;
 }
 
 void
