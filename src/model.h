@@ -32,14 +32,14 @@ public:
     explicit Model(MainWindow * main_window);
     ~Model() override;
 
-    const std::map<int, BlockObject *> & getBlocks() const;
-    const std::map<int, SideSetObject *> & getSideSets() const;
-    const std::map<int, NodeSetObject *> & getNodeSets() const;
+    const std::map<int, std::shared_ptr<BlockObject>> & getBlocks() const;
+    const std::map<int, std::shared_ptr<SideSetObject>> & getSideSets() const;
+    const std::map<int, std::shared_ptr<NodeSetObject>> & getNodeSets() const;
     const vtkVector3d & getCenterOfBounds() const;
 
-    BlockObject * getBlock(int block_id);
-    SideSetObject * getSideSet(int sideset_id);
-    NodeSetObject * getNodeSet(int nodeset_id);
+    std::shared_ptr<BlockObject> getBlock(int block_id);
+    std::shared_ptr<SideSetObject> getSideSet(int sideset_id);
+    std::shared_ptr<NodeSetObject> getNodeSet(int nodeset_id);
 
     int blockActorToId(vtkActor * actor);
 
@@ -75,25 +75,25 @@ protected:
     void addSideSets();
     void addNodeSets();
     void computeTotalBoundingBox();
-    Reader * createReader(const QString & file_name);
+    std::shared_ptr<Reader> createReader(const QString & file_name);
 
     MainWindow * main_window;
     View *& view;
     InfoView *& info_view;
 
-    std::vector<vtkExtractBlock *> extract_blocks;
-    std::vector<vtkExtractMaterialBlock *> extract_mat_blocks;
-    std::map<int, BlockObject *> blocks;
-    std::map<int, SideSetObject *> side_sets;
-    std::map<int, NodeSetObject *> node_sets;
+    std::vector<vtkSmartPointer<vtkExtractBlock>> extract_blocks;
+    std::vector<vtkSmartPointer<vtkExtractMaterialBlock>> extract_mat_blocks;
+    std::map<int, std::shared_ptr<BlockObject>> blocks;
+    std::map<int, std::shared_ptr<SideSetObject>> side_sets;
+    std::map<int, std::shared_ptr<NodeSetObject>> node_sets;
 
     /// Bounding box
     vtkBoundingBox bbox;
     /// center of bounding box of the whole mesh
     vtkVector3d center_of_bounds;
 
-    LoadThread * load_thread;
-    Reader * reader;
+    std::shared_ptr<LoadThread> load_thread;
+    std::shared_ptr<Reader> reader;
     QString file_name;
     QFileSystemWatcher * file_watcher;
     bool reset_camera_on_load;

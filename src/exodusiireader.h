@@ -4,6 +4,7 @@
 #pragma once
 
 #include "reader.h"
+#include "vtkSmartPointer.h"
 #include <map>
 
 class vtkExodusIIReader;
@@ -26,6 +27,6 @@ public:
 protected:
     void readBlockInfo();
 
-    vtkExodusIIReader * reader;
+    vtkSmartPointer<vtkExodusIIReader> reader;
     std::map<int, std::map<int, BlockInformation>> block_info;
 };

@@ -79,7 +79,7 @@ SelectTool::~SelectTool()
     delete this->mode_select_action_group;
 }
 
-const BlockObject *
+const std::shared_ptr<BlockObject>
 SelectTool::getSelectedBlock() const
 {
     return this->selected_block;
@@ -130,14 +130,12 @@ SelectTool::update()
 {
     auto output_port = this->model->getVtkOutputPort();
 
-    delete this->selection;
-    this->selection = new Selection(output_port);
+    this->selection = std::make_shared<Selection>(output_port);
     setSelectionProperties();
     auto renderer = this->view->getRenderer();
     renderer->AddActor(this->selection->getActor());
 
-    delete this->highlight;
-    this->highlight = new Selection(output_port);
+    this->highlight = std::make_shared<Selection>(output_port);
     setHighlightProperties();
     renderer->AddActor(this->highlight->getActor());
 }
@@ -183,7 +181,7 @@ SelectTool::onBlockSelectionChanged(int block_id)
     auto blocks = this->model->getBlocks();
     const auto & it = blocks.find(block_id);
     if (it != blocks.end()) {
-        BlockObject * block = it->second;
+        auto block = it->second;
         auto info = QString("Block: %1\n"
                             "Cells: %2\n"
                             "Points: %3")
@@ -202,7 +200,7 @@ SelectTool::onSideSetSelectionChanged(int sideset_id)
     auto side_sets = this->model->getSideSets();
     const auto & it = side_sets.find(sideset_id);
     if (it != side_sets.end()) {
-        auto * sideset = it->second;
+        auto sideset = it->second;
         auto info = QString("Side set: %1\n"
                             "Cells: %2\n"
                             "Points: %3")
@@ -221,7 +219,7 @@ SelectTool::onNodeSetSelectionChanged(int nodeset_id)
     auto node_sets = this->model->getNodeSets();
     const auto & it = node_sets.find(nodeset_id);
     if (it != node_sets.end()) {
-        auto * nodeset = it->second;
+        auto nodeset = it->second;
         auto info = QString("Node set: %1\n"
                             "Points: %2")
                         .arg(nodeset_id)
@@ -248,38 +246,31 @@ SelectTool::onSelectModeTriggered(QAction * action)
 void
 SelectTool::clear()
 {
-    if (this->selection) {
-        delete this->selection;
-        this->selection = nullptr;
-    }
-    if (this->highlight) {
-        delete this->highlight;
-        this->highlight = nullptr;
-    }
+    this->selection = nullptr;
+    this->highlight = nullptr;
 }
 
 void
 SelectTool::selectBlock(const QPoint & pt)
 {
-    auto * picker = vtkPropPicker::New();
+    auto picker = vtkSmartPointer<vtkPropPicker>::New();
     if (picker->PickProp(pt.x(), pt.y(), this->view->getRenderer())) {
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
             auto blk_id = this->model->blockActorToId(actor);
-            auto * block = this->model->getBlock(blk_id);
+            auto block = this->model->getBlock(blk_id);
             onBlockSelectionChanged(blk_id);
             this->selected_block = block;
             auto highlighted = this->selected_block == this->highlighted_block;
             this->view->setBlockProperties(block, true, highlighted);
         }
     }
-    picker->Delete();
 }
 
 void
 SelectTool::selectCell(const QPoint & pt)
 {
-    auto * picker = vtkCellPicker::New();
+    auto picker = vtkSmartPointer<vtkCellPicker>::New();
     if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto cell_id = picker->GetCellId();
         this->selection->selectCell(cell_id);
@@ -292,13 +283,12 @@ SelectTool::selectCell(const QPoint & pt)
             QString("Element ID: %1\nType: %2").arg(cell_id).arg(cellTypeToName(cell_type));
         showSelectedMeshEntity(nfo);
     }
-    picker->Delete();
 }
 
 void
 SelectTool::selectPoint(const QPoint & pt)
 {
-    auto * picker = vtkPointPicker::New();
+    auto picker = vtkSmartPointer<vtkPointPicker>::New();
     if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto point_id = picker->GetPointId();
         this->selection->selectPoint(point_id);
@@ -322,7 +312,6 @@ SelectTool::selectPoint(const QPoint & pt)
             showSelectedMeshEntity(nfo);
         }
     }
-    picker->Delete();
 }
 
 void
@@ -365,12 +354,12 @@ SelectTool::highlightBlock(const QPoint & pt)
         this->view->setBlockProperties(this->highlighted_block, selected, false);
     }
 
-    auto * picker = vtkPropPicker::New();
+    auto picker = vtkSmartPointer<vtkPropPicker>::New();
     if (picker->PickProp(pt.x(), pt.y(), this->view->getRenderer())) {
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
             auto blk_id = this->model->blockActorToId(actor);
-            auto * block = this->model->getBlock(blk_id);
+            auto block = this->model->getBlock(blk_id);
             if (block) {
                 this->highlighted_block = block;
                 auto selected = this->highlighted_block == this->selected_block;
@@ -381,13 +370,12 @@ SelectTool::highlightBlock(const QPoint & pt)
     else if (this->highlighted_block) {
         this->highlighted_block = nullptr;
     }
-    picker->Delete();
 }
 
 void
 SelectTool::highlightCell(const QPoint & pt)
 {
-    auto * picker = vtkCellPicker::New();
+    auto picker = vtkSmartPointer<vtkCellPicker>::New();
     if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto cell_id = picker->GetCellId();
         this->highlight->selectCell(cell_id);
@@ -395,13 +383,12 @@ SelectTool::highlightCell(const QPoint & pt)
     }
     else
         this->highlight->clear();
-    picker->Delete();
 }
 
 void
 SelectTool::highlightPoint(const QPoint & pt)
 {
-    auto * picker = vtkPointPicker::New();
+    auto picker = vtkSmartPointer<vtkPointPicker>::New();
     if (picker->Pick(pt.x(), pt.y(), 0, this->view->getRenderer())) {
         auto point_id = picker->GetPointId();
         this->highlight->selectPoint(point_id);
@@ -409,7 +396,6 @@ SelectTool::highlightPoint(const QPoint & pt)
     }
     else
         this->highlight->clear();
-    picker->Delete();
 }
 
 void

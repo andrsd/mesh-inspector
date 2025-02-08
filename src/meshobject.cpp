@@ -17,24 +17,24 @@
 
 MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
     clipping(false),
-    clipper(vtkPolyDataPlaneClipper::New()),
-    clip_plane(vtkPlane::New()),
-    clipped_actor(vtkActor::New())
+    clipper(vtkSmartPointer<vtkPolyDataPlaneClipper>::New()),
+    clip_plane(vtkSmartPointer<vtkPlane>::New()),
+    clipped_actor(vtkSmartPointer<vtkActor>::New())
 {
     auto * algoritm = alg_output->GetProducer();
     this->data_object = algoritm->GetOutputDataObject(0);
 
     if (dynamic_cast<vtkMultiBlockDataSet *>(this->data_object)) {
-        this->geometry = vtkCompositeDataGeometryFilter::New();
-        this->mapper = vtkPolyDataMapper::New();
-        this->clipped_away_mapper = vtkPolyDataMapper::New();
-        this->cut_away_geometry = vtkCompositeDataGeometryFilter::New();
+        this->geometry = vtkSmartPointer<vtkCompositeDataGeometryFilter>::New();
+        this->mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        this->clipped_away_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+        this->cut_away_geometry = vtkSmartPointer<vtkCompositeDataGeometryFilter>::New();
     }
     else {
-        this->geometry = vtkGeometryFilter::New();
-        this->mapper = vtkDataSetMapper::New();
-        this->clipped_away_mapper = vtkDataSetMapper::New();
-        this->cut_away_geometry = vtkGeometryFilter::New();
+        this->geometry = vtkSmartPointer<vtkGeometryFilter>::New();
+        this->mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+        this->clipped_away_mapper = vtkSmartPointer<vtkDataSetMapper>::New();
+        this->cut_away_geometry = vtkSmartPointer<vtkGeometryFilter>::New();
     }
 
     this->geometry->SetInputConnection(0, alg_output);
@@ -44,7 +44,7 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
     this->mapper->SetScalarModeToUsePointFieldData();
     this->mapper->InterpolateScalarsBeforeMappingOn();
 
-    this->actor = vtkActor::New();
+    this->actor = vtkSmartPointer<vtkActor>::New();
     this->actor->SetMapper(this->mapper);
     this->actor->VisibilityOff();
 
@@ -53,16 +53,11 @@ MeshObject::MeshObject(vtkAlgorithmOutput * alg_output) :
     this->bounding_box.GetCenter(center);
     this->center_of_bounds = vtkVector3d(center[0], center[1], center[2]);
 
-    this->cutter = vtkPlaneCutter::New();
+    this->cutter = vtkSmartPointer<vtkPlaneCutter>::New();
     this->cutter->SetInputData(this->data_object);
 }
 
-MeshObject::~MeshObject()
-{
-    this->geometry->Delete();
-    this->mapper->Delete();
-    this->actor->Delete();
-}
+MeshObject::~MeshObject() {}
 
 bool
 MeshObject::visible()

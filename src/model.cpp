@@ -24,15 +24,15 @@
 
 class LoadThread : public QThread {
 public:
-    explicit LoadThread(Reader * reader);
+    explicit LoadThread(std::shared_ptr<Reader> reader);
 
 protected:
     void run() override;
 
-    Reader * reader;
+    std::shared_ptr<Reader> reader;
 };
 
-LoadThread::LoadThread(Reader * reader) : QThread(), reader(reader) {}
+LoadThread::LoadThread(std::shared_ptr<Reader> reader) : QThread(), reader(reader) {}
 
 void
 LoadThread::run()
@@ -62,19 +62,19 @@ Model::~Model()
     delete this->file_watcher;
 }
 
-const std::map<int, BlockObject *> &
+const std::map<int, std::shared_ptr<BlockObject>> &
 Model::getBlocks() const
 {
     return this->blocks;
 }
 
-const std::map<int, SideSetObject *> &
+const std::map<int, std::shared_ptr<SideSetObject>> &
 Model::getSideSets() const
 {
     return this->side_sets;
 }
 
-const std::map<int, NodeSetObject *> &
+const std::map<int, std::shared_ptr<NodeSetObject>> &
 Model::getNodeSets() const
 {
     return this->node_sets;
@@ -91,23 +91,11 @@ Model::clear()
 {
     this->bbox.Reset();
 
-    for (auto & it : this->blocks)
-        delete it.second;
     this->blocks.clear();
-
-    for (auto & it : this->side_sets)
-        delete it.second;
     this->side_sets.clear();
-
-    for (auto & it : this->node_sets)
-        delete it.second;
     this->node_sets.clear();
 
-    for (auto & eb : this->extract_blocks)
-        eb->Delete();
     this->extract_blocks.clear();
-    for (auto & ec : this->extract_mat_blocks)
-        ec->Delete();
     this->extract_mat_blocks.clear();
 
     this->file_name = QString();
@@ -144,27 +132,27 @@ Model::addBlocks()
     auto * camera = this->view->getActiveCamera();
 
     for (auto & binfo : this->reader->getBlocks()) {
-        BlockObject * block = nullptr;
+        std::shared_ptr<BlockObject> block;
         if (binfo.multiblock_index != -1) {
-            vtkExtractBlock * eb = vtkExtractBlock::New();
+            auto eb = vtkSmartPointer<vtkExtractBlock>::New();
             eb->SetInputConnection(this->reader->getVtkOutputPort());
             eb->AddIndex(binfo.multiblock_index);
             eb->Update();
             this->extract_blocks.push_back(eb);
 
-            block = new BlockObject(eb->GetOutputPort(), camera);
+            block = std::make_shared<BlockObject>(eb->GetOutputPort(), camera);
         }
         else if (binfo.material_index != -1) {
-            auto eb = vtkExtractMaterialBlock::New();
+            auto eb = vtkSmartPointer<vtkExtractMaterialBlock>::New();
             eb->SetInputConnection(this->reader->getVtkOutputPort());
             eb->SetBlockId(binfo.material_index);
             eb->Update();
             this->extract_mat_blocks.push_back(eb);
 
-            block = new BlockObject(eb->GetOutputPort(), camera);
+            block = std::make_shared<BlockObject>(eb->GetOutputPort(), camera);
         }
         else {
-            block = new BlockObject(this->reader->getVtkOutputPort(), camera);
+            block = std::make_shared<BlockObject>(this->reader->getVtkOutputPort(), camera);
         }
         this->blocks[binfo.number] = block;
         this->view->addBlock(block);
@@ -176,13 +164,13 @@ void
 Model::addSideSets()
 {
     for (auto & finfo : this->reader->getSideSets()) {
-        auto * eb = vtkExtractBlock::New();
+        auto eb = vtkSmartPointer<vtkExtractBlock>::New();
         eb->SetInputConnection(this->reader->getVtkOutputPort());
         eb->AddIndex(finfo.multiblock_index);
         eb->Update();
         this->extract_blocks.push_back(eb);
 
-        auto sideset = new SideSetObject(eb->GetOutputPort());
+        auto sideset = std::make_shared<SideSetObject>(eb->GetOutputPort());
         this->side_sets[finfo.number] = sideset;
         this->view->addSideSet(sideset);
         emit sideSetAdded(finfo.number, QString::fromStdString(finfo.name));
@@ -193,20 +181,20 @@ void
 Model::addNodeSets()
 {
     for (auto & ninfo : reader->getNodeSets()) {
-        auto * eb = vtkExtractBlock::New();
+        auto eb = vtkSmartPointer<vtkExtractBlock>::New();
         eb->SetInputConnection(this->reader->getVtkOutputPort());
         eb->AddIndex(ninfo.multiblock_index);
         eb->Update();
         this->extract_blocks.push_back(eb);
 
-        auto * nodeset = new NodeSetObject(eb->GetOutputPort());
+        auto nodeset = std::make_shared<NodeSetObject>(eb->GetOutputPort());
         this->node_sets[ninfo.number] = nodeset;
         this->view->addNodeSet(nodeset);
         emit nodeSetAdded(ninfo.number, QString::fromStdString(ninfo.name));
     }
 }
 
-BlockObject *
+std::shared_ptr<BlockObject>
 Model::getBlock(int block_id)
 {
     const auto & it = this->blocks.find(block_id);
@@ -216,7 +204,7 @@ Model::getBlock(int block_id)
         return nullptr;
 }
 
-SideSetObject *
+std::shared_ptr<SideSetObject>
 Model::getSideSet(int sideset_id)
 {
     const auto & it = this->side_sets.find(sideset_id);
@@ -226,7 +214,7 @@ Model::getSideSet(int sideset_id)
         return nullptr;
 }
 
-NodeSetObject *
+std::shared_ptr<NodeSetObject>
 Model::getNodeSet(int nodeset_id)
 {
     const auto & it = this->node_sets.find(nodeset_id);
@@ -241,10 +229,9 @@ Model::blockActorToId(vtkActor * actor)
 {
     // TODO: when we start to have 1000s of actors, this should be done via a
     // map from 'actor' to 'block_id'
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->blocks) {
         if (block->getActor() == actor)
-            return it.first;
+            return id;
     }
     return -1;
 }
@@ -255,8 +242,8 @@ Model::loadFile(const QString & file_name)
     this->reader = createReader(file_name);
     if (this->reader) {
         this->file_name = file_name;
-        this->load_thread = new LoadThread(this->reader);
-        connect(this->load_thread, &LoadThread::finished, this, &Model::onLoadFinished);
+        this->load_thread = std::make_shared<LoadThread>(this->reader);
+        connect(this->load_thread.get(), &LoadThread::finished, this, &Model::onLoadFinished);
         this->load_thread->start(QThread::IdlePriority);
     }
 }
@@ -278,7 +265,6 @@ Model::onLoadFinished()
         this->info_view->update();
     }
     emit loadFinished();
-    delete this->load_thread;
     this->load_thread = nullptr;
 }
 
@@ -344,19 +330,19 @@ Model::onFileChanged(const QString & path)
     emit fileChanged(path);
 }
 
-Reader *
+std::shared_ptr<Reader>
 Model::createReader(const QString & file_name)
 {
     if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
-        return new ExodusIIReader(file_name.toStdString());
+        return std::make_shared<ExodusIIReader>(file_name.toStdString());
     else if (file_name.endsWith(".vtk") || file_name.endsWith(".vtu"))
-        return new VTKReader(file_name.toStdString());
+        return std::make_shared<VTKReader>(file_name.toStdString());
     else if (file_name.endsWith(".obj"))
-        return new OBJReader(file_name.toStdString());
+        return std::make_shared<OBJReader>(file_name.toStdString());
     else if (file_name.endsWith(".stl"))
-        return new STLReader(file_name.toStdString());
+        return std::make_shared<STLReader>(file_name.toStdString());
     else if (file_name.endsWith(".msh"))
-        return new MSHReader(file_name.toStdString());
+        return std::make_shared<MSHReader>(file_name.toStdString());
     else
         return nullptr;
 }

@@ -31,7 +31,7 @@ vtkMshReader::vtkMshReader()
 {
     this->Dimension = -1;
     this->FileName = nullptr;
-    this->SIL = vtkMutableDirectedGraph::New();
+    this->SIL = vtkSmartPointer<vtkMutableDirectedGraph>::New();
     this->SILUpdateStamp = -1;
     this->Msh = nullptr;
     this->SetNumberOfInputPorts(0);
@@ -41,7 +41,6 @@ vtkMshReader::vtkMshReader()
 
 vtkMshReader::~vtkMshReader()
 {
-    this->SIL->Delete();
     delete this->Msh;
 }
 
@@ -105,6 +104,12 @@ vtkMshReader::GetTotalNumberOfElements()
     return this->TotalNumOfElems;
 }
 
+vtkMutableDirectedGraph *
+vtkMshReader::GetSIL()
+{
+    return this->SIL.Get();
+}
+
 void
 vtkMshReader::BuildSIL()
 {
@@ -118,10 +123,9 @@ vtkMshReader::BuildSIL()
     crossEdge->InsertNextValue(0);
 
     // CrossEdge is an edge linking hierarchies.
-    vtkUnsignedCharArray * crossEdgesArray = vtkUnsignedCharArray::New();
+    auto crossEdgesArray = vtkSmartPointer<vtkUnsignedCharArray>::New();
     crossEdgesArray->SetName("CrossEdges");
     this->SIL->GetEdgeData()->AddArray(crossEdgesArray);
-    crossEdgesArray->Delete();
 
     std::deque<std::string> names;
     int cc;
@@ -148,11 +152,10 @@ vtkMshReader::BuildSIL()
     }
 
     // This array is used to assign names to nodes.
-    vtkStringArray * namesArray = vtkStringArray::New();
+    auto namesArray = vtkSmartPointer<vtkStringArray>::New();
     namesArray->SetName("Names");
     namesArray->SetNumberOfTuples(this->SIL->GetNumberOfVertices());
     this->SIL->GetVertexData()->AddArray(namesArray);
-    namesArray->Delete();
 
     std::deque<std::string>::iterator iter;
     for (cc = 0, iter = names.begin(); iter != names.end(); ++iter, ++cc) {
@@ -275,7 +278,7 @@ vtkMshReader::RequestData(vtkInformation * vtkNotUsed(request),
             ObjectType objType = objTypes[i];
             int dim = dims[i];
 
-            auto mbds = vtkMultiBlockDataSet::New();
+            auto mbds = vtkSmartPointer<vtkMultiBlockDataSet>::New();
             mbds->SetNumberOfBlocks(physBlocksByDim[dim].size());
             output->SetBlock(i, mbds);
             output->GetMetaData(i)->Set(vtkCompositeDataSet::NAME(), conn_types_names[i]);
@@ -363,7 +366,7 @@ vtkMshReader::ReadPhysicalEntities()
 void
 vtkMshReader::BuildCoordinates()
 {
-    this->AllPoints = vtkPoints::New();
+    this->AllPoints = vtkSmartPointer<vtkPoints>::New();
     for (const auto & nd : this->Msh->get_nodes()) {
         if (!nd.tags.empty()) {
             for (std::size_t j = 0; j < nd.tags.size(); j++) {
@@ -394,7 +397,7 @@ vtkMshReader::GetEntitiesByDim(int dim)
 vtkPoints *
 vtkMshReader::BuildLocalPoints(const std::map<long, vtkIdType> & nodeMap)
 {
-    auto pts = vtkPoints::New();
+    auto pts = vtkSmartPointer<vtkPoints>::New();
     pts->SetNumberOfPoints(nodeMap.size());
     for (auto & [gid, lid] : nodeMap) {
         auto coord = this->AllPoints->GetPoint(gid);
@@ -458,7 +461,7 @@ vtkUnstructuredGrid *
 vtkMshReader::CreateUnstructuredGrid(
     const std::vector<const gmshparsercpp::MshFile::ElementBlock *> & blocks)
 {
-    vtkUnstructuredGrid * ug = vtkUnstructuredGrid::New();
+    auto ug = vtkSmartPointer<vtkUnstructuredGrid>::New();
 
     vtkIdType numCells = 0;
     for (auto & blk : blocks)

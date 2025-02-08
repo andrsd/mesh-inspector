@@ -37,7 +37,7 @@ public:
     void saveSettings(QSettings * settings);
     void onClicked(const QPoint & pt);
     void onMouseMove(const QPoint & pt);
-    const BlockObject * getSelectedBlock() const;
+    const std::shared_ptr<BlockObject> getSelectedBlock() const;
 
 public slots:
     void onDeselect();
@@ -67,10 +67,10 @@ protected:
     QActionGroup * mode_select_action_group;
 
     EModeSelect select_mode;
-    Selection * selection;
-    BlockObject * selected_block;
-    Selection * highlight;
-    BlockObject * highlighted_block;
+    std::shared_ptr<Selection> selection;
+    std::shared_ptr<BlockObject> selected_block;
+    std::shared_ptr<Selection> highlight;
+    std::shared_ptr<BlockObject> highlighted_block;
 
 public:
     static QColor SELECTION_CLR;

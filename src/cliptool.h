@@ -6,6 +6,7 @@
 #include "clipwidget.h"
 #include <QObject>
 #include <QVector3D>
+#include "vtkSmartPointer.h"
 
 class MainWindow;
 class Model;
@@ -40,7 +41,7 @@ protected:
     MainWindow * main_window;
     Model *& model;
     ClipWidget * widget;
-    vtkPlane * clip_plane;
+    vtkSmartPointer<vtkPlane> clip_plane;
     QVector3D normal;
     float normal_ori;
 };

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "QVTKOpenGLNativeWidget.h"
+#include "vtkSmartPointer.h"
 
 class MainWindow;
 class Model;
@@ -12,7 +13,6 @@ class QPushButton;
 class QAction;
 class QActionGroup;
 class vtkOrientationMarkerWidget;
-class vtkRenderWindowInteractor;
 class BlockObject;
 class SideSetObject;
 class NodeSetObject;
@@ -42,12 +42,14 @@ public:
     void clear();
     void setupOrientationMarker();
     vtkCamera * getActiveCamera();
-    void addBlock(BlockObject * block);
-    void addSideSet(SideSetObject * sideset);
-    void addNodeSet(NodeSetObject * nodeset);
+    void addBlock(std::shared_ptr<BlockObject> block);
+    void addSideSet(std::shared_ptr<SideSetObject> sideset);
+    void addNodeSet(std::shared_ptr<NodeSetObject> nodeset);
     void setInteractorStyle(int dim);
     void resetCamera();
-    void setBlockProperties(BlockObject * block, bool selected = false, bool highlighted = false);
+    void setBlockProperties(std::shared_ptr<BlockObject> block,
+                            bool selected = false,
+                            bool highlighted = false);
     void setBlockVisibility(int block_id, bool visible);
     void setBlockOpacity(int block_id, double opacity);
     void setBlockColor(int block_id, QColor color);
@@ -72,11 +74,11 @@ public slots:
 
 protected:
     void setupViewModeWidget();
-    void setSelectedBlockProperties(BlockObject * block, bool highlighted = false);
-    void setDeselectedBlockProperties(BlockObject * block, bool highlighted = false);
-    void setHighlightedBlockProperties(BlockObject * block, bool highlighted);
-    void setSideSetProperties(SideSetObject * sideset);
-    void setNodeSetProperties(NodeSetObject * nodeset);
+    void setSelectedBlockProperties(std::shared_ptr<BlockObject> block, bool highlighted = false);
+    void setDeselectedBlockProperties(std::shared_ptr<BlockObject> block, bool highlighted = false);
+    void setHighlightedBlockProperties(std::shared_ptr<BlockObject> block, bool highlighted);
+    void setSideSetProperties(std::shared_ptr<SideSetObject> sideset);
+    void setNodeSetProperties(std::shared_ptr<NodeSetObject> nodeset);
     void setupCubeAxesActor();
     void setCubeAxesColors(ColorProfile * profile);
 
@@ -92,13 +94,12 @@ protected:
     QActionGroup * visual_repr;
     QAction * perspective_action;
     QAction * ori_marker_action;
-    vtkOrientationMarkerWidget * ori_marker;
-    vtkGenericOpenGLRenderWindow * render_window;
-    vtkRenderer * renderer;
-    vtkRenderWindowInteractor * interactor;
+    vtkSmartPointer<vtkOrientationMarkerWidget> ori_marker;
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> render_window;
+    vtkSmartPointer<vtkRenderer> renderer;
     OInteractorStyle2D * interactor_style_2d;
     OInteractorStyle3D * interactor_style_3d;
-    vtkCubeAxesActor * cube_axes_actor;
+    vtkSmartPointer<vtkCubeAxesActor> cube_axes_actor;
 
 public:
     static QColor SIDESET_CLR;

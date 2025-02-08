@@ -13,7 +13,7 @@ ClipTool::ClipTool(MainWindow * main_wnd) :
     main_window(main_wnd),
     model(main_wnd->getModel()),
     widget(nullptr),
-    clip_plane(vtkPlane::New()),
+    clip_plane(vtkSmartPointer<vtkPlane>::New()),
     normal(0, 0, 1),
     normal_ori(1.)
 {
@@ -22,7 +22,6 @@ ClipTool::ClipTool(MainWindow * main_wnd) :
 ClipTool::~ClipTool()
 {
     delete this->widget;
-    this->clip_plane->Delete();
 }
 
 void
@@ -98,8 +97,7 @@ ClipTool::onClip()
 void
 ClipTool::onClose()
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         block->setClip(false);
     }
 }
@@ -107,8 +105,7 @@ ClipTool::onClose()
 void
 ClipTool::clipBlocks()
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         block->setClip(true);
         block->setClipPlane(this->clip_plane);
     }
@@ -144,8 +141,7 @@ ClipTool::onPlaneMoved()
 void
 ClipTool::updateModelBlocks()
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         block->setClipPlane(this->clip_plane);
         block->modified();
         block->update();

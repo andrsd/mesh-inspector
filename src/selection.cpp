@@ -15,18 +15,18 @@
 
 Selection::Selection(vtkAlgorithmOutput * input_data) :
     geometry(nullptr),
-    extract_selection(vtkExtractSelection::New()),
-    selected(vtkUnstructuredGrid::New()),
-    mapper(vtkDataSetMapper::New()),
-    actor(vtkActor::New()),
-    selection(vtkSelection::New())
+    extract_selection(vtkSmartPointer<vtkExtractSelection>::New()),
+    selected(vtkSmartPointer<vtkUnstructuredGrid>::New()),
+    mapper(vtkSmartPointer<vtkDataSetMapper>::New()),
+    actor(vtkSmartPointer<vtkActor>::New()),
+    selection(vtkSmartPointer<vtkSelection>::New())
 {
     auto * algoritm = input_data->GetProducer();
     auto * data_object = algoritm->GetOutputDataObject(0);
     if (dynamic_cast<vtkMultiBlockDataSet *>(data_object))
-        this->geometry = vtkCompositeDataGeometryFilter::New();
+        this->geometry = vtkSmartPointer<vtkCompositeDataGeometryFilter>::New();
     else
-        this->geometry = vtkGeometryFilter::New();
+        this->geometry = vtkSmartPointer<vtkGeometryFilter>::New();
     this->geometry->SetInputConnection(0, input_data);
     this->geometry->Update();
     this->extract_selection->SetInputData(0, this->geometry->GetOutput());
@@ -36,15 +36,7 @@ Selection::Selection(vtkAlgorithmOutput * input_data) :
     this->actor->SetMapper(this->mapper);
 }
 
-Selection::~Selection()
-{
-    this->geometry->Delete();
-    this->extract_selection->Delete();
-    this->selected->Delete();
-    this->mapper->Delete();
-    this->actor->Delete();
-    freeSelection();
-}
+Selection::~Selection() {}
 
 vtkActor *
 Selection::getActor() const
@@ -68,11 +60,11 @@ Selection::clear()
 void
 Selection::selectPoint(const vtkIdType & point_id)
 {
-    auto * ids = vtkIdTypeArray::New();
+    auto ids = vtkSmartPointer<vtkIdTypeArray>::New();
     ids->SetNumberOfComponents(1);
     ids->InsertNextValue(point_id);
 
-    auto * selection_node = vtkSelectionNode::New();
+    auto selection_node = vtkSmartPointer<vtkSelectionNode>::New();
     selection_node->SetFieldType(vtkSelectionNode::POINT);
     selection_node->SetContentType(vtkSelectionNode::INDICES);
     selection_node->SetSelectionList(ids);
@@ -83,11 +75,11 @@ Selection::selectPoint(const vtkIdType & point_id)
 void
 Selection::selectCell(const vtkIdType & cell_id)
 {
-    auto * ids = vtkIdTypeArray::New();
+    auto ids = vtkSmartPointer<vtkIdTypeArray>::New();
     ids->SetNumberOfComponents(1);
     ids->InsertNextValue(cell_id);
 
-    auto * selection_node = vtkSelectionNode::New();
+    auto selection_node = vtkSmartPointer<vtkSelectionNode>::New();
     selection_node->SetFieldType(vtkSelectionNode::CELL);
     selection_node->SetContentType(vtkSelectionNode::INDICES);
     selection_node->SetSelectionList(ids);
@@ -98,27 +90,14 @@ Selection::selectCell(const vtkIdType & cell_id)
 void
 Selection::setSelection(vtkSelectionNode * selection_node)
 {
-    freeSelection();
-    this->selection = vtkSelection::New();
+    this->selection = vtkSmartPointer<vtkSelection>::New();
     this->selection->AddNode(selection_node);
 
     this->extract_selection->SetInputData(1, this->selection);
     this->extract_selection->Update();
 
-    this->selected->Delete();
-    this->selected = vtkUnstructuredGrid::New();
+    this->selected = vtkSmartPointer<vtkUnstructuredGrid>::New();
     this->selected->ShallowCopy(this->extract_selection->GetOutput());
 
     this->mapper->SetInputData(this->selected);
-}
-
-void
-Selection::freeSelection()
-{
-    for (unsigned int i = 0; i < this->selection->GetNumberOfNodes(); i++) {
-        auto * node = this->selection->GetNode(i);
-        node->GetSelectionList()->Delete();
-        node->Delete();
-    }
-    this->selection->Delete();
 }

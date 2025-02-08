@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QObject>
+#include "vtkSmartPointer.h"
 
 class MainWindow;
 class Model;
@@ -36,14 +37,14 @@ protected:
     void setupLookupTable();
     void setupColorBar();
     void getCellQualityRange(double range[]);
-    void setBlockMeshQualityProperties(BlockObject * block, double range[]);
+    void setBlockMeshQualityProperties(std::shared_ptr<BlockObject> block, double range[]);
 
     MainWindow * main_window;
     Model *& model;
     View *& view;
     MeshQualityWidget * mesh_quality;
-    vtkLookupTable * lut;
-    vtkScalarBarActor * color_bar;
+    vtkSmartPointer<vtkLookupTable> lut;
+    vtkSmartPointer<vtkScalarBarActor> color_bar;
 
 public:
     static const char * MESH_QUALITY_FIELD_NAME;

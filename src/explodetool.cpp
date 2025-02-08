@@ -54,7 +54,7 @@ ExplodeTool::onValueChanged(double value)
 {
     double dist = value / this->explode->range();
     for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+        auto block = it.second;
         auto blk_cob = block->getCenterOfBounds();
         vtkVector3d dir;
         vtkMath::Subtract(blk_cob, this->model->getCenterOfBounds(), dir);

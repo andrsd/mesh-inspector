@@ -4,6 +4,7 @@
 #pragma once
 
 #include "reader.h"
+#include "vtkSmartPointer.h"
 #include <map>
 
 class vtkOBJReader;
@@ -26,6 +27,6 @@ public:
 protected:
     void readBlockInfo();
 
-    vtkOBJReader * reader;
+    vtkSmartPointer<vtkOBJReader> reader;
     std::map<int, BlockInformation> block_info;
 };

@@ -47,7 +47,7 @@ public:
     View *& getView();
     InfoView *& getInfoView();
     Model *& getModel();
-    const BlockObject * getSelectedBlock();
+    const std::shared_ptr<BlockObject> getSelectedBlock();
 
     template <typename T>
     inline qreal

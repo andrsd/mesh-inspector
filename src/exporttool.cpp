@@ -61,13 +61,13 @@ ExportTool::onExportAsPng()
     auto fname = getFileName("Export to PNG", "PNG files (*.png)", "png");
     if (!fname.isNull()) {
         auto view = this->main_window->getView();
-        auto * windowToImageFilter = vtkWindowToImageFilter::New();
+        auto windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
         windowToImageFilter->SetInput(view->getRenderWindow());
         windowToImageFilter->SetInputBufferTypeToRGBA();
         windowToImageFilter->ReadFrontBufferOff();
         windowToImageFilter->Update();
 
-        auto * writer = vtkPNGWriter::New();
+        auto writer = vtkSmartPointer<vtkPNGWriter>::New();
         writer->SetFileName(fname.toStdString().c_str());
         writer->SetInputConnection(windowToImageFilter->GetOutputPort());
         writer->Write();
@@ -86,12 +86,12 @@ ExportTool::onExportAsJpg()
     auto fname = getFileName("Export to JPG", "JPG files (*.jpg)", "jpg");
     if (!fname.isNull()) {
         auto view = this->main_window->getView();
-        auto * windowToImageFilter = vtkWindowToImageFilter::New();
+        auto windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
         windowToImageFilter->SetInput(view->getRenderWindow());
         windowToImageFilter->ReadFrontBufferOff();
         windowToImageFilter->Update();
 
-        auto * writer = vtkJPEGWriter::New();
+        auto writer = vtkSmartPointer<vtkJPEGWriter>::New();
         writer->SetFileName(fname.toStdString().c_str());
         writer->SetInputConnection(windowToImageFilter->GetOutputPort());
         writer->Write();
@@ -115,7 +115,7 @@ ExportTool::onExportAsPdf()
         auto file_prefix = QFileInfo(path, base_name).absoluteFilePath();
 
         auto view = this->main_window->getView();
-        auto * writer = vtkGL2PSExporter::New();
+        auto writer = vtkSmartPointer<vtkGL2PSExporter>::New();
         writer->SetFileFormatToPDF();
         writer->DrawBackgroundOff();
         writer->SetSortToBSP();

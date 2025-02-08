@@ -52,12 +52,7 @@ BlockObject::BlockObject(vtkAlgorithmOutput * alg_output, vtkCamera * camera) :
     this->setUpSilhouette(camera);
 }
 
-BlockObject::~BlockObject()
-{
-    this->silhouette->Delete();
-    this->silhouette_mapper->Delete();
-    this->silhouette_actor->Delete();
-}
+BlockObject::~BlockObject() {}
 
 void
 BlockObject::setUpCellQuality(vtkUnstructuredGrid * unstr_grid)
@@ -65,7 +60,7 @@ BlockObject::setUpCellQuality(vtkUnstructuredGrid * unstr_grid)
     this->grid = unstr_grid;
     auto n_cells = unstr_grid->GetNumberOfCells();
 
-    auto cell_quality = vtkDoubleArray::New();
+    auto cell_quality = vtkSmartPointer<vtkDoubleArray>::New();
     cell_quality->SetNumberOfTuples(n_cells);
     for (vtkIdType i = 0; i < n_cells; i++)
         cell_quality->SetValue(i, (double) i);
@@ -120,14 +115,14 @@ BlockObject::getUnstructuredGrid() const
 void
 BlockObject::setUpSilhouette(vtkCamera * camera)
 {
-    this->silhouette = vtkPolyDataSilhouette::New();
+    this->silhouette = vtkSmartPointer<vtkPolyDataSilhouette>::New();
     this->silhouette->SetInputData(this->mapper->GetInput());
     this->silhouette->SetCamera(camera);
 
-    this->silhouette_mapper = vtkPolyDataMapper::New();
+    this->silhouette_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     this->silhouette_mapper->SetInputConnection(this->silhouette->GetOutputPort());
 
-    this->silhouette_actor = vtkActor::New();
+    this->silhouette_actor = vtkSmartPointer<vtkActor>::New();
     this->silhouette_actor->SetMapper(this->silhouette_mapper);
     this->silhouette_actor->VisibilityOff();
 

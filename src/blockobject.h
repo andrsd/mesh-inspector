@@ -38,9 +38,9 @@ protected:
     void setUpSilhouette(vtkCamera * camera);
 
     vtkUnstructuredGrid * grid;
-    vtkPolyDataSilhouette * silhouette;
-    vtkPolyDataMapper * silhouette_mapper;
-    vtkActor * silhouette_actor;
+    vtkSmartPointer<vtkPolyDataSilhouette> silhouette;
+    vtkSmartPointer<vtkPolyDataMapper> silhouette_mapper;
+    vtkSmartPointer<vtkActor> silhouette_actor;
     QColor color;
     double opacity;
 };
