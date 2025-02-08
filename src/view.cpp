@@ -47,8 +47,8 @@ View::View(MainWindow * main_wnd) :
     perspective_action(nullptr),
     ori_marker_action(nullptr),
     ori_marker(nullptr),
-    render_window(vtkGenericOpenGLRenderWindow::New()),
-    renderer(vtkRenderer::New()),
+    render_window(vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New()),
+    renderer(vtkSmartPointer<vtkRenderer>::New()),
     interactor(nullptr),
     interactor_style_2d(new OInteractorStyle2D(this->main_window)),
     interactor_style_3d(new OInteractorStyle3D(this->main_window)),
@@ -62,8 +62,6 @@ View::~View()
 {
     delete this->view_menu;
     delete this->view_mode;
-    this->render_window->Delete();
-    this->renderer->Delete();
 }
 
 vtkCamera *
@@ -485,7 +483,7 @@ View::setupOrientationMarker()
 {
     std::array<QColor, 3> clr({ QColor(188, 39, 26), QColor(65, 147, 41), QColor(0, 0, 200) });
 
-    vtkAxesActor * axes = vtkAxesActor::New();
+    auto axes = vtkSmartPointer<vtkAxesActor>::New();
     axes->SetNormalizedTipLength(0, 0, 0);
 
     std::array<vtkProperty *, 3> shaft_property({ axes->GetXAxisShaftProperty(),
@@ -508,7 +506,7 @@ View::setupOrientationMarker()
         text_prop->ShadowOff();
     }
 
-    this->ori_marker = vtkOrientationMarkerWidget::New();
+    this->ori_marker = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
     this->ori_marker->SetDefaultRenderer(this->renderer);
     this->ori_marker->SetOrientationMarker(axes);
     this->ori_marker->SetViewport(0.8, 0, 1.0, 0.2);
@@ -628,7 +626,7 @@ View::activateRenderMode()
 void
 View::setupCubeAxesActor()
 {
-    this->cube_axes_actor = vtkCubeAxesActor::New();
+    this->cube_axes_actor = vtkSmartPointer<vtkCubeAxesActor>::New();
     this->cube_axes_actor->VisibilityOff();
     this->cube_axes_actor->SetCamera(getActiveCamera());
     this->cube_axes_actor->SetGridLineLocation(vtkCubeAxesActor::VTK_GRID_LINES_ALL);

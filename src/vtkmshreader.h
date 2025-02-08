@@ -31,11 +31,7 @@ public:
     virtual vtkIdType GetTotalNumberOfFaces();
     virtual vtkIdType GetTotalNumberOfElements();
 
-    vtkMutableDirectedGraph *
-    GetSIL()
-    {
-        return this->SIL;
-    }
+    vtkMutableDirectedGraph * GetSIL();
 
     enum ObjectType { ELEM_BLOCK = 0, SIDE_SET = 1 };
 
@@ -67,7 +63,7 @@ protected:
 
     char * FileName;
     vtkTimeStamp FileNameMTime;
-    vtkMutableDirectedGraph * SIL;
+    vtkSmartPointer<vtkMutableDirectedGraph> SIL;
     int SILUpdateStamp;
     gmshparsercpp::MshFile * Msh;
     /// Spatial dimension

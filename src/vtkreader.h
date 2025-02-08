@@ -4,6 +4,7 @@
 #pragma once
 
 #include "reader.h"
+#include "vtkSmartPointer.h"
 #include <map>
 
 class vtkUnstructuredGridReader;
@@ -27,7 +28,7 @@ public:
 protected:
     void readBlockInfo();
 
-    vtkUnstructuredGridReader * reader;
-    vtkXMLUnstructuredGridReader * xml_reader;
+    vtkSmartPointer<vtkUnstructuredGridReader> reader;
+    vtkSmartPointer<vtkXMLUnstructuredGridReader> xml_reader;
     std::map<int, BlockInformation> block_info;
 };

@@ -103,11 +103,7 @@ Model::clear()
         delete it.second;
     this->node_sets.clear();
 
-    for (auto & eb : this->extract_blocks)
-        eb->Delete();
     this->extract_blocks.clear();
-    for (auto & ec : this->extract_mat_blocks)
-        ec->Delete();
     this->extract_mat_blocks.clear();
 
     this->file_name = QString();
@@ -146,7 +142,7 @@ Model::addBlocks()
     for (auto & binfo : this->reader->getBlocks()) {
         BlockObject * block = nullptr;
         if (binfo.multiblock_index != -1) {
-            vtkExtractBlock * eb = vtkExtractBlock::New();
+            auto eb = vtkSmartPointer<vtkExtractBlock>::New();
             eb->SetInputConnection(this->reader->getVtkOutputPort());
             eb->AddIndex(binfo.multiblock_index);
             eb->Update();
@@ -155,7 +151,7 @@ Model::addBlocks()
             block = new BlockObject(eb->GetOutputPort(), camera);
         }
         else if (binfo.material_index != -1) {
-            auto eb = vtkExtractMaterialBlock::New();
+            auto eb = vtkSmartPointer<vtkExtractMaterialBlock>::New();
             eb->SetInputConnection(this->reader->getVtkOutputPort());
             eb->SetBlockId(binfo.material_index);
             eb->Update();
@@ -176,7 +172,7 @@ void
 Model::addSideSets()
 {
     for (auto & finfo : this->reader->getSideSets()) {
-        auto * eb = vtkExtractBlock::New();
+        auto eb = vtkSmartPointer<vtkExtractBlock>::New();
         eb->SetInputConnection(this->reader->getVtkOutputPort());
         eb->AddIndex(finfo.multiblock_index);
         eb->Update();
@@ -193,7 +189,7 @@ void
 Model::addNodeSets()
 {
     for (auto & ninfo : reader->getNodeSets()) {
-        auto * eb = vtkExtractBlock::New();
+        auto eb = vtkSmartPointer<vtkExtractBlock>::New();
         eb->SetInputConnection(this->reader->getVtkOutputPort());
         eb->AddIndex(ninfo.multiblock_index);
         eb->Update();

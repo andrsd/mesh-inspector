@@ -5,6 +5,7 @@
 
 #include "vtkVector.h"
 #include "vtkBoundingBox.h"
+#include "vtkSmartPointer.h"
 
 class vtkDataObject;
 class vtkAlgorithmOutput;
@@ -45,17 +46,17 @@ protected:
     vtkVector3d computeCenterOfBounds();
 
     vtkDataObject * data_object;
-    vtkPolyDataAlgorithm * geometry;
-    vtkMapper * mapper;
-    vtkActor * actor;
+    vtkSmartPointer<vtkPolyDataAlgorithm> geometry;
+    vtkSmartPointer<vtkMapper> mapper;
+    vtkSmartPointer<vtkActor> actor;
     vtkBoundingBox bounding_box;
     vtkVector3d center_of_bounds;
 
     bool clipping;
-    vtkPolyDataPlaneClipper * clipper;
-    vtkPlane * clip_plane;
-    vtkMapper * clipped_away_mapper;
-    vtkActor * clipped_actor;
-    vtkPlaneCutter * cutter;
-    vtkPolyDataAlgorithm * cut_away_geometry;
+    vtkSmartPointer<vtkPolyDataPlaneClipper> clipper;
+    vtkSmartPointer<vtkPlane> clip_plane;
+    vtkSmartPointer<vtkMapper> clipped_away_mapper;
+    vtkSmartPointer<vtkActor> clipped_actor;
+    vtkSmartPointer<vtkPlaneCutter> cutter;
+    vtkSmartPointer<vtkPolyDataAlgorithm> cut_away_geometry;
 };

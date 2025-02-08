@@ -6,16 +6,12 @@
 
 STLReader::STLReader(const std::string & file_name) : Reader(file_name), reader(nullptr) {}
 
-STLReader::~STLReader()
-{
-    if (this->reader)
-        this->reader->Delete();
-}
+STLReader::~STLReader() {}
 
 void
 STLReader::load()
 {
-    this->reader = vtkSTLReader::New();
+    this->reader = vtkSmartPointer<vtkSTLReader>::New();
 
     this->reader->SetFileName(this->file_name.c_str());
     this->reader->Update();

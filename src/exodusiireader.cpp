@@ -3,21 +3,16 @@
 
 #include "exodusiireader.h"
 #include "vtkExodusIIReader.h"
+#include "vtkSmartPointer.h"
 
-ExodusIIReader::ExodusIIReader(const std::string & file_name) : Reader(file_name), reader(nullptr)
-{
-}
+ExodusIIReader::ExodusIIReader(const std::string & file_name) : Reader(file_name) {}
 
-ExodusIIReader::~ExodusIIReader()
-{
-    if (this->reader)
-        this->reader->Delete();
-}
+ExodusIIReader::~ExodusIIReader() {}
 
 void
 ExodusIIReader::load()
 {
-    this->reader = vtkExodusIIReader::New();
+    this->reader = vtkSmartPointer<vtkExodusIIReader>::New();
 
     this->reader->SetFileName(this->file_name.c_str());
     this->reader->UpdateInformation();

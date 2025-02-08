@@ -4,6 +4,7 @@
 #pragma once
 
 #include "QVTKOpenGLNativeWidget.h"
+#include "vtkSmartPointer.h"
 
 class MainWindow;
 class Model;
@@ -92,13 +93,13 @@ protected:
     QActionGroup * visual_repr;
     QAction * perspective_action;
     QAction * ori_marker_action;
-    vtkOrientationMarkerWidget * ori_marker;
-    vtkGenericOpenGLRenderWindow * render_window;
-    vtkRenderer * renderer;
+    vtkSmartPointer<vtkOrientationMarkerWidget> ori_marker;
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> render_window;
+    vtkSmartPointer<vtkRenderer> renderer;
     vtkRenderWindowInteractor * interactor;
     OInteractorStyle2D * interactor_style_2d;
     OInteractorStyle3D * interactor_style_3d;
-    vtkCubeAxesActor * cube_axes_actor;
+    vtkSmartPointer<vtkCubeAxesActor> cube_axes_actor;
 
 public:
     static QColor SIDESET_CLR;

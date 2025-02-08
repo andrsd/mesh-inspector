@@ -34,7 +34,6 @@ MeshQualityTool::MeshQualityTool(MainWindow * main_wnd) :
 MeshQualityTool::~MeshQualityTool()
 {
     delete this->mesh_quality;
-    this->lut->Delete();
 }
 
 void
@@ -105,7 +104,7 @@ MeshQualityTool::onMetricChanged(int metric_id)
         auto * block = it.second;
 
         auto grid = block->getUnstructuredGrid();
-        auto cell_quality = vtkCellQuality::New();
+        auto cell_quality = vtkSmartPointer<vtkCellQuality>::New();
         switch (metric_id) {
         default:
         case MESH_METRIC_JACOBIAN:
@@ -128,7 +127,6 @@ MeshQualityTool::onMetricChanged(int metric_id)
         cell_quality->Update();
         auto out = cell_quality->GetOutput();
         grid->GetCellData()->AddArray(out->GetCellData()->GetArray("CellQuality"));
-        cell_quality->Delete();
     }
 
     double range[2];
@@ -358,7 +356,7 @@ MeshQualityTool::setupLookupTable()
                         0.41389999999999999,
                         1. };
 
-    this->lut = vtkLookupTable::New();
+    this->lut = vtkSmartPointer<vtkLookupTable>::New();
     this->lut->SetNumberOfTableValues(43);
     double * clr_ptr = colors;
     for (int i = 0; i < 43; i++, clr_ptr += 4)
@@ -370,7 +368,7 @@ MeshQualityTool::setupLookupTable()
 void
 MeshQualityTool::setupColorBar()
 {
-    this->color_bar = vtkScalarBarActor::New();
+    this->color_bar = vtkSmartPointer<vtkScalarBarActor>::New();
     this->color_bar->VisibilityOff();
     this->color_bar->SetNumberOfLabels(5);
     this->color_bar->SetLookupTable(this->lut);

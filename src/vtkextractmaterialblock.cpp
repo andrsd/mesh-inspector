@@ -49,7 +49,7 @@ vtkExtractMaterialBlock::RequestData(vtkInformation * request,
     // for GlobalIds array so that, if present, it will be copied to the output.
     output_cd->CopyGlobalIdsOn();
 
-    auto new_cell_pts = vtkIdList::New();
+    auto new_cell_pts = vtkSmartPointer<vtkIdList>::New();
     new_cell_pts->Allocate(VTK_CELL_SIZE);
 
     vtkIdType n_pts = input->GetNumberOfPoints();
@@ -59,7 +59,7 @@ vtkExtractMaterialBlock::RequestData(vtkInformation * request,
         point_map[i] = -1;
 
     output->Allocate(n_cells / 4); // allocate storage for geometry/topology
-    auto new_pts = vtkPoints::New();
+    auto new_pts = vtkSmartPointer<vtkPoints>::New();
     new_pts->Allocate(n_pts / 4, n_pts);
     output_cd->CopyAllocate(cd);
 
@@ -91,9 +91,7 @@ vtkExtractMaterialBlock::RequestData(vtkInformation * request,
     }
 
     delete[] point_map;
-    new_cell_pts->Delete();
     output->SetPoints(new_pts);
-    new_pts->Delete();
 
     output->Squeeze();
 

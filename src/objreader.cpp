@@ -9,16 +9,12 @@
 
 OBJReader::OBJReader(const std::string & file_name) : Reader(file_name), reader(nullptr) {}
 
-OBJReader::~OBJReader()
-{
-    if (this->reader)
-        this->reader->Delete();
-}
+OBJReader::~OBJReader() {}
 
 void
 OBJReader::load()
 {
-    this->reader = vtkOBJReader::New();
+    this->reader = vtkSmartPointer<vtkOBJReader>::New();
 
     this->reader->SetFileName(this->file_name.c_str());
     this->reader->Update();

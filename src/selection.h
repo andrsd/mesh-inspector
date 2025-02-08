@@ -4,6 +4,7 @@
 #pragma once
 
 #include "vtkType.h"
+#include "vtkSmartPointer.h"
 
 class vtkActor;
 class vtkDataSetMapper;
@@ -27,12 +28,11 @@ public:
 
 protected:
     void setSelection(vtkSelectionNode * selection_node);
-    void freeSelection();
 
-    vtkPolyDataAlgorithm * geometry;
-    vtkExtractSelection * extract_selection;
-    vtkUnstructuredGrid * selected;
-    vtkDataSetMapper * mapper;
-    vtkActor * actor;
-    vtkSelection * selection;
+    vtkSmartPointer<vtkPolyDataAlgorithm> geometry;
+    vtkSmartPointer<vtkExtractSelection> extract_selection;
+    vtkSmartPointer<vtkUnstructuredGrid> selected;
+    vtkSmartPointer<vtkDataSetMapper> mapper;
+    vtkSmartPointer<vtkActor> actor;
+    vtkSmartPointer<vtkSelection> selection;
 };

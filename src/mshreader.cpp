@@ -6,16 +6,12 @@
 
 MSHReader::MSHReader(const std::string & file_name) : Reader(file_name), reader(nullptr) {}
 
-MSHReader::~MSHReader()
-{
-    if (this->reader)
-        this->reader->Delete();
-}
+MSHReader::~MSHReader() {}
 
 void
 MSHReader::load()
 {
-    this->reader = vtkMshReader::New();
+    this->reader = vtkSmartPointer<vtkMshReader>::New();
 
     this->reader->SetFileName(this->file_name.c_str());
     this->reader->UpdateInformation();

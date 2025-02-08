@@ -24,24 +24,18 @@ VTKReader::VTKReader(const std::string & file_name) :
 {
 }
 
-VTKReader::~VTKReader()
-{
-    if (this->reader)
-        this->reader->Delete();
-    if (this->xml_reader)
-        this->xml_reader->Delete();
-}
+VTKReader::~VTKReader() {}
 
 void
 VTKReader::load()
 {
     if (endsWith(this->file_name, ".vtk")) {
-        this->reader = vtkUnstructuredGridReader::New();
+        this->reader = vtkSmartPointer<vtkUnstructuredGridReader>::New();
         this->reader->SetFileName(this->file_name.c_str());
         this->reader->Update();
     }
     else if (endsWith(this->file_name, ".vtu")) {
-        this->xml_reader = vtkXMLUnstructuredGridReader::New();
+        this->xml_reader = vtkSmartPointer<vtkXMLUnstructuredGridReader>::New();
         this->xml_reader->SetFileName(this->file_name.c_str());
         this->xml_reader->Update();
 
