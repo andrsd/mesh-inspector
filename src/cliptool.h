@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QVector3D>
 #include "vtkSmartPointer.h"
+#include <QPoint>
 
 class MainWindow;
 class Model;
@@ -20,10 +21,10 @@ public:
     ~ClipTool() override;
 
     void setupWidgets();
-    void updateLocation();
     void done();
     void setPlaneNormal(const QVector3D & n);
     void setPlaneOrigin(const QVector3D & pt);
+    void closeEvent(QCloseEvent * event);
 
 public slots:
     void onClip();

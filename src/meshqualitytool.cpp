@@ -18,6 +18,7 @@
 #include "vtkUnstructuredGrid.h"
 #include "vtkMapper.h"
 #include "vtkRenderer.h"
+#include <QSettings>
 
 const char * MeshQualityTool::MESH_QUALITY_FIELD_NAME = "CellQuality";
 
@@ -53,6 +54,11 @@ MeshQualityTool::setupWidgets()
             &MeshQualityTool::onMetricChanged);
     connect(this->mesh_quality, &MeshQualityWidget::closed, this, &MeshQualityTool::onClose);
     this->mesh_quality->setVisible(false);
+
+    auto * settings = this->main_window->getSettings();
+    auto pos = settings->value("mesh_quality/pos", QPoint(-1, -1)).toPoint();
+    if (pos.x() >= 0 && pos.y() >= 0)
+        this->mesh_quality->move(pos);
 }
 
 void
@@ -79,22 +85,12 @@ MeshQualityTool::onMeshQuality()
 {
     this->mesh_quality->adjustSize();
     this->mesh_quality->show();
-    updateLocation();
 
     auto metric_id = this->mesh_quality->getMetricId();
     onMetricChanged(metric_id);
 
     this->main_window->updateMenuBar();
     this->color_bar->VisibilityOn();
-}
-
-void
-MeshQualityTool::updateLocation()
-{
-    auto width = this->main_window->getRenderWindowWidth();
-    int left = (width - this->mesh_quality->width()) / 2;
-    int top = this->main_window->geometry().height() - this->mesh_quality->height() - 10;
-    this->mesh_quality->move(left, top);
 }
 
 void
@@ -427,4 +423,12 @@ MeshQualityTool::setBlockMeshQualityProperties(std::shared_ptr<BlockObject> bloc
     mapper->SetColorModeToMapScalars();
     mapper->SetScalarRange(range);
     mapper->SetLookupTable(this->lut);
+}
+
+void
+MeshQualityTool::closeEvent(QCloseEvent * event)
+{
+    auto pos = this->mesh_quality->pos();
+    auto * settings = this->main_window->getSettings();
+    settings->setValue("mesh_quality/pos", pos);
 }

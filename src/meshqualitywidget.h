@@ -9,7 +9,6 @@ class QGraphicsOpacityEffect;
 class QHBoxLayout;
 class QLabel;
 class QComboBox;
-class ClickableLabel;
 
 enum MeshQualityMetric {
     MESH_METRIC_JACOBIAN = 1,
@@ -33,13 +32,13 @@ signals:
     void metricChanged(int metric_id);
 
 protected slots:
-    void onClose();
     void onMetricChanged(int index);
 
 protected:
-    QGraphicsOpacityEffect * opacity;
+    void closeEvent(QCloseEvent * event) override;
+
+protected:
     QHBoxLayout * layout;
     QLabel * metric_label;
     QComboBox * metric;
-    ClickableLabel * close;
 };

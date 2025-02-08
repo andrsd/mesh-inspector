@@ -4,12 +4,14 @@
 #pragma once
 
 #include <QObject>
+#include <QPoint>
 
 class MainWindow;
 class Model;
 class ExplodeWidget;
 class QAction;
 class QMenu;
+class QCloseEvent;
 
 class ExplodeTool : public QObject {
     Q_OBJECT
@@ -19,11 +21,12 @@ public:
     ~ExplodeTool() override;
 
     void setupWidgets();
-    void updateLocation();
+    void closeEvent(QCloseEvent * event);
 
 public slots:
     void onExplode();
     void onValueChanged(double value);
+    void onClose();
 
 protected:
     MainWindow * main_window;

@@ -533,9 +533,6 @@ MainWindow::resizeEvent(QResizeEvent * event)
 {
     QMainWindow::resizeEvent(event);
     updateViewModeLocation();
-    this->explode_tool->updateLocation();
-    this->clip_tool->updateLocation();
-    this->mesh_quality_tool->updateLocation();
 }
 
 void
@@ -574,6 +571,9 @@ MainWindow::closeEvent(QCloseEvent * event)
     this->settings->setValue("window/geometry", this->saveGeometry());
     this->settings->setValue("recent_files", this->recent_files);
     this->settings->setValue("cwd", QDir::currentPath());
+    this->clip_tool->closeEvent(event);
+    this->mesh_quality_tool->closeEvent(event);
+    this->explode_tool->closeEvent(event);
     QMainWindow::closeEvent(event);
 }
 

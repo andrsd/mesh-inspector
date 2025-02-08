@@ -6,6 +6,7 @@
 #include "mainwindow.h"
 #include "model.h"
 #include <QMenu>
+#include <QSettings>
 #include "vtkMath.h"
 #include "blockobject.h"
 
@@ -29,16 +30,13 @@ ExplodeTool::setupWidgets()
                          &ExplodeWidget::valueChanged,
                          this,
                          &ExplodeTool::onValueChanged);
+    QMainWindow::connect(this->explode, &ExplodeWidget::closed, this, &ExplodeTool::onClose);
     this->explode->setVisible(false);
-}
 
-void
-ExplodeTool::updateLocation()
-{
-    auto width = this->main_window->getRenderWindowWidth();
-    int left = (width - this->explode->width()) / 2;
-    int top = this->main_window->geometry().height() - this->explode->height() - 10;
-    this->explode->move(left, top);
+    auto * settings = this->main_window->getSettings();
+    auto pos = settings->value("explode_tool/pos", QPoint(-1, -1)).toPoint();
+    if (pos.x() >= 0 && pos.y() >= 0)
+        this->explode->move(pos);
 }
 
 void
@@ -46,7 +44,6 @@ ExplodeTool::onExplode()
 {
     this->explode->adjustSize();
     this->explode->show();
-    updateLocation();
 }
 
 void
@@ -62,4 +59,17 @@ ExplodeTool::onValueChanged(double value)
         vtkMath::MultiplyScalar(dir.GetData(), dist);
         block->setPosition(dir[0], dir[1], dir[2]);
     }
+}
+
+void
+ExplodeTool::onClose()
+{
+}
+
+void
+ExplodeTool::closeEvent(QCloseEvent * event)
+{
+    auto pos = this->explode->pos();
+    auto * settings = this->main_window->getSettings();
+    settings->setValue("explode_tool/pos", pos);
 }

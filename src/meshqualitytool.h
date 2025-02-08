@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include "vtkSmartPointer.h"
+#include <QPoint>
 
 class MainWindow;
 class Model;
@@ -14,6 +15,7 @@ class vtkLookupTable;
 class vtkScalarBarActor;
 class ColorProfile;
 class BlockObject;
+class QCloseEvent;
 
 class MeshQualityTool : public QObject {
 public:
@@ -22,10 +24,10 @@ public:
 
     void setupWidgets();
     void setupVtk();
-    void updateLocation();
     bool isVisible() const;
     void done();
     void update();
+    void closeEvent(QCloseEvent * event);
 
 public slots:
     void onMeshQuality();
