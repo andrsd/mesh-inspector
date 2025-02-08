@@ -38,23 +38,10 @@ ExplodeTool::setupWidgets()
 }
 
 void
-ExplodeTool::updateLocation()
-{
-    if (this->pos.x() == -1 && this->pos.y() == -1) {
-        auto width = this->main_window->getRenderWindowWidth();
-        int left = (width - this->explode->width()) / 2;
-        int top = this->main_window->geometry().height() - this->explode->height() - 10;
-        this->pos = QPoint(left, top);
-    }
-    this->explode->move(this->pos);
-}
-
-void
 ExplodeTool::onExplode()
 {
     this->explode->adjustSize();
     this->explode->show();
-    updateLocation();
 }
 
 void

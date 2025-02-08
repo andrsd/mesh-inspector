@@ -20,7 +20,6 @@ public:
     ~ExplodeTool() override;
 
     void setupWidgets();
-    void updateLocation();
 
 public slots:
     void onExplode();

@@ -23,7 +23,6 @@ public:
 
     void setupWidgets();
     void setupVtk();
-    void updateLocation();
     bool isVisible() const;
     void done();
     void update();

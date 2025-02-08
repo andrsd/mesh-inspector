@@ -60,18 +60,6 @@ ClipTool::setupWidgets()
 }
 
 void
-ClipTool::updateLocation()
-{
-    if (this->pos.x() == -1 && this->pos.y() == -1) {
-        auto width = this->main_window->getRenderWindowWidth();
-        int left = (width - this->widget->width()) / 2;
-        int top = this->main_window->geometry().height() - this->widget->height() - 10;
-        this->pos = QPoint(left, top);
-    }
-    this->widget->move(this->pos);
-}
-
-void
 ClipTool::done()
 {
     this->widget->done();
@@ -94,7 +82,6 @@ ClipTool::onClip()
 
     this->widget->adjustSize();
     this->widget->show();
-    updateLocation();
 
     clipBlocks();
 }

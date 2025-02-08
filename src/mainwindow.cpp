@@ -533,9 +533,6 @@ MainWindow::resizeEvent(QResizeEvent * event)
 {
     QMainWindow::resizeEvent(event);
     updateViewModeLocation();
-    this->explode_tool->updateLocation();
-    this->clip_tool->updateLocation();
-    this->mesh_quality_tool->updateLocation();
 }
 
 void

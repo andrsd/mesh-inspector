@@ -82,25 +82,12 @@ MeshQualityTool::onMeshQuality()
 {
     this->mesh_quality->adjustSize();
     this->mesh_quality->show();
-    updateLocation();
 
     auto metric_id = this->mesh_quality->getMetricId();
     onMetricChanged(metric_id);
 
     this->main_window->updateMenuBar();
     this->color_bar->VisibilityOn();
-}
-
-void
-MeshQualityTool::updateLocation()
-{
-    if (this->pos.x() == -1 && this->pos.y() == -1) {
-        auto width = this->main_window->getRenderWindowWidth();
-        int left = (width - this->mesh_quality->width()) / 2;
-        int top = this->main_window->geometry().height() - this->mesh_quality->height() - 10;
-        this->pos = QPoint(left, top);
-    }
-    this->mesh_quality->move(this->pos);
 }
 
 void
