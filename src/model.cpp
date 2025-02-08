@@ -24,15 +24,15 @@
 
 class LoadThread : public QThread {
 public:
-    explicit LoadThread(Reader * reader);
+    explicit LoadThread(std::shared_ptr<Reader> reader);
 
 protected:
     void run() override;
 
-    Reader * reader;
+    std::shared_ptr<Reader> reader;
 };
 
-LoadThread::LoadThread(Reader * reader) : QThread(), reader(reader) {}
+LoadThread::LoadThread(std::shared_ptr<Reader> reader) : QThread(), reader(reader) {}
 
 void
 LoadThread::run()
@@ -242,8 +242,8 @@ Model::loadFile(const QString & file_name)
     this->reader = createReader(file_name);
     if (this->reader) {
         this->file_name = file_name;
-        this->load_thread = new LoadThread(this->reader);
-        connect(this->load_thread, &LoadThread::finished, this, &Model::onLoadFinished);
+        this->load_thread = std::make_shared<LoadThread>(this->reader);
+        connect(this->load_thread.get(), &LoadThread::finished, this, &Model::onLoadFinished);
         this->load_thread->start(QThread::IdlePriority);
     }
 }
@@ -265,7 +265,6 @@ Model::onLoadFinished()
         this->info_view->update();
     }
     emit loadFinished();
-    delete this->load_thread;
     this->load_thread = nullptr;
 }
 
@@ -331,19 +330,19 @@ Model::onFileChanged(const QString & path)
     emit fileChanged(path);
 }
 
-Reader *
+std::shared_ptr<Reader>
 Model::createReader(const QString & file_name)
 {
     if (file_name.endsWith(".e") || file_name.endsWith(".exo"))
-        return new ExodusIIReader(file_name.toStdString());
+        return std::make_shared<ExodusIIReader>(file_name.toStdString());
     else if (file_name.endsWith(".vtk") || file_name.endsWith(".vtu"))
-        return new VTKReader(file_name.toStdString());
+        return std::make_shared<VTKReader>(file_name.toStdString());
     else if (file_name.endsWith(".obj"))
-        return new OBJReader(file_name.toStdString());
+        return std::make_shared<OBJReader>(file_name.toStdString());
     else if (file_name.endsWith(".stl"))
-        return new STLReader(file_name.toStdString());
+        return std::make_shared<STLReader>(file_name.toStdString());
     else if (file_name.endsWith(".msh"))
-        return new MSHReader(file_name.toStdString());
+        return std::make_shared<MSHReader>(file_name.toStdString());
     else
         return nullptr;
 }

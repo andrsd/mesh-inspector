@@ -75,7 +75,7 @@ protected:
     void addSideSets();
     void addNodeSets();
     void computeTotalBoundingBox();
-    Reader * createReader(const QString & file_name);
+    std::shared_ptr<Reader> createReader(const QString & file_name);
 
     MainWindow * main_window;
     View *& view;
@@ -92,8 +92,8 @@ protected:
     /// center of bounding box of the whole mesh
     vtkVector3d center_of_bounds;
 
-    LoadThread * load_thread;
-    Reader * reader;
+    std::shared_ptr<LoadThread> load_thread;
+    std::shared_ptr<Reader> reader;
     QString file_name;
     QFileSystemWatcher * file_watcher;
     bool reset_camera_on_load;
