@@ -154,7 +154,7 @@ MainWindow::getModel()
     return this->model;
 }
 
-const BlockObject *
+const std::shared_ptr<BlockObject>
 MainWindow::getSelectedBlock()
 {
     return this->select_tool->getSelectedBlock();

@@ -97,8 +97,7 @@ ClipTool::onClip()
 void
 ClipTool::onClose()
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         block->setClip(false);
     }
 }
@@ -106,8 +105,7 @@ ClipTool::onClose()
 void
 ClipTool::clipBlocks()
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         block->setClip(true);
         block->setClipPlane(this->clip_plane);
     }
@@ -143,8 +141,7 @@ ClipTool::onPlaneMoved()
 void
 ClipTool::updateModelBlocks()
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         block->setClipPlane(this->clip_plane);
         block->modified();
         block->update();

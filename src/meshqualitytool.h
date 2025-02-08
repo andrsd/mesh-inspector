@@ -37,7 +37,7 @@ protected:
     void setupLookupTable();
     void setupColorBar();
     void getCellQualityRange(double range[]);
-    void setBlockMeshQualityProperties(BlockObject * block, double range[]);
+    void setBlockMeshQualityProperties(std::shared_ptr<BlockObject> block, double range[]);
 
     MainWindow * main_window;
     Model *& model;

@@ -79,7 +79,7 @@ SelectTool::~SelectTool()
     delete this->mode_select_action_group;
 }
 
-const BlockObject *
+const std::shared_ptr<BlockObject>
 SelectTool::getSelectedBlock() const
 {
     return this->selected_block;
@@ -183,7 +183,7 @@ SelectTool::onBlockSelectionChanged(int block_id)
     auto blocks = this->model->getBlocks();
     const auto & it = blocks.find(block_id);
     if (it != blocks.end()) {
-        BlockObject * block = it->second;
+        auto block = it->second;
         auto info = QString("Block: %1\n"
                             "Cells: %2\n"
                             "Points: %3")
@@ -202,7 +202,7 @@ SelectTool::onSideSetSelectionChanged(int sideset_id)
     auto side_sets = this->model->getSideSets();
     const auto & it = side_sets.find(sideset_id);
     if (it != side_sets.end()) {
-        auto * sideset = it->second;
+        auto sideset = it->second;
         auto info = QString("Side set: %1\n"
                             "Cells: %2\n"
                             "Points: %3")
@@ -221,7 +221,7 @@ SelectTool::onNodeSetSelectionChanged(int nodeset_id)
     auto node_sets = this->model->getNodeSets();
     const auto & it = node_sets.find(nodeset_id);
     if (it != node_sets.end()) {
-        auto * nodeset = it->second;
+        auto nodeset = it->second;
         auto info = QString("Node set: %1\n"
                             "Points: %2")
                         .arg(nodeset_id)
@@ -266,7 +266,7 @@ SelectTool::selectBlock(const QPoint & pt)
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
             auto blk_id = this->model->blockActorToId(actor);
-            auto * block = this->model->getBlock(blk_id);
+            auto block = this->model->getBlock(blk_id);
             onBlockSelectionChanged(blk_id);
             this->selected_block = block;
             auto highlighted = this->selected_block == this->highlighted_block;
@@ -367,7 +367,7 @@ SelectTool::highlightBlock(const QPoint & pt)
         auto * actor = dynamic_cast<vtkActor *>(picker->GetViewProp());
         if (actor) {
             auto blk_id = this->model->blockActorToId(actor);
-            auto * block = this->model->getBlock(blk_id);
+            auto block = this->model->getBlock(blk_id);
             if (block) {
                 this->highlighted_block = block;
                 auto selected = this->highlighted_block == this->selected_block;

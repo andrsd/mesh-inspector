@@ -100,9 +100,7 @@ MeshQualityTool::updateLocation()
 void
 MeshQualityTool::onMetricChanged(int metric_id)
 {
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
-
+    for (auto & [id, block] : this->model->getBlocks()) {
         auto grid = block->getUnstructuredGrid();
         auto cell_quality = vtkSmartPointer<vtkCellQuality>::New();
         switch (metric_id) {
@@ -132,8 +130,7 @@ MeshQualityTool::onMetricChanged(int metric_id)
     double range[2];
     getCellQualityRange(range);
 
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         setBlockMeshQualityProperties(block, range);
         block->modified();
         block->update();
@@ -145,8 +142,7 @@ MeshQualityTool::getCellQualityRange(double range[])
 {
     range[0] = std::numeric_limits<double>::max();
     range[1] = -std::numeric_limits<double>::max();
-    for (auto & it : this->model->getBlocks()) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         auto cell_data = block->getCellData();
 
         double block_range[2];
@@ -159,8 +155,7 @@ MeshQualityTool::getCellQualityRange(double range[])
 void
 MeshQualityTool::onClose()
 {
-    for (auto & it : this->model->getBlocks()) {
-        BlockObject * block = it.second;
+    for (auto & [id, block] : this->model->getBlocks()) {
         auto * mapper = block->getMapper();
         mapper->ScalarVisibilityOff();
         block->update();
@@ -411,7 +406,7 @@ MeshQualityTool::setupColorBar()
 }
 
 void
-MeshQualityTool::setBlockMeshQualityProperties(BlockObject * block, double range[])
+MeshQualityTool::setBlockMeshQualityProperties(std::shared_ptr<BlockObject> block, double range[])
 {
     auto * property = block->getProperty();
     property->SetRepresentationToSurface();

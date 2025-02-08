@@ -170,7 +170,7 @@ View::clear()
 }
 
 void
-View::addBlock(BlockObject * block)
+View::addBlock(std::shared_ptr<BlockObject> block)
 {
     setBlockProperties(block);
     this->renderer->AddViewProp(block->getActor());
@@ -179,14 +179,14 @@ View::addBlock(BlockObject * block)
 }
 
 void
-View::addSideSet(SideSetObject * sideset)
+View::addSideSet(std::shared_ptr<SideSetObject> sideset)
 {
     setSideSetProperties(sideset);
     this->renderer->AddViewProp(sideset->getActor());
 }
 
 void
-View::addNodeSet(NodeSetObject * nodeset)
+View::addNodeSet(std::shared_ptr<NodeSetObject> nodeset)
 {
     this->setNodeSetProperties(nodeset);
     this->renderer->AddViewProp(nodeset->getActor());
@@ -197,17 +197,14 @@ View::onShadedTriggered(bool checked)
 {
     this->render_mode = SHADED;
     auto blocks = this->model->getBlocks();
-    for (auto & it : blocks) {
-        auto * block = it.second;
+    for (auto & [id, block] : blocks) {
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(false);
     }
     auto side_sets = this->model->getSideSets();
-    for (auto & it : side_sets) {
-        auto * sideset = it.second;
+    for (auto & [id, sideset] : side_sets)
         setSideSetProperties(sideset);
-    }
 }
 
 void
@@ -215,17 +212,14 @@ View::onShadedWithEdgesTriggered(bool checked)
 {
     this->render_mode = SHADED_WITH_EDGES;
     auto blocks = this->model->getBlocks();
-    for (auto & it : blocks) {
-        auto * block = it.second;
+    for (auto & [id, block] : blocks) {
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(false);
     }
     auto side_sets = this->model->getSideSets();
-    for (auto & it : side_sets) {
-        auto * sideset = it.second;
+    for (auto & [id, sideset] : side_sets)
         setSideSetProperties(sideset);
-    }
 }
 
 void
@@ -233,17 +227,14 @@ View::onHiddenEdgesRemovedTriggered(bool checked)
 {
     this->render_mode = HIDDEN_EDGES_REMOVED;
     auto blocks = this->model->getBlocks();
-    for (auto & it : blocks) {
-        auto * block = it.second;
+    for (auto & [id, block] : blocks) {
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(block->visible());
     }
     auto side_sets = this->model->getSideSets();
-    for (auto & it : side_sets) {
-        auto * sideset = it.second;
+    for (auto & [id, sideset] : side_sets)
         setSideSetProperties(sideset);
-    }
 }
 
 void
@@ -251,17 +242,14 @@ View::onTransluentTriggered(bool checked)
 {
     this->render_mode = TRANSLUENT;
     auto blocks = this->model->getBlocks();
-    for (auto & it : blocks) {
-        auto * block = it.second;
+    for (auto & [id, block] : blocks) {
         bool selected = this->main_window->getSelectedBlock() == block;
         setBlockProperties(block, selected);
         block->setSilhouetteVisible(block->visible());
     }
     auto side_sets = this->model->getSideSets();
-    for (auto & it : side_sets) {
-        auto * sideset = it.second;
+    for (auto & [id, sideset] : side_sets)
         setSideSetProperties(sideset);
-    }
 }
 
 void
@@ -301,7 +289,7 @@ View::onColorProfileChanged(ColorProfile * profile)
 }
 
 void
-View::setSelectedBlockProperties(BlockObject * block, bool highlighted)
+View::setSelectedBlockProperties(std::shared_ptr<BlockObject> block, bool highlighted)
 {
     auto * property = block->getProperty();
     if (this->render_mode == SHADED) {
@@ -333,7 +321,7 @@ View::setSelectedBlockProperties(BlockObject * block, bool highlighted)
 }
 
 void
-View::setDeselectedBlockProperties(BlockObject * block, bool highlighted)
+View::setDeselectedBlockProperties(std::shared_ptr<BlockObject> block, bool highlighted)
 {
     auto * property = block->getProperty();
     if (this->render_mode == SHADED) {
@@ -368,7 +356,7 @@ View::setDeselectedBlockProperties(BlockObject * block, bool highlighted)
 }
 
 void
-View::setHighlightedBlockProperties(BlockObject * block, bool highlighted)
+View::setHighlightedBlockProperties(std::shared_ptr<BlockObject> block, bool highlighted)
 {
     auto * property = block->getSilhouetteProperty();
     if (highlighted) {
@@ -420,7 +408,7 @@ View::setHighlightedBlockProperties(BlockObject * block, bool highlighted)
 }
 
 void
-View::setBlockProperties(BlockObject * block, bool selected, bool highlighted)
+View::setBlockProperties(std::shared_ptr<BlockObject> block, bool selected, bool highlighted)
 {
     auto * property = block->getProperty();
     property->SetRepresentationToSurface();
@@ -433,7 +421,7 @@ View::setBlockProperties(BlockObject * block, bool selected, bool highlighted)
 }
 
 void
-View::setSideSetProperties(SideSetObject * sideset)
+View::setSideSetProperties(std::shared_ptr<SideSetObject> sideset)
 {
     auto * property = sideset->getProperty();
     property->SetColor(SIDESET_CLR.redF(), SIDESET_CLR.greenF(), SIDESET_CLR.blueF());
@@ -461,7 +449,7 @@ View::setSideSetProperties(SideSetObject * sideset)
 }
 
 void
-View::setNodeSetProperties(NodeSetObject * nodeset)
+View::setNodeSetProperties(std::shared_ptr<NodeSetObject> nodeset)
 {
     auto * property = nodeset->getProperty();
     property->SetRepresentationToPoints();
@@ -536,7 +524,7 @@ View::resetCamera()
 void
 View::setBlockVisibility(int block_id, bool visible)
 {
-    BlockObject * block = this->model->getBlock(block_id);
+    auto block = this->model->getBlock(block_id);
     if (block) {
         block->setVisible(visible);
         if (this->render_mode == HIDDEN_EDGES_REMOVED || this->render_mode == TRANSLUENT)
@@ -549,7 +537,7 @@ View::setBlockVisibility(int block_id, bool visible)
 void
 View::setBlockOpacity(int block_id, double opacity)
 {
-    BlockObject * block = this->model->getBlock(block_id);
+    auto block = this->model->getBlock(block_id);
     if (block) {
         block->setOpacity(opacity);
         if (this->render_mode == SHADED || this->render_mode == SHADED_WITH_EDGES) {
@@ -562,7 +550,7 @@ View::setBlockOpacity(int block_id, double opacity)
 void
 View::setBlockColor(int block_id, QColor color)
 {
-    BlockObject * block = this->model->getBlock(block_id);
+    auto block = this->model->getBlock(block_id);
     if (block) {
         block->setColor(color);
         auto * property = block->getProperty();
@@ -576,7 +564,7 @@ View::setBlockColor(int block_id, QColor color)
 void
 View::setSideSetVisibility(int sideset_id, bool visible)
 {
-    auto * sideset = this->model->getSideSet(sideset_id);
+    auto sideset = this->model->getSideSet(sideset_id);
     if (sideset)
         sideset->setVisible(visible);
 }
@@ -584,7 +572,7 @@ View::setSideSetVisibility(int sideset_id, bool visible)
 void
 View::setNodeSetVisibility(int nodeset_id, bool visible)
 {
-    auto * nodeset = this->model->getNodeSet(nodeset_id);
+    auto nodeset = this->model->getNodeSet(nodeset_id);
     if (nodeset)
         nodeset->setVisible(visible);
 }

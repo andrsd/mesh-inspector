@@ -62,19 +62,19 @@ Model::~Model()
     delete this->file_watcher;
 }
 
-const std::map<int, BlockObject *> &
+const std::map<int, std::shared_ptr<BlockObject>> &
 Model::getBlocks() const
 {
     return this->blocks;
 }
 
-const std::map<int, SideSetObject *> &
+const std::map<int, std::shared_ptr<SideSetObject>> &
 Model::getSideSets() const
 {
     return this->side_sets;
 }
 
-const std::map<int, NodeSetObject *> &
+const std::map<int, std::shared_ptr<NodeSetObject>> &
 Model::getNodeSets() const
 {
     return this->node_sets;
@@ -91,16 +91,8 @@ Model::clear()
 {
     this->bbox.Reset();
 
-    for (auto & it : this->blocks)
-        delete it.second;
     this->blocks.clear();
-
-    for (auto & it : this->side_sets)
-        delete it.second;
     this->side_sets.clear();
-
-    for (auto & it : this->node_sets)
-        delete it.second;
     this->node_sets.clear();
 
     this->extract_blocks.clear();
@@ -140,7 +132,7 @@ Model::addBlocks()
     auto * camera = this->view->getActiveCamera();
 
     for (auto & binfo : this->reader->getBlocks()) {
-        BlockObject * block = nullptr;
+        std::shared_ptr<BlockObject> block;
         if (binfo.multiblock_index != -1) {
             auto eb = vtkSmartPointer<vtkExtractBlock>::New();
             eb->SetInputConnection(this->reader->getVtkOutputPort());
@@ -148,7 +140,7 @@ Model::addBlocks()
             eb->Update();
             this->extract_blocks.push_back(eb);
 
-            block = new BlockObject(eb->GetOutputPort(), camera);
+            block = std::make_shared<BlockObject>(eb->GetOutputPort(), camera);
         }
         else if (binfo.material_index != -1) {
             auto eb = vtkSmartPointer<vtkExtractMaterialBlock>::New();
@@ -157,10 +149,10 @@ Model::addBlocks()
             eb->Update();
             this->extract_mat_blocks.push_back(eb);
 
-            block = new BlockObject(eb->GetOutputPort(), camera);
+            block = std::make_shared<BlockObject>(eb->GetOutputPort(), camera);
         }
         else {
-            block = new BlockObject(this->reader->getVtkOutputPort(), camera);
+            block = std::make_shared<BlockObject>(this->reader->getVtkOutputPort(), camera);
         }
         this->blocks[binfo.number] = block;
         this->view->addBlock(block);
@@ -178,7 +170,7 @@ Model::addSideSets()
         eb->Update();
         this->extract_blocks.push_back(eb);
 
-        auto sideset = new SideSetObject(eb->GetOutputPort());
+        auto sideset = std::make_shared<SideSetObject>(eb->GetOutputPort());
         this->side_sets[finfo.number] = sideset;
         this->view->addSideSet(sideset);
         emit sideSetAdded(finfo.number, QString::fromStdString(finfo.name));
@@ -195,14 +187,14 @@ Model::addNodeSets()
         eb->Update();
         this->extract_blocks.push_back(eb);
 
-        auto * nodeset = new NodeSetObject(eb->GetOutputPort());
+        auto nodeset = std::make_shared<NodeSetObject>(eb->GetOutputPort());
         this->node_sets[ninfo.number] = nodeset;
         this->view->addNodeSet(nodeset);
         emit nodeSetAdded(ninfo.number, QString::fromStdString(ninfo.name));
     }
 }
 
-BlockObject *
+std::shared_ptr<BlockObject>
 Model::getBlock(int block_id)
 {
     const auto & it = this->blocks.find(block_id);
@@ -212,7 +204,7 @@ Model::getBlock(int block_id)
         return nullptr;
 }
 
-SideSetObject *
+std::shared_ptr<SideSetObject>
 Model::getSideSet(int sideset_id)
 {
     const auto & it = this->side_sets.find(sideset_id);
@@ -222,7 +214,7 @@ Model::getSideSet(int sideset_id)
         return nullptr;
 }
 
-NodeSetObject *
+std::shared_ptr<NodeSetObject>
 Model::getNodeSet(int nodeset_id)
 {
     const auto & it = this->node_sets.find(nodeset_id);
@@ -237,10 +229,9 @@ Model::blockActorToId(vtkActor * actor)
 {
     // TODO: when we start to have 1000s of actors, this should be done via a
     // map from 'actor' to 'block_id'
-    for (auto & it : this->blocks) {
-        auto * block = it.second;
+    for (auto & [id, block] : this->blocks) {
         if (block->getActor() == actor)
-            return it.first;
+            return id;
     }
     return -1;
 }
