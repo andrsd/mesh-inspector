@@ -22,7 +22,7 @@ jobs:
         include:
           - os: ubuntu-22.04
             arch: gcc_64
-          - os: macos-13
+          - os: macos-15-intel
             arch: macos
     runs-on: ${{ matrix.os }}
     steps:
