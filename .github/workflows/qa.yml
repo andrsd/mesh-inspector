@@ -8,18 +8,28 @@ on:
     branches:
       - main
 
+env:
+  VERSION: 14
+
 jobs:
   formatting-check:
     name: Check formatting
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Clang-format style check
-      uses: jidicula/clang-format-action@v4.13.0
-      with:
-        clang-format-version: '14'
-        check-path: .
-        exclude-regex: '(/resources/|/contrib/)'
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get install clang-format-${{ env.VERSION }}
+
+      - name: clang-format check
+        run: |
+          cmake_common_version="v3.4"
+          script_name="project-clang-format.py"
+          script_path="${{ github.workspace }}/$script_name"
+          download_url="https://raw.githubusercontent.com/egor-tensin/cmake-common/$cmake_common_version/tools/$script_name"
+          curl -s -o "$script_path" "$download_url"
+          python3 "$script_path" --clang-format "clang-format-${{ env.VERSION }}" --style "file" --exclude "./resources/" --exclude "./contrib/"
 
   check-spdx-tags:
     name: check spdx tags
